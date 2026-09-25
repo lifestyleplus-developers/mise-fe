@@ -2,6 +2,7 @@
   "name": "mise-app",
   "version": "1.0.0",
   "main": "index.ts",
+  "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "expo": "~57.0.25",
     "expo-status-bar": "~57.0.1",
