@@ -3,6 +3,7 @@
     "name": "mise-app",
     "slug": "mise-app",
     "version": "1.0.0",
+    "scheme": "mise",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,6 +21,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-status-bar"],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }

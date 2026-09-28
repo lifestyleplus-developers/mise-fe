@@ -1,41 +1,29 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+## Running the app
 
-## Expo has changed — do not trust your training data
-
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
-
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
-
-## Commands
-
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+Package manager is pnpm (see `.npmrc` and `packageManager` in `package.json`).
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+pnpm install       # install dependencies
+pnpm start         # start the dev server (then choose a platform, or scan the QR code in Expo Go)
+pnpm android       # start and open on Android
+pnpm ios           # start and open on iOS
+pnpm web           # start and open in a browser
+pnpm lint          # expo lint
+pnpm format        # prettier --write .
 ```
 
-Run lint and typecheck before declaring any task done.
+## Architecture
 
-## Navigation & Routing
+**Don't scaffold ahead of a real need.** Several items below have a tool chosen but nothing built yet — build them alongside the first screen that actually needs them (Login is the natural first candidate: it touches server state, the retry queue, mocking, constants, and env config all at once), not speculatively ahead of one.
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+- **Routing:** Expo Router. File-based routes in `app/` — routes only, no other code lives there. _(Done.)_
+- **Folder structure:** Feature-based. `app/` for routes; `features/<name>/` for feature-specific components, hooks and API calls; `shared/` for cross-cutting code (API client, constants, stores, i18n). _(Done — `features/` and `shared/` exist, empty until something needs them.)_
+- **Server state:** TanStack Query. Not wired yet. Leave `networkMode` on its default (`'online'`) — that already gives offline-safe pause/resume behavior for both queries and mutations, no custom retry loop needed.
+- **Persisted local state:** Zustand + AsyncStorage. Not used yet — create a store only when something concrete needs persisting (e.g. a session), not speculatively.
+- **Retry queue:** Not a separate system — it's TanStack Query's own `MutationCache` / `networkMode` / `resumePausedMutations` / `persistQueryClient`, configured on the same client as "Server state" above. A persisted/paused mutation can't carry its original function reference across an app restart (functions don't serialize), so register `queryClient.setMutationDefaults(mutationKey, { mutationFn })` for each mutation at the point it's defined.
+- **API types:** No codegen yet — Lamax's OpenAPI schema doesn't exist until their backend (`mise-be`) is live. Hand-write types against the API Contract's JSON examples until then. Candidates for later, none chosen: `openapi-typescript` + `openapi-fetch` (lightweight), Orval (generates TanStack Query hooks directly), `swagger-typescript-api`.
+- **Mocking the backend:** JSON fixtures in-repo matching the API Contract's exact shapes — not MSW. MSW's own docs call React Native support "potentially incomplete," and issues #2592 (fails to intercept in the RN runtime at all) and #2367 (`TransformStream` missing) are open and unresolved on the RN runtime itself, unrelated to Expo's `fetch`. The API layer reads from fixtures now and swaps internally once real endpoints exist — hooks and screens never change. Fixtures need simulated latency/errors (so loading/error states actually get exercised) and mutations that affect subsequent reads within a session.
+- **Lint / format:** `expo lint` + Prettier (`singleQuote: true`). _(Done — see `eslint.config.js`, `.prettierrc.json`, `.prettierignore`.)_
+- **Shared constants:** Role codes, error codes, and answer types belong in `shared/constants/`, typed — not copy-pasted string literals across screens. Create this the moment the first screen needs one of these, not before.
+- **Environment config:** `API_BASE_URL` is a placeholder until a real dev backend exists. Mechanism not yet chosen — `app.json`'s `extra` field + `expo-constants`, `.env`, or EAS environment variables — decide when a real value is actually needed.
+- **Testing:** Deferred, not forgotten. Not set up yet. Jest + React Native Testing Library are the likely candidates when it's time.
