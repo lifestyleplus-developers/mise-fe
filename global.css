@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Color tokens ported from mise-week-01.html's mockup CSS
+  (:root = light, .dark = dark). Values are the mockup's own
+  hex — some already carry baked-in alpha (8-digit hex).
+*/
+:root {
+  --background: #faf9f5;
+  --foreground: #18181b;
+
+  --card: #ffffff;
+  --card-foreground: #18181b;
+
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+
+  --primary: #18181b;
+  --primary-foreground: #faf9f5;
+
+  --secondary: #f0eee6;
+  --secondary-foreground: #18181b;
+
+  --muted: #f3f1ea;
+  --muted-foreground: #6d6d76;
+
+  --accent: #eeebe1;
+  --accent-foreground: #18181b;
+
+  --destructive: #b93838;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #f6e9e9;
+  --destructive-soft-foreground: #b93838;
+
+  --success: #2d7a4f;
+  --success-foreground: #ffffff;
+  --success-soft: #e7f1eb;
+  --success-soft-foreground: #2d7a4f;
+
+  --warning: #a96613;
+  --warning-foreground: #ffffff;
+  --warning-soft: #f5ecdf;
+  --warning-soft-foreground: #9a5d12;
+
+  --pending: #64748b;
+  --pending-foreground: #ffffff;
+  --pending-soft: #eceef1;
+  --pending-soft-foreground: #5e6d82;
+
+  --border: #e6e4dc;
+  --input: #e6e4dc;
+  --input-edge: #8e8e95;
+  --ring: #18181b;
+
+  --nav-surface: #fdfcfaf0;
+  --nav-border: #e6e4dc;
+  --nav-foreground: #18181b;
+  --nav-segment: #ededed;
+  --nav-active: #0066cc;
+
+  --scrim: #18181b66;
+}
+
+.dark {
+  --background: #111113;
+  --foreground: #f4f4f5;
+
+  --card: #19191d;
+  --card-foreground: #f4f4f5;
+
+  --popover: #19191d;
+  --popover-foreground: #f4f4f5;
+
+  --primary: #f4f4f5;
+  --primary-foreground: #111113;
+
+  --secondary: #242429;
+  --secondary-foreground: #f4f4f5;
+
+  --muted: #222227;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #27272e;
+  --accent-foreground: #f4f4f5;
+
+  --destructive: #9b3535;
+  --destructive-foreground: #f4f4f5;
+  --destructive-soft: #2a1a1a;
+  --destructive-soft-foreground: #d98080;
+
+  --success: #266b44;
+  --success-foreground: #f4f4f5;
+  --success-soft: #17281e;
+  --success-soft-foreground: #6bbd8e;
+
+  --warning: #9d5c10;
+  --warning-foreground: #f4f4f5;
+  --warning-soft: #28200f;
+  --warning-soft-foreground: #d9a04e;
+
+  --pending: #4d5b6e;
+  --pending-foreground: #f4f4f5;
+  --pending-soft: #1c2129;
+  --pending-soft-foreground: #8fa3bd;
+
+  --border: #28282f;
+  --input: #28282f;
+  --input-edge: #6b6b73;
+  --ring: #d4d4d8;
+
+  --nav-surface: #1e1e23f0;
+  --nav-border: #2f2f36;
+  --nav-foreground: #f4f4f5;
+  --nav-segment: #3a3a42;
+  --nav-active: #5aa9ff;
+
+  --scrim: #0009;
+}
