@@ -3,118 +3,124 @@
 @tailwind utilities;
 
 /*
-  Color tokens ported from mise-week-01.html's mockup CSS
-  (:root = light, .dark = dark). Values are the mockup's own
-  hex — some already carry baked-in alpha (8-digit hex).
+  Color tokens ported from mise-week-01.html's mockup CSS, converted to
+  H S% L% triples (not hex) so Tailwind's opacity modifiers work
+  (bg-primary/90 etc. — required by the pulled-in Button component).
+  --scrim / --nav-surface keep baked-in alpha as rgba(), since they're
+  already translucent by design and never take an opacity modifier.
 */
-:root {
-  --background: #faf9f5;
-  --foreground: #18181b;
+@layer base {
+  :root {
+    --background: 48 33% 97%;
+    --foreground: 240 6% 10%;
 
-  --card: #ffffff;
-  --card-foreground: #18181b;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 10%;
 
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
 
-  --primary: #18181b;
-  --primary-foreground: #faf9f5;
+    --primary: 240 6% 10%;
+    --primary-foreground: 48 33% 97%;
 
-  --secondary: #f0eee6;
-  --secondary-foreground: #18181b;
+    --secondary: 48 25% 92%;
+    --secondary-foreground: 240 6% 10%;
 
-  --muted: #f3f1ea;
-  --muted-foreground: #6d6d76;
+    --muted: 47 27% 94%;
+    --muted-foreground: 240 4% 45%;
 
-  --accent: #eeebe1;
-  --accent-foreground: #18181b;
+    --accent: 46 28% 91%;
+    --accent-foreground: 240 6% 10%;
 
-  --destructive: #b93838;
-  --destructive-foreground: #ffffff;
-  --destructive-soft: #f6e9e9;
-  --destructive-soft-foreground: #b93838;
+    --destructive: 0 54% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 0 42% 94%;
+    --destructive-soft-foreground: 0 54% 47%;
 
-  --success: #2d7a4f;
-  --success-foreground: #ffffff;
-  --success-soft: #e7f1eb;
-  --success-soft-foreground: #2d7a4f;
+    --success: 146 46% 33%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 144 26% 93%;
+    --success-soft-foreground: 146 46% 33%;
 
-  --warning: #a96613;
-  --warning-foreground: #ffffff;
-  --warning-soft: #f5ecdf;
-  --warning-soft-foreground: #9a5d12;
+    --warning: 33 80% 37%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 35 52% 92%;
+    --warning-soft-foreground: 33 79% 34%;
 
-  --pending: #64748b;
-  --pending-foreground: #ffffff;
-  --pending-soft: #eceef1;
-  --pending-soft-foreground: #5e6d82;
+    --pending: 215 16% 47%;
+    --pending-foreground: 0 0% 100%;
+    --pending-soft: 216 15% 94%;
+    --pending-soft-foreground: 215 16% 44%;
 
-  --border: #e6e4dc;
-  --input: #e6e4dc;
-  --input-edge: #8e8e95;
-  --ring: #18181b;
+    --border: 48 17% 88%;
+    --input: 48 17% 88%;
+    --input-edge: 240 3% 57%;
+    --ring: 240 6% 10%;
 
-  --nav-surface: #fdfcfaf0;
-  --nav-border: #e6e4dc;
-  --nav-foreground: #18181b;
-  --nav-segment: #ededed;
-  --nav-active: #0066cc;
+    --radius: 1rem;
 
-  --scrim: #18181b66;
-}
+    --nav-surface: rgba(253, 252, 250, 0.94);
+    --nav-border: 48 17% 88%;
+    --nav-foreground: 240 6% 10%;
+    --nav-segment: 0 0% 93%;
+    --nav-active: 210 100% 40%;
 
-.dark {
-  --background: #111113;
-  --foreground: #f4f4f5;
+    --scrim: rgba(24, 24, 27, 0.4);
+  }
 
-  --card: #19191d;
-  --card-foreground: #f4f4f5;
+  .dark:root {
+    --background: 240 6% 7%;
+    --foreground: 240 5% 96%;
 
-  --popover: #19191d;
-  --popover-foreground: #f4f4f5;
+    --card: 240 7% 11%;
+    --card-foreground: 240 5% 96%;
 
-  --primary: #f4f4f5;
-  --primary-foreground: #111113;
+    --popover: 240 7% 11%;
+    --popover-foreground: 240 5% 96%;
 
-  --secondary: #242429;
-  --secondary-foreground: #f4f4f5;
+    --primary: 240 5% 96%;
+    --primary-foreground: 240 6% 7%;
 
-  --muted: #222227;
-  --muted-foreground: #a1a1aa;
+    --secondary: 240 6% 15%;
+    --secondary-foreground: 240 5% 96%;
 
-  --accent: #27272e;
-  --accent-foreground: #f4f4f5;
+    --muted: 240 7% 14%;
+    --muted-foreground: 240 5% 65%;
 
-  --destructive: #9b3535;
-  --destructive-foreground: #f4f4f5;
-  --destructive-soft: #2a1a1a;
-  --destructive-soft-foreground: #d98080;
+    --accent: 240 8% 17%;
+    --accent-foreground: 240 5% 96%;
 
-  --success: #266b44;
-  --success-foreground: #f4f4f5;
-  --success-soft: #17281e;
-  --success-soft-foreground: #6bbd8e;
+    --destructive: 0 49% 41%;
+    --destructive-foreground: 240 5% 96%;
+    --destructive-soft: 0 24% 13%;
+    --destructive-soft-foreground: 0 54% 68%;
 
-  --warning: #9d5c10;
-  --warning-foreground: #f4f4f5;
-  --warning-soft: #28200f;
-  --warning-soft-foreground: #d9a04e;
+    --success: 146 48% 28%;
+    --success-foreground: 240 5% 96%;
+    --success-soft: 145 27% 12%;
+    --success-soft-foreground: 146 38% 58%;
 
-  --pending: #4d5b6e;
-  --pending-foreground: #f4f4f5;
-  --pending-soft: #1c2129;
-  --pending-soft-foreground: #8fa3bd;
+    --warning: 32 82% 34%;
+    --warning-foreground: 240 5% 96%;
+    --warning-soft: 41 45% 11%;
+    --warning-soft-foreground: 35 65% 58%;
 
-  --border: #28282f;
-  --input: #28282f;
-  --input-edge: #6b6b73;
-  --ring: #d4d4d8;
+    --pending: 215 18% 37%;
+    --pending-foreground: 240 5% 96%;
+    --pending-soft: 217 19% 14%;
+    --pending-soft-foreground: 214 26% 65%;
 
-  --nav-surface: #1e1e23f0;
-  --nav-border: #2f2f36;
-  --nav-foreground: #f4f4f5;
-  --nav-segment: #3a3a42;
-  --nav-active: #5aa9ff;
+    --border: 240 8% 17%;
+    --input: 240 8% 17%;
+    --input-edge: 240 4% 44%;
+    --ring: 240 5% 84%;
 
-  --scrim: #0009;
+    --nav-surface: rgba(30, 30, 35, 0.94);
+    --nav-border: 240 7% 20%;
+    --nav-foreground: 240 5% 96%;
+    --nav-segment: 240 6% 24%;
+    --nav-active: 211 100% 68%;
+
+    --scrim: rgba(0, 0, 0, 0.53);
+  }
 }
