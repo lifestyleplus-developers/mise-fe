@@ -2,18 +2,10 @@ import { Banner } from '@/shared/components/ui/banner';
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { TextField } from '@/shared/components/ui/text-field';
-import {
-  InterfaceLanguage,
-  LanguageSelector,
-} from '@/shared/components/language-selector';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // primary-foreground token, resolved manually — ActivityIndicator's `color`
 // prop isn't reachable through className the way View/Text colors are.
@@ -36,6 +28,9 @@ function resolveMockLogin(username: string, password: string): LoginResult {
   const normalized = username.trim().toLowerCase();
   if (normalized === 'offline') return { kind: 'unreachable' };
   if (normalized === 'busy') return { kind: 'rate_limited' };
+  if (normalized === 'test-1' && password === '1234') {
+    return { kind: 'ok', persona: normalized };
+  }
   if (KNOWN_MEMBERS.includes(normalized) && password !== 'wrong') {
     return { kind: 'ok', persona: normalized };
   }
@@ -50,7 +45,6 @@ const ERROR_COPY: Record<Exclude<LoginResult['kind'], 'ok'>, string> = {
 
 export default function LoginScreen() {
   const { colorScheme } = useColorScheme();
-  const [language, setLanguage] = React.useState<InterfaceLanguage>('EN');
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
@@ -83,7 +77,7 @@ export default function LoginScreen() {
 
   if (signedInAs) {
     return (
-      <SafeAreaView className="bg-background flex-1 items-center justify-center gap-4 px-8">
+      <SafeAreaView className="flex-1 items-center justify-center gap-4 px-8">
         <Text variant="h1">mise</Text>
         <Text className="text-center">Signed in as {signedInAs}.</Text>
         <Button variant="outline" onPress={() => setSignedInAs(null)}>
@@ -94,20 +88,14 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="bg-background flex-1">
+    <SafeAreaView className="flex-1">
       <ScrollView
-        contentContainerClassName="flex-grow"
+        contentContainerClassName="flex-grow justify-center"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="h-11 shrink-0 flex-row items-center justify-end px-4">
-          <LanguageSelector
-            value={language}
-            onChange={setLanguage}
-            disabled={submitting}
-          />
-        </View>
-
-        <Text className="mt-8 mb-8 text-center text-[44px] leading-none tracking-tight">
+        {/* The wordmark and card are centred as one group, so the wordmark
+            carries no top margin — only the gap down to the card. */}
+        <Text className="font-display mb-8 text-center text-[44px] leading-none tracking-[-0.015em]">
           mise
         </Text>
 

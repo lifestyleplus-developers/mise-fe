@@ -8,7 +8,7 @@ function Input({
   return (
     <TextInput
       className={cn(
-        'border-input-edge bg-muted text-foreground placeholder:text-muted-foreground h-12 w-full flex-row items-center rounded-2xl border px-4 text-base',
+        'border-input-edge bg-muted text-foreground placeholder:text-muted-foreground h-12 w-full flex-row items-center rounded-2xl border px-4 font-sans text-base',
         'focus:border-ring focus:ring-ring focus:ring-2',
         props.editable === false &&
           cn(

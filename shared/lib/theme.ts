@@ -5,6 +5,31 @@ import {
 } from 'expo-router/react-navigation';
 
 /**
+ * The app-wide backdrop — the mockup's `--wash`: three warm radial gradients
+ * over the base background, carried on the frame so every screen sits on it.
+ * CSS states the layers and the base colour in one `background` shorthand;
+ * RN takes them as two style props, so they are split here.
+ */
+export const WASH = {
+  light: {
+    backgroundColor: '#faf9f5',
+    backgroundImage: [
+      'radial-gradient(115% 24% at 85% 0%, #f6c58acc 0%, transparent 72%)',
+      'radial-gradient(90% 18% at 2% 5%, #fadfd4cc 0%, transparent 70%)',
+      'radial-gradient(125% 24% at 45% 100%, #f5c9a2cc 0%, transparent 72%)',
+    ].join(', '),
+  },
+  dark: {
+    backgroundColor: '#111113',
+    backgroundImage: [
+      'radial-gradient(115% 24% at 85% 0%, #ec986840 0%, transparent 72%)',
+      'radial-gradient(90% 18% at 2% 5%, #e68a662e 0%, transparent 70%)',
+      'radial-gradient(125% 24% at 45% 100%, #e0925c2e 0%, transparent 72%)',
+    ].join(', '),
+  },
+};
+
+/**
  * Mirrors global.css's :root / .dark:root tokens as literal values.
  * React Navigation's theme consumes plain colors, not CSS variables,
  * so these are duplicated here rather than referenced via var().
@@ -54,11 +79,16 @@ export const THEME = {
   },
 };
 
+/**
+ * `background` is transparent on purpose: the WASH sits behind the navigator,
+ * so anything opaque here — navigator container or screen card — hides it.
+ * The base colour lives on the wash itself.
+ */
 export const NAV_THEME: Record<'light' | 'dark', Theme> = {
   light: {
     ...DefaultTheme,
     colors: {
-      background: THEME.light.background,
+      background: 'transparent',
       border: THEME.light.border,
       card: THEME.light.card,
       notification: THEME.light.destructive,
@@ -69,7 +99,7 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
   dark: {
     ...DarkTheme,
     colors: {
-      background: THEME.dark.background,
+      background: 'transparent',
       border: THEME.dark.border,
       card: THEME.dark.card,
       notification: THEME.dark.destructive,

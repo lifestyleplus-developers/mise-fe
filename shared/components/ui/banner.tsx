@@ -34,7 +34,7 @@ function Banner({ tone, message, detail, icon: Icon }: BannerProps) {
       <View className="min-w-0 flex-1">
         <Text
           className={cn(
-            'text-[14px] leading-snug font-medium',
+            'font-sans-medium text-[14px] leading-snug',
             tone === 'error'
               ? 'text-destructive-soft-foreground'
               : 'text-foreground',

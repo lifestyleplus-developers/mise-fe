@@ -36,7 +36,7 @@ function LanguageSelector({
         className="border-input-edge bg-card active:bg-accent min-h-11 flex-row items-center gap-1.5 self-start rounded-full border px-3.5 disabled:opacity-60"
       >
         <Globe className="text-foreground size-[18px]" />
-        <Text className="text-foreground text-[14px] font-semibold">
+        <Text className="text-foreground font-sans-semibold text-[14px]">
           {current.label}
         </Text>
       </Pressable>
@@ -57,7 +57,7 @@ function LanguageSelector({
             className="border-border bg-card rounded-t-[1.75rem] border-t px-4 pt-2 pb-6"
           >
             <View className="bg-border mx-auto mb-3 h-1.5 w-10 rounded-full" />
-            <Text className="mb-3 px-1 text-[22px] leading-tight">
+            <Text className="font-display mb-3 px-1 text-[22px] leading-tight">
               Language
             </Text>
             <View className="border-border overflow-hidden rounded-3xl border">
@@ -80,7 +80,7 @@ function LanguageSelector({
                     <Text
                       className={cn(
                         'text-foreground min-w-0 flex-1 text-[16px]',
-                        selected ? 'font-bold' : 'font-medium',
+                        selected ? 'font-sans-bold' : 'font-sans-medium',
                       )}
                     >
                       {language.label}
@@ -98,7 +98,7 @@ function LanguageSelector({
               onPress={() => setOpen(false)}
               className="border-border bg-card active:bg-accent mt-4 min-h-11 w-full items-center justify-center rounded-full border"
             >
-              <Text className="text-foreground text-[14px] font-semibold">
+              <Text className="text-foreground font-sans-semibold text-[14px]">
                 Cancel
               </Text>
             </Pressable>

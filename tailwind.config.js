@@ -9,6 +9,16 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      // Each weight is a separate family: RN resolves a font by family name
+      // and cannot select a weight within one, so `font-semibold` alone would
+      // synthesise a fake bold off the regular file.
+      fontFamily: {
+        sans: ['Montserrat_400Regular'],
+        'sans-medium': ['Montserrat_500Medium'],
+        'sans-semibold': ['Montserrat_600SemiBold'],
+        'sans-bold': ['Montserrat_700Bold'],
+        display: ['PlayfairDisplay_600SemiBold'],
+      },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
