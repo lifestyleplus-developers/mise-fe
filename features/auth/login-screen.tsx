@@ -1,60 +1,82 @@
-import { mockLogin } from '@/features/auth/mock-login';
-import { Banner } from '@/shared/components/ui/banner';
+import { useLogin } from '@/features/auth/use-login';
 import { Button } from '@/shared/components/ui/button';
+import { ModalDialog } from '@/shared/components/ui/modal';
 import { Text } from '@/shared/components/ui/text';
 import { ThemeToggle } from '@/shared/components/theme-toggle';
 import { TextField } from '@/shared/components/ui/text-field';
 import { LOGIN_FAILURE, type LoginFailure } from '@/shared/constants/errors';
 import { THEME } from '@/shared/lib/theme';
+import { format, useT, type MessageKey } from '@/shared/i18n';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, TextInput, View } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
-const ERROR_COPY: Record<LoginFailure, string> = {
-  [LOGIN_FAILURE.INVALID_CREDENTIALS]: 'Username or password is wrong.',
-  [LOGIN_FAILURE.RATE_LIMITED]: 'Too many tries. Wait a minute.',
-  [LOGIN_FAILURE.UNREACHABLE]: "Can't reach mise. Try again.",
+/**
+ * Failure → catalogue key. A Record over the failure union, so the compiler
+ * errors the moment a failure code lacks a message — the copy table the
+ * error modal reads from. Switch on code, never on message (§15).
+ */
+const ERROR_KEY: Record<LoginFailure, MessageKey> = {
+  [LOGIN_FAILURE.INVALID_CREDENTIALS]: 'login.err.invalid',
+  [LOGIN_FAILURE.RATE_LIMITED]: 'login.err.rate-limited',
+  [LOGIN_FAILURE.UNREACHABLE]: 'login.err.unreachable',
 };
 
 export function LoginScreen() {
   const { colorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
+  // One state machine: the screen renders `state` and never holds async
+  // state of its own (issues 4, 9 and 11 all close on this).
+  const { state, login, signOut, resetLogin } = useLogin();
+  const t = useT();
+
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [submitting, setSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<LoginFailure | null>(null);
-  const [signedInAs, setSignedInAs] = React.useState<string | null>(null);
+  // Refocus target after a failed attempt — issue 6 in login-issues.md.
+  // Ref passes straight through TextField → Input → TextInput on React 19;
+  // no forwarding code needed in the primitives.
+  const passwordRef = React.useRef<TextInput>(null);
 
+  const isSubmitting = state.kind === 'submitting';
   const canSubmit =
-    username.trim().length > 0 && password.length > 0 && !submitting;
+    username.trim().length > 0 && password.length > 0 && !isSubmitting;
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!canSubmit) return;
-    setSubmitting(true);
-    setError(null);
-
-    const result = await mockLogin(username, password);
-
-    setSubmitting(false);
-    if (result.kind === 'ok') {
-      setSignedInAs(result.persona);
-      return;
-    }
-    if (result.kind === LOGIN_FAILURE.INVALID_CREDENTIALS) setPassword('');
-    setError(result.kind);
+    login({ username, password });
   }
 
-  if (signedInAs) {
+  function dismissError() {
+    // The mockup refocused the password field on an invalid result; with the
+    // error in a modal, the dismiss is the moment to do it — focusing while
+    // the dialog is still up leaves the keyboard fighting the modal on
+    // Android. By the time OK (or a backdrop tap) lands, the cursor is
+    // already in the field: dismiss and type. Invalid only — the password is
+    // only cleared on that failure, and the field the user is correcting is
+    // the one that gets focus.
+    const wasInvalid =
+      state.kind === 'failure' &&
+      state.failure === LOGIN_FAILURE.INVALID_CREDENTIALS;
+    if (wasInvalid) setPassword('');
+    resetLogin();
+    if (wasInvalid) passwordRef.current?.focus();
+  }
+
+  // Signed in — identity straight from the ['auth','me'] cache; the screen
+  // holds no copy of it. A future Home screen replaces this branch.
+  if (state.kind === 'ok') {
     return (
       <SafeAreaView className="flex-1 items-center justify-center gap-4 px-8">
         <Text variant="h1">mise</Text>
-        <Text className="text-center">Signed in as {signedInAs}.</Text>
-        <Button variant="outline" onPress={() => setSignedInAs(null)}>
-          <Text>Sign out</Text>
+        <Text className="text-center">
+          {format(t('login.signed-in-as'), { name: state.fullName })}
+        </Text>
+        <Button variant="outline" onPress={signOut}>
+          <Text>{t('login.sign-out')}</Text>
         </Button>
       </SafeAreaView>
     );
@@ -76,13 +98,11 @@ export function LoginScreen() {
         </Text>
 
         <View className="shadow-card border-border bg-card mx-4 flex flex-col gap-4 rounded-[1.75rem] border p-6">
-          {error ? <Banner tone="error" message={ERROR_COPY[error]} /> : null}
-
           <TextField
-            label="Username"
+            label={t('login.username')}
             value={username}
             onChangeText={setUsername}
-            editable={!submitting}
+            editable={!isSubmitting}
             autoComplete="username"
             autoCapitalize="none"
             autoCorrect={false}
@@ -90,23 +110,24 @@ export function LoginScreen() {
           />
 
           <TextField
-            label="Password"
+            ref={passwordRef}
+            label={t('login.password')}
             isPassword
-            showLabel="Show password"
-            hideLabel="Hide password"
+            showLabel={t('login.show-password')}
+            hideLabel={t('login.hide-password')}
             value={password}
             onChangeText={setPassword}
-            editable={!submitting}
+            editable={!isSubmitting}
             autoComplete="current-password"
           />
 
           <Button
             onPress={handleSubmit}
             disabled={!canSubmit}
-            accessibilityState={{ busy: submitting }}
+            accessibilityState={{ busy: isSubmitting }}
             className="mt-2 min-h-12 w-full"
           >
-            {submitting ? (
+            {isSubmitting ? (
               <>
                 {/* ActivityIndicator takes a `color` prop and can't be reached
                     through className, so the token is read here directly. */}
@@ -114,15 +135,15 @@ export function LoginScreen() {
                   size="small"
                   color={THEME[colorScheme ?? 'light'].primaryForeground}
                 />
-                <Text>Signing in…</Text>
+                <Text>{t('login.signing-in')}</Text>
               </>
             ) : (
-              <Text>Sign in</Text>
+              <Text>{t('login.sign-in')}</Text>
             )}
           </Button>
 
           <Text className="text-muted-foreground text-center text-[13px] leading-snug">
-            Forgot your password? Ask your manager.
+            {t('login.forgot-password')}
           </Text>
         </View>
       </ScrollView>
@@ -145,6 +166,30 @@ export function LoginScreen() {
           <ThemeToggle />
         </View>
       </View>
+
+      {/* Failures surface as a modal rather than inline: the banner cost the
+          card a row on every error and pushed the fields mid-correction. */}
+      <ModalDialog
+        visible={state.kind === 'failure'}
+        title={t('login.err.title')}
+        message={state.kind === 'failure' ? t(ERROR_KEY[state.failure]) : ''}
+        actionLabel={t('common.ok')}
+        onDismiss={dismissError}
+      />
+
+      {/* 409 — a username that exists in more than one business. The picker
+          is not built (tracked in login-issues.md); surfaced as a plain
+          informational dialog rather than masquerading as a credential
+          failure. */}
+      {state.kind === 'ambiguous_username' ? (
+        <ModalDialog
+          visible
+          title={t('login.err.title')}
+          message={t('login.err.ambiguous')}
+          actionLabel={t('common.ok')}
+          onDismiss={resetLogin}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

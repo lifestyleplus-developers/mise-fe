@@ -18,6 +18,14 @@ module.exports = {
         'sans-semibold': ['Montserrat_600SemiBold'],
         'sans-bold': ['Montserrat_700Bold'],
         display: ['PlayfairDisplay_600SemiBold'],
+        // Interface scripts for the four-language requirement (FE Spec §9).
+        // RN resolves a single fontFamily name — no CSS-style fallback stack
+        // — so Latin text in these classes keeps Montserrat's fallback and
+        // Devanagari/Malayalam/Kannada glyphs fall through to these faces.
+        // Loaded in _layout.tsx before the first frame.
+        'sans-devanagari': ['NotoSansDevanagari_400Regular'],
+        'sans-malayalam': ['NotoSansMalayalam_400Regular'],
+        'sans-kannada': ['NotoSansKannada_400Regular'],
       },
       colors: {
         background: 'hsl(var(--background))',
