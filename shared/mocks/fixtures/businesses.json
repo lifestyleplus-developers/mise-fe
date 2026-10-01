@@ -1,5 +1,32 @@
 [
-  { "id": 7, "name": "ZamZam" },
-  { "id": 11, "name": "Porch Inn" },
-  { "id": 12, "name": "Kebapci" }
+  {
+    "id": 7,
+    "name": "ZamZam",
+    "modules": {
+      "checklists": true,
+      "inventory": true,
+      "attendance_outlets": [3, 5],
+      "spot_check_outlets": [3]
+    }
+  },
+  {
+    "id": 11,
+    "name": "Porch Inn",
+    "modules": {
+      "checklists": true,
+      "inventory": false,
+      "attendance_outlets": [],
+      "spot_check_outlets": []
+    }
+  },
+  {
+    "id": 12,
+    "name": "Kebapci",
+    "modules": {
+      "checklists": true,
+      "inventory": false,
+      "attendance_outlets": [],
+      "spot_check_outlets": []
+    }
+  }
 ]

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import * as React from 'react';
 
 import { api, MockApiError } from '@/shared/api/client';
 import { queryClient } from '@/shared/api/query-client';
@@ -43,8 +44,17 @@ export type LoginState =
   /** Signed in; identity read straight from the ['auth','me'] cache. */
   | { kind: 'ok'; fullName: string }
   | { kind: 'failure'; failure: LoginFailure }
-  /** 409 with a businesses array — picker not built; screen degrades it. */
-  | { kind: 'ambiguous_username'; businesses: BusinessRef[] };
+  /**
+   * 409 with a businesses array — the screen shows the picker. `choosingId`
+   * is the business already picked while its resend is in flight, so the
+   * picker stays up showing which row is signing in rather than flashing
+   * away and back.
+   */
+  | {
+      kind: 'ambiguous_username';
+      businesses: BusinessRef[];
+      choosingId: number | null;
+    };
 
 function classify(error: unknown): LoginFailure {
   // No response at all — transport died. (Also what the mock's "offline"
@@ -66,8 +76,8 @@ export function useLogin() {
   const queryClient_ = useQueryClient();
 
   // Subscribed, never fetched (enabled: false) — the hook's window onto the
-  // identity the mutation's onSuccess writes. The signed-in render reads it
-  // here; a future Home screen reads the same key.
+  // identity the mutation's onSuccess writes. Home reads the same key
+  // through useMe.
   const { data: me } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => api.auth.me(),
@@ -75,9 +85,32 @@ export function useLogin() {
     staleTime: Infinity,
   });
 
+  // The businesses a 409 offered. Held beside the mutation because resending
+  // with a tenant_id replaces the mutation's error — and with it the list —
+  // while the picker still has to render. Cleared by anything that is not
+  // the picker's own flow: success, another failure, cancel.
+  const [candidates, setCandidates] = React.useState<BusinessRef[] | null>(
+    null,
+  );
+  // What the resend repeats. A ref, not state: nothing renders from it.
+  const lastRequest = React.useRef<LoginRequest | null>(null);
+
   const mutation = useMutation<LoginResponse, unknown, LoginRequest>({
     mutationKey: ['auth', 'login'],
     networkMode: 'always',
+
+    onError: (error) => {
+      if (
+        error instanceof MockApiError &&
+        error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
+      ) {
+        setCandidates(
+          (error.body as ApiErrorBody & AmbiguousUsernameBody).businesses,
+        );
+      } else {
+        setCandidates(null);
+      }
+    },
 
     onSuccess: () => {
       // Fill ['auth','me'] the way the real flow will — GET /auth/me after
@@ -100,7 +133,17 @@ export function useLogin() {
   });
 
   const state: LoginState = (() => {
-    if (mutation.isPending) return { kind: 'submitting' };
+    if (mutation.isPending) {
+      const choosingId = mutation.variables?.tenant_id;
+      if (candidates && choosingId !== undefined) {
+        return {
+          kind: 'ambiguous_username',
+          businesses: candidates,
+          choosingId,
+        };
+      }
+      return { kind: 'submitting' };
+    }
     if (mutation.isError) {
       const error = mutation.error;
       if (
@@ -113,6 +156,7 @@ export function useLogin() {
           // the same intersection the mock types it with.
           businesses: (error.body as ApiErrorBody & AmbiguousUsernameBody)
             .businesses,
+          choosingId: null,
         };
       }
       return { kind: 'failure', failure: classify(error) };
@@ -120,22 +164,39 @@ export function useLogin() {
     if (mutation.isSuccess) {
       // me-fill still in flight (or it failed — see the catch above); either
       // way the screen holds the submitting state rather than flickering.
-      if (!me) return { kind: 'submitting' };
+      if (!me) {
+        // A picked business keeps its picker (row spinning) until the
+        // redirect, instead of flashing the form between the two.
+        const choosingId = mutation.variables?.tenant_id;
+        if (candidates && choosingId !== undefined) {
+          return {
+            kind: 'ambiguous_username',
+            businesses: candidates,
+            choosingId,
+          };
+        }
+        return { kind: 'submitting' };
+      }
       return { kind: 'ok', fullName: me.user.full_name };
     }
     return { kind: 'idle' };
   })();
 
-  const login = (request: LoginRequest) => mutation.mutate(request);
+  const login = (request: LoginRequest) => {
+    lastRequest.current = request;
+    mutation.mutate(request);
+  };
 
-  const signOut = () => {
-    // POST /auth/logout clears the mock session; clearing the key drops the
-    // cached identity. Fire-and-forget with a guard — sign-out must succeed
-    // locally even if the call fails.
-    void api.auth.logout().catch(() => undefined);
-    queryClient_.removeQueries({ queryKey: ['auth'] });
+  /** §2: resend the same credentials with the chosen business's id. */
+  const chooseBusiness = (tenantId: number) => {
+    if (!lastRequest.current) return;
+    mutation.mutate({ ...lastRequest.current, tenant_id: tenantId });
+  };
+
+  const resetLogin = () => {
+    setCandidates(null);
     mutation.reset();
   };
 
-  return { state, login, signOut, resetLogin: mutation.reset };
+  return { state, login, chooseBusiness, resetLogin };
 }

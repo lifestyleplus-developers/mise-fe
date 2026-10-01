@@ -9,14 +9,28 @@ export const hi = {
   'login.sign-in': 'साइन इन करें',
   'login.signing-in': 'साइन इन हो रहा है…',
   'login.forgot-password': 'पासवर्ड भूल गए? अपने मैनेजर से पूछें।',
-  'login.signed-in-as': '{name} के रूप में साइन इन किया है।',
-  'login.sign-out': 'साइन आउट करें',
 
   'login.err.title': 'साइन इन नहीं हो सका',
   'login.err.invalid': 'उपयोगकर्ता नाम या पासवर्ड गलत है।',
   'login.err.rate-limited': 'बहुत ज़्यादा कोशिशें। एक मिनट रुकें।',
   'login.err.unreachable': 'mise तक नहीं पहुँच पा रहे। फिर से कोशिश करें।',
-  'login.err.ambiguous': 'यह उपयोगकर्ता नाम एक से अधिक व्यवसायों में मौजूद है।',
+
+  // Shell and Home — stand-in wording from the week-1 mockup, unreviewed.
+  'tab.home': 'होम',
+  'tab.checklists': 'चेकलिस्ट',
+  'tab.issues': 'समस्याएँ',
+  'tab.modules': 'मॉड्यूल',
+  'tab.more': 'और',
+  'nav.tabs': 'टैब',
+  'home.empty.title': 'आपको अभी कुछ नहीं सौंपा गया है',
+  'home.empty.action': 'चेकलिस्ट पर जाएँ',
+  'common.offline': 'mise से कनेक्ट नहीं हो पा रहा।',
+  'common.retry': 'फिर कोशिश करें',
+  'common.loading': 'लोड हो रहा है…',
+  'settings.sign-out': 'साइन आउट',
+
+  'login.picker.title': 'कौन-सा बिज़नेस?',
+  'login.picker.cancel': 'रद्द करें',
 
   'common.ok': 'ठीक है',
 

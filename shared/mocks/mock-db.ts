@@ -10,15 +10,28 @@
  * that, and session-in-the-db is the shape the real flow keeps — `GET
  * /auth/me` becomes a real server read with a real token later.
  *
+ * Who sees what on Home and the tab bar (all in the ZamZam business):
+ *   priya (OWNER), raheem (ADMIN) — no assignments → the "nothing assigned"
+ *                                   empty state, plus Issues and Modules
+ *   suresh — implementer + inventory manager → Modules (Inventory)
+ *   meera  — attendance manager              → Modules (Attendance)
+ *   nadia  — checklist manager               → Issues tab
+ *
  * Credentials, for want of a better place while there is no Settings screen:
  *   priya, raheem, suresh, meera, nadia — password "demo" signs in
  *   any persona + password "wrong"      — exercises invalid_credentials
  *   busy / anything                     — exercises rate_limited
  *   offline / anything                  — exercises unreachable (thrown before
  *                                         a response exists)
- *   test-1 / 1234                       — exercises ambiguous_username (exists
- *                                         in two businesses); resend with a
- *                                         tenant_id from the 409 to get in
+ *   test-1 / 1234 (Porch Inn), test-2 / 1234 (Kebapci) — plain members.
+ *                                         No username repeats across
+ *                                         businesses, so nobody is asked to
+ *                                         pick one. To exercise the 409
+ *                                         ambiguous_username picker, give two
+ *                                         businesses a user with the same
+ *                                         username (the Schema allows it:
+ *                                         `unique(tenant_id, username)`).
+ *   anita (Porch Inn), kabir (Kebapci)  — owners of those businesses, "demo"
  *   network-error / anything            — 500, the generic server-fault path
  */
 import type {
@@ -29,6 +42,7 @@ import type {
   MeResponse,
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
+import type { Role } from '@/shared/constants/roles';
 import businesses from './fixtures/businesses.json';
 import users from './fixtures/users.json';
 
@@ -38,8 +52,9 @@ type DbUser = {
   username: string;
   password: string;
   full_name: string;
-  tenant_role: 'OWNER' | 'ADMIN' | 'MEMBER';
+  tenant_role: Role;
   interface_language: 'EN' | 'HI' | 'ML' | 'KN';
+  memberships: MeResponse['memberships'];
 };
 
 /** Long enough to see the loading state, short enough not to feel broken. */
@@ -189,12 +204,8 @@ function resolveMe(): MeResponse {
       interface_language: user.interface_language,
     },
     business: { id: business.id, name: business.name },
-    modules: {
-      checklists: true,
-      inventory: true,
-      attendance_outlets: [],
-      spot_check_outlets: [],
-    },
+    modules: business.modules,
+    memberships: user.memberships,
   };
 }
 

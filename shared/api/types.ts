@@ -7,6 +7,7 @@
  * Only what the app consumes today. Growing this file endpoint by endpoint
  * is the point — do not pre-declare the whole contract.
  */
+import type { Role } from '@/shared/constants/roles';
 
 /** API Contract §1 — one error shape everywhere. Switch on code, never message. */
 export type ApiErrorBody = {
@@ -64,7 +65,7 @@ export type MeResponse = {
     id: number;
     username: string;
     full_name: string;
-    role: 'OWNER' | 'ADMIN' | 'MEMBER';
+    role: Role;
     interface_language: 'EN' | 'HI' | 'ML' | 'KN';
   };
   business: {
@@ -75,6 +76,17 @@ export type MeResponse = {
     checklists: boolean;
     inventory: boolean;
     attendance_outlets: number[];
+    spot_check_outlets: number[];
+  };
+  /**
+   * Module roles and per-assignment roles, as membership rows (§2). Empty
+   * arrays throughout for someone who holds none.
+   */
+  memberships: {
+    cl_admin_assignments: number[];
+    cl_imp_assignments: number[];
+    attendance_configs: number[];
+    inventory_outlets: number[];
     spot_check_outlets: number[];
   };
 };

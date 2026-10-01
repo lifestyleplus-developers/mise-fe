@@ -6,7 +6,14 @@
     "password": "demo",
     "full_name": "Priya Nair",
     "tenant_role": "OWNER",
-    "interface_language": "EN"
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 2,
@@ -15,7 +22,14 @@
     "password": "demo",
     "full_name": "Raheem Ali",
     "tenant_role": "ADMIN",
-    "interface_language": "HI"
+    "interface_language": "HI",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 3,
@@ -24,7 +38,14 @@
     "password": "demo",
     "full_name": "Suresh Kumar",
     "tenant_role": "MEMBER",
-    "interface_language": "KN"
+    "interface_language": "KN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [12],
+      "attendance_configs": [],
+      "inventory_outlets": [3],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 4,
@@ -33,7 +54,14 @@
     "password": "demo",
     "full_name": "Meera Pillai",
     "tenant_role": "MEMBER",
-    "interface_language": "ML"
+    "interface_language": "ML",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [2],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 5,
@@ -42,24 +70,77 @@
     "password": "demo",
     "full_name": "Nadia Sheikh",
     "tenant_role": "MEMBER",
-    "interface_language": "EN"
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [11],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 6,
     "tenant_id": 11,
-    "username": "test-1",
-    "password": "1234",
-    "full_name": "Test Account",
-    "tenant_role": "MEMBER",
-    "interface_language": "EN"
+    "username": "anita",
+    "password": "demo",
+    "full_name": "Anita Menon",
+    "tenant_role": "OWNER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   },
   {
     "id": 7,
-    "tenant_id": 12,
+    "tenant_id": 11,
     "username": "test-1",
     "password": "1234",
-    "full_name": "Test Account",
+    "full_name": "Porch Inn Tester",
     "tenant_role": "MEMBER",
-    "interface_language": "EN"
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
+  },
+  {
+    "id": 8,
+    "tenant_id": 12,
+    "username": "kabir",
+    "password": "demo",
+    "full_name": "Kabir Rao",
+    "tenant_role": "OWNER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
+  },
+  {
+    "id": 9,
+    "tenant_id": 12,
+    "username": "test-2",
+    "password": "1234",
+    "full_name": "Kebapci Tester",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    }
   }
 ]

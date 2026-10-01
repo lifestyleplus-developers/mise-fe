@@ -1,3 +1,4 @@
+import { BusinessPicker } from '@/features/auth/business-picker';
 import { useLogin } from '@/features/auth/use-login';
 import { Button } from '@/shared/components/ui/button';
 import { ModalDialog } from '@/shared/components/ui/modal';
@@ -6,7 +7,8 @@ import { ThemeToggle } from '@/shared/components/theme-toggle';
 import { TextField } from '@/shared/components/ui/text-field';
 import { LOGIN_FAILURE, type LoginFailure } from '@/shared/constants/errors';
 import { THEME } from '@/shared/lib/theme';
-import { format, useT, type MessageKey } from '@/shared/i18n';
+import { useT, type MessageKey } from '@/shared/i18n';
+import { Redirect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, TextInput, View } from 'react-native';
@@ -31,7 +33,7 @@ export function LoginScreen() {
   const insets = useSafeAreaInsets();
   // One state machine: the screen renders `state` and never holds async
   // state of its own (issues 4, 9 and 11 all close on this).
-  const { state, login, signOut, resetLogin } = useLogin();
+  const { state, login, chooseBusiness, resetLogin } = useLogin();
   const t = useT();
 
   const [username, setUsername] = React.useState('');
@@ -66,21 +68,9 @@ export function LoginScreen() {
     if (wasInvalid) passwordRef.current?.focus();
   }
 
-  // Signed in — identity straight from the ['auth','me'] cache; the screen
-  // holds no copy of it. A future Home screen replaces this branch.
-  if (state.kind === 'ok') {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 px-8">
-        <Text variant="h1">mise</Text>
-        <Text className="text-center">
-          {format(t('login.signed-in-as'), { name: state.fullName })}
-        </Text>
-        <Button variant="outline" onPress={signOut}>
-          <Text>{t('login.sign-out')}</Text>
-        </Button>
-      </SafeAreaView>
-    );
-  }
+  // Signed in — §2: Home is the entry point for every role. Redirect rather
+  // than push, so Back from Home never lands on a signed-in login form.
+  if (state.kind === 'ok') return <Redirect href="/home" />;
 
   return (
     <SafeAreaView className="flex-1">
@@ -178,18 +168,16 @@ export function LoginScreen() {
       />
 
       {/* 409 — a username that exists in more than one business. The picker
-          is not built (tracked in login-issues.md); surfaced as a plain
-          informational dialog rather than masquerading as a credential
-          failure. */}
-      {state.kind === 'ambiguous_username' ? (
-        <ModalDialog
-          visible
-          title={t('login.err.title')}
-          message={t('login.err.ambiguous')}
-          actionLabel={t('common.ok')}
-          onDismiss={resetLogin}
-        />
-      ) : null}
+          stays up while the chosen business's sign-in is in flight. */}
+      <BusinessPicker
+        visible={state.kind === 'ambiguous_username'}
+        businesses={state.kind === 'ambiguous_username' ? state.businesses : []}
+        choosingId={
+          state.kind === 'ambiguous_username' ? state.choosingId : null
+        }
+        onChoose={chooseBusiness}
+        onCancel={resetLogin}
+      />
     </SafeAreaView>
   );
 }

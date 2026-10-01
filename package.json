@@ -55,8 +55,9 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "build": "expo export",
-    "do": "pnpm format && pnpm lint && pnpm build",
-    "lh": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:8000 tcp:8000 && pnpm exec expo start --localhost"
+    "type-check": "tsc --noEmit",
+    "lh": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:8000 tcp:8000 && pnpm exec expo start --localhost",
+    "do": "pnpm format && pnpm lint && pnpm type-check && git add ."
   },
   "private": true
 }

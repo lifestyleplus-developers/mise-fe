@@ -9,15 +9,29 @@ export const ml = {
   'login.sign-in': 'സൈൻ ഇൻ ചെയ്യുക',
   'login.signing-in': 'സൈൻ ഇൻ ചെയ്യുന്നു…',
   'login.forgot-password': 'പാസ്‌വേഡ് മറന്നോ? നിങ്ങളുടെ മാനേജരോട് ചോദിക്കുക.',
-  'login.signed-in-as': '{name} ആയി സൈൻ ഇൻ ചെയ്തിരിക്കുന്നു.',
-  'login.sign-out': 'സൈൻ ഔട്ട് ചെയ്യുക',
 
   'login.err.title': 'സൈൻ ഇൻ പരാജയപ്പെട്ടു',
   'login.err.invalid': 'ഉപയോക്തൃനാമമോ പാസ്‌വേഡോ തെറ്റാണ്.',
   'login.err.rate-limited': 'വളരെയധികം ശ്രമങ്ങൾ. ഒരു മിനിറ്റ് കാത്തിരിക്കുക.',
   'login.err.unreachable':
     'mise-ലേക്ക് എത്താൻ കഴിയുന്നില്ല. വീണ്ടും ശ്രമിക്കുക.',
-  'login.err.ambiguous': 'ഈ ഉപയോക്തൃനാമം ഒന്നിലധികം ബിസിനസുകളിൽ ഉണ്ട്.',
+
+  // Shell and Home — stand-in wording from the week-1 mockup, unreviewed.
+  'tab.home': 'ഹോം',
+  'tab.checklists': 'ചെക്ക്‌ലിസ്റ്റുകൾ',
+  'tab.issues': 'പ്രശ്നങ്ങൾ',
+  'tab.modules': 'മൊഡ്യൂളുകൾ',
+  'tab.more': 'കൂടുതൽ',
+  'nav.tabs': 'ടാബുകൾ',
+  'home.empty.title': 'നിങ്ങൾക്ക് ഇതുവരെ ഒന്നും നൽകിയിട്ടില്ല',
+  'home.empty.action': 'ചെക്ക്‌ലിസ്റ്റുകളിലേക്ക് പോകുക',
+  'common.offline': 'mise-ഉമായി ബന്ധിപ്പിക്കാനാകുന്നില്ല.',
+  'common.retry': 'വീണ്ടും ശ്രമിക്കുക',
+  'common.loading': 'ലോഡ് ചെയ്യുന്നു…',
+  'settings.sign-out': 'സൈൻ ഔട്ട്',
+
+  'login.picker.title': 'ഏത് ബിസിനസ്?',
+  'login.picker.cancel': 'റദ്ദാക്കുക',
 
   'common.ok': 'ശരി',
 
