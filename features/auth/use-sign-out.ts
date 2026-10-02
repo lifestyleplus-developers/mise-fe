@@ -11,7 +11,6 @@ export function useSignOut() {
   return () => {
     void api.auth.logout().catch(() => undefined);
     router.replace('/');
-    queryClient.removeQueries({ queryKey: ['auth'] });
-    queryClient.getMutationCache().clear();
+    queryClient.clear();
   };
 }

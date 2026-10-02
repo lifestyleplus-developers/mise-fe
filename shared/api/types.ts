@@ -15,6 +15,7 @@ export const API_ERROR_CODE = {
   INVALID_CREDENTIALS: 'invalid_credentials',
   TOKEN_EXPIRED: 'token_expired',
   AMBIGUOUS_USERNAME: 'ambiguous_username',
+  VALIDATION_ERROR: 'validation_error',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -77,3 +78,20 @@ export type MeResponse = {
 export type UpdateMeRequest = {
   interface_language: MeResponse['user']['interface_language'];
 };
+
+/** API Contract §3 — an outlet. */
+export type Outlet = {
+  id: number;
+  name: string;
+  attendance_enabled: boolean;
+  spot_checks_enabled: boolean;
+  is_archived: boolean;
+};
+
+/** POST /outlets. */
+export type CreateOutletRequest = { name: string };
+
+/** PATCH /outlets/{id} — rename, or toggle a module. */
+export type UpdateOutletRequest = Partial<
+  Pick<Outlet, 'name' | 'attendance_enabled' | 'spot_checks_enabled'>
+>;

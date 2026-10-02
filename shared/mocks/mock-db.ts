@@ -23,13 +23,19 @@ import type {
   ApiErrorBody,
   LoginRequest,
   LoginResponse,
+  CreateOutletRequest,
   MeResponse,
+  Outlet,
   UpdateMeRequest,
+  UpdateOutletRequest,
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
-import type { Role } from '@/shared/constants/roles';
+import { canAdminister, type Role } from '@/shared/constants/roles';
 import businesses from './fixtures/businesses.json';
+import outletFixtures from './fixtures/outlets.json';
 import users from './fixtures/users.json';
+
+type DbOutlet = Outlet & { tenant_id: number };
 
 type DbUser = {
   id: number;
@@ -51,10 +57,12 @@ type Session = { userId: number; token: string };
 let db: {
   users: DbUser[];
   businesses: typeof businesses;
+  outlets: DbOutlet[];
   session: Session | null;
 } = {
   users: users as DbUser[],
   businesses,
+  outlets: outletFixtures.map((outlet) => ({ ...outlet })),
   session: null,
 };
 
@@ -153,6 +161,19 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
   };
 }
 
+/** Outlets of a business with a module switched on; archived ones drop out. */
+function liveOutlets(
+  tenantId: number,
+  flag: 'attendance_enabled' | 'spot_checks_enabled',
+): number[] {
+  return db.outlets
+    .filter(
+      (outlet) =>
+        outlet.tenant_id === tenantId && outlet[flag] && !outlet.is_archived,
+    )
+    .map((outlet) => outlet.id);
+}
+
 function resolveMe(): MeResponse {
   if (!db.session) {
     throw new MockApiError(401, {
@@ -178,7 +199,11 @@ function resolveMe(): MeResponse {
       interface_language: user.interface_language,
     },
     business: { id: business.id, name: business.name },
-    modules: business.modules,
+    modules: {
+      ...business.modules,
+      attendance_outlets: liveOutlets(business.id, 'attendance_enabled'),
+      spot_check_outlets: liveOutlets(business.id, 'spot_checks_enabled'),
+    },
     memberships: user.memberships,
   };
 }
@@ -213,4 +238,133 @@ export async function mockUpdateMe(
 export async function mockLogout(): Promise<void> {
   await delay();
   db.session = null;
+}
+
+function apiError(
+  status: number,
+  code: string,
+  message: string,
+  field?: string,
+) {
+  return new MockApiError(status, {
+    error: { code, message, field: field ?? null },
+  });
+}
+
+/** The signed-in ADMIN or OWNER; anyone else is refused, as the platform does. */
+function requireAdmin() {
+  const me = resolveMe();
+  if (!canAdminister(me.user.role)) {
+    throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+  }
+  return me;
+}
+
+function toOutlet({ tenant_id: _tenant, ...outlet }: DbOutlet): Outlet {
+  return outlet;
+}
+
+function findOutlet(tenantId: number, id: number): DbOutlet {
+  const outlet = db.outlets.find(
+    (candidate) => candidate.id === id && candidate.tenant_id === tenantId,
+  );
+  if (!outlet) throw apiError(404, 'not_found', 'Not found.');
+  return outlet;
+}
+
+/** `unique(tenant_id, name)` — case-insensitive here, as a person would read it. */
+function assertNameFree(tenantId: number, name: string, exceptId?: number) {
+  const taken = db.outlets.some(
+    (outlet) =>
+      outlet.tenant_id === tenantId &&
+      outlet.id !== exceptId &&
+      outlet.name.toLowerCase() === name.toLowerCase(),
+  );
+  if (taken) {
+    throw apiError(
+      400,
+      API_ERROR_CODE.VALIDATION_ERROR,
+      'An outlet with this name already exists.',
+      'name',
+    );
+  }
+}
+
+/** A name of "offline" stands in for the network dying mid-save. */
+function assertReachable(name?: string) {
+  if (name?.trim().toLowerCase() === 'offline') {
+    throw new Error('Network request failed');
+  }
+}
+
+/** GET /outlets?include_archived=true */
+export async function mockListOutlets(): Promise<Outlet[]> {
+  await delay();
+  const me = resolveMe();
+  return db.outlets
+    .filter((outlet) => outlet.tenant_id === me.business.id)
+    .map(toOutlet);
+}
+
+/** GET /outlets/{id} */
+export async function mockGetOutlet(id: number): Promise<Outlet> {
+  await delay();
+  const me = resolveMe();
+  return toOutlet(findOutlet(me.business.id, id));
+}
+
+/** POST /outlets */
+export async function mockCreateOutlet(
+  request: CreateOutletRequest,
+): Promise<Outlet> {
+  await delay();
+  const me = requireAdmin();
+  const name = request.name.trim();
+  assertReachable(name);
+  assertNameFree(me.business.id, name);
+  const outlet: DbOutlet = {
+    id: Math.max(0, ...db.outlets.map((candidate) => candidate.id)) + 1,
+    tenant_id: me.business.id,
+    name,
+    attendance_enabled: false,
+    spot_checks_enabled: false,
+    is_archived: false,
+  };
+  db.outlets.push(outlet);
+  return toOutlet(outlet);
+}
+
+/** PATCH /outlets/{id} */
+export async function mockUpdateOutlet(
+  id: number,
+  request: UpdateOutletRequest,
+): Promise<Outlet> {
+  await delay();
+  const me = requireAdmin();
+  const outlet = findOutlet(me.business.id, id);
+  if (outlet.is_archived) {
+    throw apiError(409, 'archived', "Can't be edited while archived.");
+  }
+  if (request.name !== undefined) {
+    const name = request.name.trim();
+    assertReachable(name);
+    assertNameFree(me.business.id, name, id);
+    outlet.name = name;
+  }
+  if (request.attendance_enabled !== undefined) {
+    outlet.attendance_enabled = request.attendance_enabled;
+  }
+  if (request.spot_checks_enabled !== undefined) {
+    outlet.spot_checks_enabled = request.spot_checks_enabled;
+  }
+  return toOutlet(outlet);
+}
+
+/** POST /outlets/{id}/archive — there is no delete endpoint. */
+export async function mockArchiveOutlet(id: number): Promise<Outlet> {
+  await delay();
+  const me = requireAdmin();
+  const outlet = findOutlet(me.business.id, id);
+  outlet.is_archived = true;
+  return toOutlet(outlet);
 }

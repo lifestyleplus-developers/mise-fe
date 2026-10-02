@@ -9,6 +9,8 @@ type ListGroupRow = {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   onSelect: () => void;
+  /** Shown before the chevron, e.g. a badge. */
+  trailing?: React.ReactNode;
 };
 
 type ListGroupProps = {
@@ -45,6 +47,7 @@ function ListGroup({ heading, rows }: ListGroupProps) {
             <Text className="font-sans-medium min-w-0 flex-1 text-[15px]">
               {row.label}
             </Text>
+            {row.trailing}
             <ChevronRight className="text-muted-foreground size-5 shrink-0" />
           </Pressable>
         ))}

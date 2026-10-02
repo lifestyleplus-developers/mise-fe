@@ -1,0 +1,66 @@
+[
+  {
+    "id": 3,
+    "tenant_id": 7,
+    "name": "Indiranagar",
+    "attendance_enabled": true,
+    "spot_checks_enabled": true,
+    "is_archived": false
+  },
+  {
+    "id": 5,
+    "tenant_id": 7,
+    "name": "Koramangala",
+    "attendance_enabled": true,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 8,
+    "tenant_id": 7,
+    "name": "Whitefield",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 11,
+    "tenant_id": 7,
+    "name": "Indiranagar 100 Feet Road Central Kitchen",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 9,
+    "tenant_id": 7,
+    "name": "MG Road",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": true
+  },
+  {
+    "id": 21,
+    "tenant_id": 11,
+    "name": "Porch Inn Main",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 22,
+    "tenant_id": 11,
+    "name": "Porch Inn Annex",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 31,
+    "tenant_id": 12,
+    "name": "Kebapci Central",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  }
+]

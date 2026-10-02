@@ -1,6 +1,11 @@
 import { Text } from '@/shared/components/ui/text';
 import * as React from 'react';
-import { Modal as RNModal, Pressable, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal as RNModal,
+  Pressable,
+  View,
+} from 'react-native';
 
 type BottomSheetProps = {
   visible: boolean;
@@ -28,21 +33,23 @@ export function BottomSheet({
       onRequestClose={onDismiss}
     >
       <Pressable className="bg-scrim flex-1 justify-end" onPress={onDismiss}>
-        <Pressable
-          accessibilityViewIsModal
-          onPress={() => {}}
-          className="border-border bg-card rounded-t-[1.75rem] border-t px-4 pt-2 pb-6"
-        >
-          <View className="bg-border mx-auto mb-3 h-1.5 w-10 rounded-full" />
-          <Text
-            variant="h2"
-            className="mb-3 border-b-0 px-1 pb-0 text-[22px] leading-tight"
+        <KeyboardAvoidingView behavior="padding">
+          <Pressable
+            accessibilityViewIsModal
+            onPress={() => {}}
+            className="border-border bg-card rounded-t-[1.75rem] border-t px-4 pt-2 pb-6"
           >
-            {title}
-          </Text>
-          {children}
-          {footer ? <View className="mt-4">{footer}</View> : null}
-        </Pressable>
+            <View className="bg-border mx-auto mb-3 h-1.5 w-10 rounded-full" />
+            <Text
+              variant="h2"
+              className="mb-3 border-b-0 px-1 pb-0 text-[22px] leading-tight"
+            >
+              {title}
+            </Text>
+            {children}
+            {footer ? <View className="mt-4">{footer}</View> : null}
+          </Pressable>
+        </KeyboardAvoidingView>
       </Pressable>
     </RNModal>
   );
