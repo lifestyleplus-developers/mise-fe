@@ -43,4 +43,22 @@ export const hi = {
   'more.outlets': 'आउटलेट',
   'more.users': 'उपयोगकर्ता',
   'common.back': 'वापस',
+
+  // Settings — stand-in wording from the week-2 mockup, unreviewed.
+  'language.title': 'भाषा',
+  'language.waiting': 'आपके खाते में सेव होने का इंतज़ार',
+  'settings.profile': 'प्रोफ़ाइल',
+  'profile.full-name': 'पूरा नाम',
+  'profile.username': 'यूज़रनेम',
+  'profile.role': 'भूमिका',
+  'profile.business': 'बिज़नेस',
+  'profile.hint': 'नाम या पासवर्ड बदलने के लिए अपने मैनेजर से पूछें।',
+  'role.OWNER': 'मालिक',
+  'role.ADMIN': 'प्रशासक',
+  'role.MEMBER': 'सदस्य',
+  'signout.title': 'साइन आउट करें?',
+  'signout.stay': 'साइन इन रहें',
+  'signout.anyway': 'फिर भी साइन आउट करें',
+  'signout.cancel': 'रद्द करें',
+  'signout.confirm': 'साइन आउट',
 } satisfies Partial<Catalogue>;

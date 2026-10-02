@@ -14,3 +14,18 @@ export const INTERFACE_LANGUAGE = {
 
 export type InterfaceLanguage =
   (typeof INTERFACE_LANGUAGE)[keyof typeof INTERFACE_LANGUAGE];
+
+/**
+ * Each language's name in its own script. Deliberately not in the catalogues:
+ * a person who cannot read the current interface language must still be able
+ * to find their own in the list.
+ */
+export const INTERFACE_LANGUAGES: readonly {
+  code: InterfaceLanguage;
+  label: string;
+}[] = [
+  { code: 'EN', label: 'English' },
+  { code: 'HI', label: 'हिन्दी' },
+  { code: 'ML', label: 'മലയാളം' },
+  { code: 'KN', label: 'ಕನ್ನಡ' },
+];

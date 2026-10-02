@@ -52,6 +52,33 @@ export const en = {
   'placeholder.label': 'Placeholder',
   'placeholder.week': 'Specced and built in week {n}',
 
+  // Settings (FE Spec §3.12). Role names are the client-facing ones (AGENTS.md, Terminology).
+  'language.title': 'Language',
+  'language.waiting': 'Waiting to save to your account',
+  'settings.profile': 'Profile',
+  'profile.full-name': 'Full name',
+  'profile.username': 'Username',
+  'profile.role': 'Role',
+  'profile.business': 'Business',
+  'profile.hint': 'To change your name or password, ask your manager.',
+  'profile.hint-admin': 'To change your name or password, go to More → Users.',
+  'role.OWNER': 'Owner',
+  'role.ADMIN': 'Administrator',
+  'role.MEMBER': 'Member',
+  'signout.title': 'Sign out?',
+  'signout.stay': 'Stay signed in',
+  'signout.anyway': 'Sign out anyway',
+  'signout.cancel': 'Cancel',
+  'signout.confirm': 'Sign out',
+
+  'theme.title': 'Theme',
+  'theme.light': 'Light',
+  'theme.dark': 'Dark',
+
+  // Sign-out warning when the language choice has not reached the account.
+  'signout.queued.language':
+    "Your language choice hasn't been saved to your account yet. If you sign out now, it is lost.",
+
   'settings.sign-out': 'Sign out',
 
   'theme.switch-to-light': 'Switch to light theme',

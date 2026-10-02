@@ -44,4 +44,22 @@ export const ml = {
   'more.outlets': 'ഔട്ട്‌ലെറ്റുകൾ',
   'more.users': 'ഉപയോക്താക്കൾ',
   'common.back': 'തിരികെ',
+
+  // Settings — stand-in wording from the week-2 mockup, unreviewed.
+  'language.title': 'ഭാഷ',
+  'language.waiting': 'നിങ്ങളുടെ അക്കൗണ്ടിൽ സേവ് ചെയ്യാൻ കാത്തിരിക്കുന്നു',
+  'settings.profile': 'പ്രൊഫൈൽ',
+  'profile.full-name': 'പൂർണ്ണനാമം',
+  'profile.username': 'ഉപയോക്തൃനാമം',
+  'profile.role': 'റോൾ',
+  'profile.business': 'ബിസിനസ്',
+  'profile.hint': 'പേരോ പാസ്‌വേഡോ മാറ്റാൻ നിങ്ങളുടെ മാനേജരോട് ചോദിക്കുക.',
+  'role.OWNER': 'ഉടമ',
+  'role.ADMIN': 'അഡ്മിനിസ്ട്രേറ്റർ',
+  'role.MEMBER': 'അംഗം',
+  'signout.title': 'സൈൻ ഔട്ട് ചെയ്യണോ?',
+  'signout.stay': 'സൈൻ ഇൻ ചെയ്തുതന്നെ തുടരുക',
+  'signout.anyway': 'എന്നാലും സൈൻ ഔട്ട് ചെയ്യുക',
+  'signout.cancel': 'റദ്ദാക്കുക',
+  'signout.confirm': 'സൈൻ ഔട്ട്',
 } satisfies Partial<Catalogue>;

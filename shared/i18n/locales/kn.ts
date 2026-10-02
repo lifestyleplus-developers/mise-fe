@@ -43,4 +43,23 @@ export const kn = {
   'more.outlets': 'ಔಟ್‌ಲೆಟ್‌ಗಳು',
   'more.users': 'ಬಳಕೆದಾರರು',
   'common.back': 'ಹಿಂದೆ',
+
+  // Settings — stand-in wording from the week-2 mockup, unreviewed.
+  'language.title': 'ಭಾಷೆ',
+  'language.waiting': 'ನಿಮ್ಮ ಖಾತೆಗೆ ಉಳಿಸಲು ಕಾಯುತ್ತಿದೆ',
+  'settings.profile': 'ಪ್ರೊಫೈಲ್',
+  'profile.full-name': 'ಪೂರ್ಣ ಹೆಸರು',
+  'profile.username': 'ಬಳಕೆದಾರ ಹೆಸರು',
+  'profile.role': 'ಪಾತ್ರ',
+  'profile.business': 'ವ್ಯವಹಾರ',
+  'profile.hint':
+    'ಹೆಸರು ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸಲು ನಿಮ್ಮ ಮ್ಯಾನೇಜರ್ ಅವರನ್ನು ಕೇಳಿ.',
+  'role.OWNER': 'ಮಾಲೀಕರು',
+  'role.ADMIN': 'ನಿರ್ವಾಹಕರು',
+  'role.MEMBER': 'ಸದಸ್ಯರು',
+  'signout.title': 'ಸೈನ್ ಔಟ್ ಮಾಡಬೇಕೇ?',
+  'signout.stay': 'ಸೈನ್ ಇನ್ ಆಗಿಯೇ ಇರಿ',
+  'signout.anyway': 'ಆದರೂ ಸೈನ್ ಔಟ್ ಮಾಡಿ',
+  'signout.cancel': 'ರದ್ದುಮಾಡಿ',
+  'signout.confirm': 'ಸೈನ್ ಔಟ್',
 } satisfies Partial<Catalogue>;

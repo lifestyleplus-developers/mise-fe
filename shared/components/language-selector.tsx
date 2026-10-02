@@ -1,3 +1,4 @@
+import { INTERFACE_LANGUAGES } from '@/shared/constants/languages';
 import { cn } from '@/shared/lib/utils';
 import { Check, Globe } from 'lucide-react-native';
 import * as React from 'react';
@@ -5,12 +6,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 
 export type InterfaceLanguage = 'EN' | 'HI' | 'ML' | 'KN';
 
-const LANGUAGES: { code: InterfaceLanguage; label: string }[] = [
-  { code: 'EN', label: 'English' },
-  { code: 'HI', label: 'हिन्दी' },
-  { code: 'ML', label: 'മലയാളം' },
-  { code: 'KN', label: 'ಕನ್ನಡ' },
-];
+const LANGUAGES = INTERFACE_LANGUAGES;
 
 type LanguageSelectorProps = {
   value: InterfaceLanguage;

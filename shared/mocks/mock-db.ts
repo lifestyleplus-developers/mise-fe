@@ -41,6 +41,7 @@ import type {
   LoginRequest,
   LoginResponse,
   MeResponse,
+  UpdateMeRequest,
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import type { Role } from '@/shared/constants/roles';
@@ -222,6 +223,18 @@ export async function mockLogin(request: LoginRequest): Promise<LoginResponse> {
 /** GET /auth/me */
 export async function mockFetchMe(): Promise<MeResponse> {
   await delay();
+  return resolveMe();
+}
+
+/** PATCH /auth/me — the one self-service edit: interface_language. */
+export async function mockUpdateMe(
+  request: UpdateMeRequest,
+): Promise<MeResponse> {
+  await delay();
+  // resolveMe throws token_expired with no session, as the real call would.
+  const me = resolveMe();
+  const user = db.users.find((candidate) => candidate.id === me.user.id)!;
+  user.interface_language = request.interface_language;
   return resolveMe();
 }
 

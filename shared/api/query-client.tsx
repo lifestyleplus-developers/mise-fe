@@ -1,7 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { focusManager, QueryClient, type Query } from '@tanstack/react-query';
+import {
+  focusManager,
+  onlineManager,
+  QueryClient,
+  type Query,
+} from '@tanstack/react-query';
 import * as ExpoNetwork from 'expo-network';
 import * as React from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
@@ -26,6 +31,20 @@ export const queryClient = new QueryClient({
       networkMode: 'online',
     },
   },
+});
+
+/**
+ * React Query assumes it is online on React Native — there is no browser
+ * `online` event — so without this a write made offline fails instead of
+ * pausing, and `networkMode: 'online'` below would do nothing. Fed from
+ * expo-network; an unknown reachability counts as online, never as a reason
+ * to hold a write back.
+ */
+onlineManager.setEventListener((setOnline) => {
+  const subscription = ExpoNetwork.addNetworkStateListener((state) => {
+    setOnline(state.isInternetReachable !== false);
+  });
+  return () => subscription.remove();
 });
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });

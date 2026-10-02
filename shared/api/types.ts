@@ -90,3 +90,11 @@ export type MeResponse = {
     spot_check_outlets: number[];
   };
 };
+
+/**
+ * PATCH /auth/me — §2: change own interface_language. Nothing else on the
+ * identity is self-editable (no email, no name, no password).
+ */
+export type UpdateMeRequest = {
+  interface_language: MeResponse['user']['interface_language'];
+};

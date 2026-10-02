@@ -18,5 +18,8 @@ export function useSignOut() {
     void api.auth.logout().catch(() => undefined);
     router.replace('/');
     queryClient.removeQueries({ queryKey: ['auth'] });
+    // Settings' sign-out warning says unsent writes are lost; this is the
+    // losing. A paused write left behind would replay against nobody.
+    queryClient.getMutationCache().clear();
   };
 }
