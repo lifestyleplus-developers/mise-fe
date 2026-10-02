@@ -1,5 +1,5 @@
 import { useMe } from '@/features/auth/use-me';
-import { PlaceholderCard } from '@/features/shell/placeholder-card';
+import { PlaceholderCard } from '@/features/shell/placeholder';
 import { TAB } from '@/features/shell/tabs';
 import { TabScreen } from '@/features/shell/tab-screen';
 import { EmptyState } from '@/shared/components/empty-state';

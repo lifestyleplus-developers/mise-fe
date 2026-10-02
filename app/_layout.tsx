@@ -13,10 +13,12 @@ import { NotoSansKannada_400Regular } from '@expo-google-fonts/noto-sans-kannada
 import { NotoSansMalayalam_400Regular } from '@expo-google-fonts/noto-sans-malayalam';
 import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { PortalHost } from '@rn-primitives/portal';
+import { colorScheme } from 'nativewind';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
+import * as React from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
@@ -26,6 +28,15 @@ export default function RootLayout() {
   // is nothing to apply here — just read the resolved theme.
   const theme = useThemeStore((state) => state.theme);
   const hasHydrated = useThemeStore((state) => state.hasHydrated);
+  // Point NativeWind at the stored theme once the layout is mounted.
+  // Calling `colorScheme.set` from the store's hydration callback can land
+  // before NativeWind's appearance listener is live, in which case the OS
+  // scheme wins and `dark:` tokens render dark under a light wash until the
+  // first manual toggle. A layout effect runs after mount and before paint,
+  // so there is no frame of the wrong palette either.
+  React.useLayoutEffect(() => {
+    if (hasHydrated) colorScheme.set(theme);
+  }, [theme, hasHydrated]);
   // The interface language hydrates with the same treatment: rendering
   // before AsyncStorage answers would show English for a frame to someone
   // whose stored language is not English.

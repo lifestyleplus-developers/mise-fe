@@ -23,7 +23,8 @@
  *   busy / anything                     — exercises rate_limited
  *   offline / anything                  — exercises unreachable (thrown before
  *                                         a response exists)
- *   test-1 / 1234 (Porch Inn), test-2 / 1234 (Kebapci) — plain members.
+ *   test-1 / 1234 (Porch Inn) — an ADMIN; test-2 / 1234 (Kebapci) — a plain
+ *                                         member.
  *                                         No username repeats across
  *                                         businesses, so nobody is asked to
  *                                         pick one. To exercise the 409

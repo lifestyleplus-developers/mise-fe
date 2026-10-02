@@ -41,6 +41,13 @@ export const en = {
   'home.empty.title': 'Nothing assigned to you yet',
   'home.empty.action': 'Go to Checklists',
 
+  // More tab (FE Spec §2) and the screens it opens.
+  'more.settings': 'Settings',
+  'more.administration': 'Administration',
+  'more.outlets': 'Outlets',
+  'more.users': 'Users',
+  'common.back': 'Back',
+
   // Developer-facing: marks a tab whose screen is specced for a later week.
   'placeholder.label': 'Placeholder',
   'placeholder.week': 'Specced and built in week {n}',

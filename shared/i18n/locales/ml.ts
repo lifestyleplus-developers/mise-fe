@@ -37,4 +37,11 @@ export const ml = {
 
   'theme.switch-to-light': 'ലൈറ്റ് തീമിലേക്ക് മാറുക',
   'theme.switch-to-dark': 'ഡാർക്ക് തീമിലേക്ക് മാറുക',
+
+  // More tab — stand-in wording from the week-2 mockup, unreviewed.
+  'more.settings': 'ക്രമീകരണങ്ങൾ',
+  'more.administration': 'ഭരണം',
+  'more.outlets': 'ഔട്ട്‌ലെറ്റുകൾ',
+  'more.users': 'ഉപയോക്താക്കൾ',
+  'common.back': 'തിരികെ',
 } satisfies Partial<Catalogue>;

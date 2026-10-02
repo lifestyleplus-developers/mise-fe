@@ -36,4 +36,11 @@ export const kn = {
 
   'theme.switch-to-light': 'ಲೈಟ್ ಥೀಮ್‌ಗೆ ಬದಲಿಸಿ',
   'theme.switch-to-dark': 'ಡಾರ್ಕ್ ಥೀಮ್‌ಗೆ ಬದಲಿಸಿ',
+
+  // More tab — stand-in wording from the week-2 mockup, unreviewed.
+  'more.settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
+  'more.administration': 'ಆಡಳಿತ',
+  'more.outlets': 'ಔಟ್‌ಲೆಟ್‌ಗಳು',
+  'more.users': 'ಬಳಕೆದಾರರು',
+  'common.back': 'ಹಿಂದೆ',
 } satisfies Partial<Catalogue>;

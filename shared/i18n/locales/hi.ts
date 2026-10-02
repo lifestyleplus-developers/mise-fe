@@ -36,4 +36,11 @@ export const hi = {
 
   'theme.switch-to-light': 'लाइट थीम पर जाएँ',
   'theme.switch-to-dark': 'डार्क थीम पर जाएँ',
+
+  // More tab — stand-in wording from the week-2 mockup, unreviewed.
+  'more.settings': 'सेटिंग्स',
+  'more.administration': 'प्रशासन',
+  'more.outlets': 'आउटलेट',
+  'more.users': 'उपयोगकर्ता',
+  'common.back': 'वापस',
 } satisfies Partial<Catalogue>;
