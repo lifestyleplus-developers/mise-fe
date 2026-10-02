@@ -4,12 +4,7 @@ import {
   type Theme,
 } from 'expo-router/react-navigation';
 
-/**
- * The app-wide backdrop — the mockup's `--wash`: three warm radial gradients
- * over the base background, carried on the frame so every screen sits on it.
- * CSS states the layers and the base colour in one `background` shorthand;
- * RN takes them as two style props, so they are split here.
- */
+/** The app-wide backdrop: the mockup's `--wash` gradients over the base colour. */
 export const WASH = {
   light: {
     backgroundColor: '#faf9f5',
@@ -29,11 +24,7 @@ export const WASH = {
   },
 };
 
-/**
- * Mirrors global.css's :root / .dark:root tokens as literal values.
- * React Navigation's theme consumes plain colors, not CSS variables,
- * so these are duplicated here rather than referenced via var().
- */
+/** Mirrors global.css's :root / .dark:root tokens as literal values. */
 export const THEME = {
   light: {
     background: 'hsl(48 33% 97%)',
@@ -79,11 +70,7 @@ export const THEME = {
   },
 };
 
-/**
- * `background` is transparent on purpose: the WASH sits behind the navigator,
- * so anything opaque here — navigator container or screen card — hides it.
- * The base colour lives on the wash itself.
- */
+/** Navigation themes; `background` is transparent so the wash shows. */
 export const NAV_THEME: Record<'light' | 'dark', Theme> = {
   light: {
     ...DefaultTheme,

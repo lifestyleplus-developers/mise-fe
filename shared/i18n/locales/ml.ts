@@ -16,7 +16,6 @@ export const ml = {
   'login.err.unreachable':
     'mise-ലേക്ക് എത്താൻ കഴിയുന്നില്ല. വീണ്ടും ശ്രമിക്കുക.',
 
-  // Shell and Home — stand-in wording from the week-1 mockup, unreviewed.
   'tab.home': 'ഹോം',
   'tab.checklists': 'ചെക്ക്‌ലിസ്റ്റുകൾ',
   'tab.issues': 'പ്രശ്നങ്ങൾ',
@@ -38,14 +37,12 @@ export const ml = {
   'theme.switch-to-light': 'ലൈറ്റ് തീമിലേക്ക് മാറുക',
   'theme.switch-to-dark': 'ഡാർക്ക് തീമിലേക്ക് മാറുക',
 
-  // More tab — stand-in wording from the week-2 mockup, unreviewed.
   'more.settings': 'ക്രമീകരണങ്ങൾ',
   'more.administration': 'ഭരണം',
   'more.outlets': 'ഔട്ട്‌ലെറ്റുകൾ',
   'more.users': 'ഉപയോക്താക്കൾ',
   'common.back': 'തിരികെ',
 
-  // Settings — stand-in wording from the week-2 mockup, unreviewed.
   'language.title': 'ഭാഷ',
   'language.waiting': 'നിങ്ങളുടെ അക്കൗണ്ടിൽ സേവ് ചെയ്യാൻ കാത്തിരിക്കുന്നു',
   'settings.profile': 'പ്രൊഫൈൽ',

@@ -9,11 +9,7 @@ type EmptyStateProps = {
   action?: React.ReactNode;
 };
 
-/**
- * "Nothing here" as good news, not an error (FE Spec §11): a calm card with
- * an icon tile, one line, and at most one way forward. Shared because every
- * list screen needs the same one — Home, Incidents, At risk.
- */
+/** "Nothing here" as good news, not an error (FE Spec §11). */
 function EmptyState({ icon: Icon, title, action }: EmptyStateProps) {
   return (
     <View className="shadow-card border-border bg-card mx-4 items-center gap-4 rounded-3xl border px-6 py-10">

@@ -4,7 +4,7 @@ import { View } from 'react-native';
 
 type DescriptionRow = { label: string; value: string };
 
-/** Read-only label/value rows in a card — a profile, a detail panel. */
+/** Read-only label/value rows in a card. */
 function DescriptionList({ rows }: { rows: DescriptionRow[] }) {
   return (
     <View className="shadow-card border-border bg-card overflow-hidden rounded-3xl border">

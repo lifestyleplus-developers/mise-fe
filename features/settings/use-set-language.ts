@@ -12,13 +12,7 @@ import { useLanguageStore } from '@/shared/stores/language-store';
 
 const SET_LANGUAGE_KEY = ['auth', 'set-language'] as const;
 
-/**
- * PATCH /auth/me. `networkMode: 'online'` pauses it while offline and
- * resumes it on reconnect or foreground (see query-client.tsx), which is what
- * the "waiting to save" pill reports. The scope serialises it: two quick
- * changes offline must reach the server in the order they were made, or the
- * older one could land last and win.
- */
+/** PATCH /auth/me. Pauses while offline; the scope keeps saves in order. */
 queryClient.setMutationDefaults(SET_LANGUAGE_KEY, {
   mutationFn: (language: InterfaceLanguage) =>
     api.auth.updateMe({ interface_language: language }),
@@ -29,12 +23,7 @@ queryClient.setMutationDefaults(SET_LANGUAGE_KEY, {
   },
 });
 
-/**
- * Picking a language. The interface changes at once — the store is the
- * source the screens render from — and the account catches up when it can.
- * Model §15: the language is a property of the user, so it must reach the
- * platform, but a slow save never holds the screen back.
- */
+/** Applies the language locally at once, then saves it to the account. */
 export function useSetLanguage() {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const mutation = useMutation<MeResponse, unknown, InterfaceLanguage>({
@@ -54,12 +43,7 @@ type SetLanguageMutation = Mutation<
   unknown
 >;
 
-/**
- * Whether a language choice has not reached the account. `waiting` is the
- * stalled kind — queued behind no connection — which Settings shows as a
- * pill; `unsaved` also counts one in flight, which is what sign-out must
- * warn about, since leaving then loses it too.
- */
+/** `waiting`: queued offline. `unsaved`: queued or in flight. */
 export function useLanguageSaveState() {
   const pending = useMutationState({
     filters: { mutationKey: SET_LANGUAGE_KEY, status: 'pending' },

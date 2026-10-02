@@ -1,13 +1,4 @@
-/**
- * The transport seam. Everything above this line — hooks, screens — codes
- * against `api`; below it is the only place that knows how calls are
- * answered. Today that is the mock db; when the real endpoints exist these
- * three bodies become `fetch` calls against API_BASE_URL and nothing else in
- * the app changes (mise-fe/AGENTS.md, "Mocking the backend").
- *
- * Deliberately framework-free: no React, no Query — so it stays testable and
- * the swap stays mechanical.
- */
+/** The transport seam. */
 import {
   mockFetchMe,
   mockLogin,
@@ -37,10 +28,7 @@ export const api = {
       return mockFetchMe();
     },
 
-    /**
-     * PATCH /auth/me — returns the updated identity, so the caller can write
-     * it straight into the ['auth','me'] cache.
-     */
+    /** PATCH /auth/me — returns the updated identity. */
     updateMe(request: UpdateMeRequest): Promise<MeResponse> {
       // TODO(server): PATCH {API_BASE_URL}/api/v1/auth/me
       return mockUpdateMe(request);

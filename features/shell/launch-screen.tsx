@@ -8,12 +8,7 @@ type LaunchScreenProps = {
   error?: { message: string; retryLabel: string; onRetry: () => void };
 };
 
-/**
- * What shows while /auth/me is in flight, or has failed with nothing cached
- * to fall back on: the wordmark, and either "Loading…" or the failure with
- * a Retry. Without an identity there are no tabs to build, so nothing
- * richer is possible.
- */
+/** Shown while /auth/me is loading, or failed with nothing cached. */
 export function LaunchScreen({ loadingLabel, error }: LaunchScreenProps) {
   return (
     <View className="flex-1 items-center justify-center gap-6 px-8">

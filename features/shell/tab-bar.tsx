@@ -7,15 +7,7 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/**
- * The floating pill (FE Spec §2). Custom rather than the navigator's own bar
- * because the mockup's is a rounded, translucent capsule that floats over the
- * content, and because its entries depend on /auth/me: a tab that does not
- * apply to this person is left out entirely, not greyed.
- *
- * The navigator still declares every tab as a route; this bar decides which
- * of them are reachable.
- */
+/** The floating pill (FE Spec §2). */
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const { data: me } = useMe();
   const insets = useSafeAreaInsets();
@@ -26,8 +18,6 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const activeKey = state.routes[state.index]?.key;
 
   return (
-    // box-none: the strip around the pill must not swallow taps meant for
-    // the content beneath it.
     <View
       pointerEvents="box-none"
       className="absolute inset-x-1.5 z-20"
@@ -61,8 +51,6 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
               accessibilityRole="tab"
               accessibilityState={{ selected: focused }}
               onPress={onPress}
-              // The active ring is a real border on every item (transparent
-              // when idle) so selecting one never shifts the layout by a pixel.
               className={cn(
                 'min-h-[56px] min-w-11 flex-1 items-center justify-start gap-0.5 rounded-3xl border px-0.5 pt-2 pb-1.5',
                 focused

@@ -11,35 +11,19 @@ import * as ExpoNetwork from 'expo-network';
 import * as React from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 
-/**
- * One client for the whole app. The async-storage persister is the
- * foundation of the retry queue (Model §13 / FE Spec §6): queries survive a
- * restart, and once mutations are configured to persist, paused writes do
- * too. Nothing is configured to persist yet — login deliberately must not.
- */
+/** One client for the whole app. */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Server state is refetchable; a day keeps the persisted cache useful
-      // across restarts without growing unbounded.
       gcTime: 1000 * 60 * 60 * 24,
     },
     mutations: {
-      // 'online' is the default and is stated here as policy: mutations may
-      // pause while offline and resume on focus, but nothing retries blindly.
-      // The login mutation narrows this further — see use-login.ts.
       networkMode: 'online',
     },
   },
 });
 
-/**
- * React Query assumes it is online on React Native — there is no browser
- * `online` event — so without this a write made offline fails instead of
- * pausing, and `networkMode: 'online'` below would do nothing. Fed from
- * expo-network; an unknown reachability counts as online, never as a reason
- * to hold a write back.
- */
+/** Feeds React Query's online state from expo-network. */
 onlineManager.setEventListener((setOnline) => {
   const subscription = ExpoNetwork.addNetworkStateListener((state) => {
     setOnline(state.isInternetReachable !== false);
@@ -49,13 +33,7 @@ onlineManager.setEventListener((setOnline) => {
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
-/**
- * Auth never persists. §8: the mock session lives in module memory and dies
- * with the JS context, while a persisted `['auth','me']` would survive the
- * restart — cache says signed-in, backend says nobody is, and the first
- * refetch answers token_expired to a screen that believed the cache. (A
- * real token store changes this calculus, and gets to opt back in.)
- */
+/** Auth never persists. */
 function shouldDehydrateAuth(query: Query) {
   return query.queryKey[0] !== 'auth';
 }
@@ -72,20 +50,10 @@ function onAppStateChange(status: AppStateStatus) {
   }
 }
 
-/**
- * Provider for the whole app. Restoring the persisted cache gates children —
- * a second hydration gate alongside the theme store's in _layout.tsx, and
- * for the same reason: rendering before the cache is read would show a
- * signed-out frame to someone who is signed in.
- */
+/** Provider for the whole app. */
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
-    // RN has no window focus; AppState stands in, so refetchOnWindowFocus
-    // and focus-driven behaviour work as on web.
     const appState = AppState.addEventListener('change', onAppStateChange);
-    // v5 does not resume paused mutations by itself — the persist plugin
-    // restores the cache but nothing replays writes. Connectivity recovery
-    // and app foregrounding are the two moments a paused write can proceed.
     const network = ExpoNetwork.addNetworkStateListener((event) => {
       if (event.isInternetReachable) resumePaused();
     });
@@ -102,8 +70,6 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
         persister,
         dehydrateOptions: { shouldDehydrateQuery: shouldDehydrateAuth },
       }}
-      // Fires once after restore; the last of the three resume moments
-      // (restore, reconnect, foreground) a paused write can proceed at.
       onSuccess={resumePaused}
     >
       {children}

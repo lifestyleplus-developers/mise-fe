@@ -16,11 +16,7 @@ type BusinessPickerProps = {
   onCancel: () => void;
 };
 
-/**
- * "Which business?" — API Contract §2: the same username exists in more than
- * one business, so the person picks and the sign-in is resent with that
- * business's id. Rare, and handled rather than assumed away.
- */
+/** "Which business?" picker for an ambiguous username (API Contract §2). */
 export function BusinessPicker({
   visible,
   businesses,
@@ -35,7 +31,6 @@ export function BusinessPicker({
     <BottomSheet
       visible={visible}
       title={t('login.picker.title')}
-      // A backdrop tap must not abandon a sign-in already on its way.
       onDismiss={busy ? () => {} : onCancel}
       footer={
         <Button

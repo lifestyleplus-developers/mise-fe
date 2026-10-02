@@ -40,14 +40,7 @@ function Section({
   );
 }
 
-/**
- * Settings — language, profile, sign out (FE Spec §3.12). Theme sits beside
- * language because the login-screen toggle it replaces is gone once someone is
- * signed in; the mockup has no such section, so it is the one addition.
- *
- * Profile is read-only: names and passwords are changed by a manager (API
- * Contract §4 — no self-service edit, no email).
- */
+/** Settings (FE Spec §3.12). Theme is an addition to the mockup. */
 export function SettingsScreen() {
   const { data: me } = useMe();
   const t = useT();
@@ -59,8 +52,6 @@ export function SettingsScreen() {
   const signOut = useSignOut();
   const [confirming, setConfirming] = React.useState(false);
 
-  // Mid sign-out the identity is already cleared; PushedScreen renders
-  // nothing in that frame too.
   if (!me) return null;
 
   const themes: { value: ThemeName; label: string }[] = [
@@ -122,8 +113,6 @@ export function SettingsScreen() {
         </Button>
       </View>
 
-      {/* Leaving with a language choice that has not reached the account
-          loses it, so that case warns; otherwise it is a plain confirm. */}
       <ConfirmDialog
         visible={confirming}
         icon={unsaved ? TriangleAlert : LogOut}

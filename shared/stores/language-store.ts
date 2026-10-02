@@ -14,19 +14,7 @@ type LanguageStore = {
   setLanguage: (language: InterfaceLanguage) => void;
 };
 
-/**
- * Which language the interface renders in.
- *
- * Device-local, like the theme store: `user.interface_language` is the
- * platform's record (Model §15 — the language follows the person between
- * devices), but until the backend exists and /auth/me returns a real
- * setting, this is where the choice lives. Login writes it back from the
- * me response; Settings will own the picker.
- *
- * Not in the same store as the theme on purpose: theme and language change
- * at different times, for different reasons, and login touches only one of
- * them.
- */
+/** Which language the interface renders in. */
 export const useLanguageStore = create<LanguageStore>()(
   persist(
     (set) => ({

@@ -15,7 +15,6 @@ export const hi = {
   'login.err.rate-limited': 'बहुत ज़्यादा कोशिशें। एक मिनट रुकें।',
   'login.err.unreachable': 'mise तक नहीं पहुँच पा रहे। फिर से कोशिश करें।',
 
-  // Shell and Home — stand-in wording from the week-1 mockup, unreviewed.
   'tab.home': 'होम',
   'tab.checklists': 'चेकलिस्ट',
   'tab.issues': 'समस्याएँ',
@@ -37,14 +36,12 @@ export const hi = {
   'theme.switch-to-light': 'लाइट थीम पर जाएँ',
   'theme.switch-to-dark': 'डार्क थीम पर जाएँ',
 
-  // More tab — stand-in wording from the week-2 mockup, unreviewed.
   'more.settings': 'सेटिंग्स',
   'more.administration': 'प्रशासन',
   'more.outlets': 'आउटलेट',
   'more.users': 'उपयोगकर्ता',
   'common.back': 'वापस',
 
-  // Settings — stand-in wording from the week-2 mockup, unreviewed.
   'language.title': 'भाषा',
   'language.waiting': 'आपके खाते में सेव होने का इंतज़ार',
   'settings.profile': 'प्रोफ़ाइल',

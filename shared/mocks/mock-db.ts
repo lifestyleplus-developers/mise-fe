@@ -1,39 +1,22 @@
 /**
- * The mock backend. JSON fixtures in-repo matching the API Contract's exact
- * shapes — mise-fe/AGENTS.md rules out MSW for RN, and the API layer reads
- * these until real endpoints exist, swapping internally so hooks and screens
- * never change.
+ * The mock backend: JSON fixtures matching the API Contract's shapes.
  *
- * The db is a fixture *plus mutation writes*, deliberately: AGENTS.md
- * requires mutations to affect subsequent reads within a session. Login
- * writes `session`; logout clears it. A purely static fixture cannot do
- * that, and session-in-the-db is the shape the real flow keeps — `GET
- * /auth/me` becomes a real server read with a real token later.
- *
- * Who sees what on Home and the tab bar (all in the ZamZam business):
- *   priya (OWNER), raheem (ADMIN) — no assignments → the "nothing assigned"
- *                                   empty state, plus Issues and Modules
+ * Who sees what on Home and the tab bar (ZamZam business):
+ *   priya (OWNER), raheem (ADMIN) — no assignments → empty Home, Issues, Modules
  *   suresh — implementer + inventory manager → Modules (Inventory)
  *   meera  — attendance manager              → Modules (Attendance)
  *   nadia  — checklist manager               → Issues tab
  *
- * Credentials, for want of a better place while there is no Settings screen:
- *   priya, raheem, suresh, meera, nadia — password "demo" signs in
- *   any persona + password "wrong"      — exercises invalid_credentials
- *   busy / anything                     — exercises rate_limited
- *   offline / anything                  — exercises unreachable (thrown before
- *                                         a response exists)
- *   test-1 / 1234 (Porch Inn) — an ADMIN; test-2 / 1234 (Kebapci) — a plain
- *                                         member.
- *                                         No username repeats across
- *                                         businesses, so nobody is asked to
- *                                         pick one. To exercise the 409
- *                                         ambiguous_username picker, give two
- *                                         businesses a user with the same
- *                                         username (the Schema allows it:
- *                                         `unique(tenant_id, username)`).
- *   anita (Porch Inn), kabir (Kebapci)  — owners of those businesses, "demo"
- *   network-error / anything            — 500, the generic server-fault path
+ * Credentials:
+ *   priya, raheem, suresh, meera, nadia — password "demo"
+ *   any persona + password "wrong"      — invalid_credentials
+ *   busy / anything                     — rate_limited
+ *   offline / anything                  — unreachable (no response)
+ *   network-error / anything            — 500
+ *   test-1 / 1234 (Porch Inn)           — ADMIN
+ *   test-2 / 1234 (Kebapci)             — MEMBER
+ *   anita (Porch Inn), kabir (Kebapci)  — owners, "demo"
+ *   Give two businesses the same username to exercise the 409 picker.
  */
 import type {
   AmbiguousUsernameBody,
@@ -102,11 +85,7 @@ type LoginOutcome =
 function resolveLogin(request: LoginRequest): LoginOutcome {
   const username = request.username.trim().toLowerCase();
 
-  // Magic usernames drive documented failure paths.
   if (username === 'offline') {
-    // Simulates the transport dying: the request never gets a response, so
-    // this is a thrown network error, not a MockApiError — the same shape a
-    // real fetch produces when the server is unreachable.
     throw new Error('Network request failed');
   }
   if (username === 'busy') {
@@ -132,8 +111,6 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
 
   const matches = db.users.filter((user) => user.username === username);
 
-  // §2: same username in more than one business → 409 with a businesses
-  // array; resend with tenant_id included.
   if (matches.length > 1 && request.tenant_id === undefined) {
     return {
       status: 409,
@@ -157,8 +134,6 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
       : matches[0];
 
   if (!user || user.password !== request.password) {
-    // Unknown username is indistinguishable from a wrong password — also how
-    // the platform answers.
     return {
       status: 401,
       body: {
@@ -180,9 +155,6 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
 
 function resolveMe(): MeResponse {
   if (!db.session) {
-    // A caller hitting /auth/me with no session is a client bug in the real
-    // flow; the mock answers with an expired token rather than inventing a
-    // user.
     throw new MockApiError(401, {
       error: {
         code: API_ERROR_CODE.TOKEN_EXPIRED,
@@ -231,7 +203,6 @@ export async function mockUpdateMe(
   request: UpdateMeRequest,
 ): Promise<MeResponse> {
   await delay();
-  // resolveMe throws token_expired with no session, as the real call would.
   const me = resolveMe();
   const user = db.users.find((candidate) => candidate.id === me.user.id)!;
   user.interface_language = request.interface_language;

@@ -6,7 +6,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 
 type PlaceholderCardProps = {
-  /** Screen id from the mockup, e.g. 'CHK-01'. Developer-facing, not translated. */
+  /** Screen id from the mockup, e.g. 'CHK-01'. Not translated. */
   id: string;
   name: string;
   /** The delivery week the real screen lands in (Delivery Timeline). */
@@ -14,12 +14,7 @@ type PlaceholderCardProps = {
   children?: React.ReactNode;
 };
 
-/**
- * Stands in for a screen that is specced for a later week. The mockup draws
- * exactly this in the same places, so the shell can be walked through before
- * the screens inside it exist. Also used inline by a real screen that has a
- * part still to come (Home's run groups).
- */
+/** Stands in for a screen specced for a later week. */
 export function PlaceholderCard({
   id,
   name,
@@ -48,20 +43,13 @@ export function PlaceholderCard({
 type PlaceholderConfig = PlaceholderCardProps & {
   /** Catalogue key for the screen title. */
   title: MessageKey;
-  /**
-   * `tab` is a tab root (header, pull to refresh, room for the pill);
-   * `pushed` is a screen opened over the tabs (Back button, no pill).
-   */
+  /** `tab`: a tab root. `pushed`: opened over the tabs, no tab bar. */
   frame: 'tab' | 'pushed';
   /** Pushed screens only: ADMIN and OWNER. */
   adminOnly?: boolean;
 };
 
-/**
- * One placeholder screen, whichever frame it sits in. Route files call this
- * with the screen's config and export the result; deleting a placeholder is
- * re-pointing its route at the real screen.
- */
+/** A whole placeholder screen. Route files export its result. */
 export function createPlaceholder({
   title,
   frame,

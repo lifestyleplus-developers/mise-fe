@@ -9,20 +9,14 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
-      // Each weight is a separate family: RN resolves a font by family name
-      // and cannot select a weight within one, so `font-semibold` alone would
-      // synthesise a fake bold off the regular file.
+      // One family per weight; RN cannot select a weight within a family.
       fontFamily: {
         sans: ['Montserrat_400Regular'],
         'sans-medium': ['Montserrat_500Medium'],
         'sans-semibold': ['Montserrat_600SemiBold'],
         'sans-bold': ['Montserrat_700Bold'],
         display: ['PlayfairDisplay_600SemiBold'],
-        // Interface scripts for the four-language requirement (FE Spec §9).
-        // RN resolves a single fontFamily name — no CSS-style fallback stack
-        // — so Latin text in these classes keeps Montserrat's fallback and
-        // Devanagari/Malayalam/Kannada glyphs fall through to these faces.
-        // Loaded in _layout.tsx before the first frame.
+        // Devanagari, Malayalam and Kannada faces (FE Spec §9).
         'sans-devanagari': ['NotoSansDevanagari_400Regular'],
         'sans-malayalam': ['NotoSansMalayalam_400Regular'],
         'sans-kannada': ['NotoSansKannada_400Regular'],

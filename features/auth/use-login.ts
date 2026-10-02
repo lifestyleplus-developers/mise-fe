@@ -14,16 +14,7 @@ import {
 import { LOGIN_FAILURE, type LoginFailure } from '@/shared/constants/errors';
 import { useLanguageStore } from '@/shared/stores/language-store';
 
-/**
- * Login is the one mutation that must fire now or fail now. `'always'`
- * attempts the request even with no network, so the transport fails and the
- * user sees "Can't reach mise" — 'online' (the client default) would PAUSE
- * an offline attempt and replay it when the provider resumes paused
- * mutations, silently resubmitting stale credentials. Persistence is not a
- * concern here: v5's persister dehydrates queries only, so no mutation can
- * land in AsyncStorage. The retry queue is for checklist answers, never
- * credentials.
- */
+/** Login is the one mutation that must fire now or fail now. */
 const loginMutationFn = (request: LoginRequest): Promise<LoginResponse> =>
   api.auth.login(request);
 
@@ -32,24 +23,14 @@ queryClient.setMutationDefaults(['auth', 'login'], {
   networkMode: 'always',
 });
 
-/**
- * What the login screen renders. Derived entirely from mutation and cache
- * state in the hook — the screen holds no async state of its own, so an
- * unmount mid-flight has nothing to write to (issue 4's property, without
- * leaning on callback-after-unmount semantics).
- */
+/** What the login screen renders. */
 export type LoginState =
   | { kind: 'idle' }
   | { kind: 'submitting' }
   /** Signed in; identity read straight from the ['auth','me'] cache. */
   | { kind: 'ok'; fullName: string }
   | { kind: 'failure'; failure: LoginFailure }
-  /**
-   * 409 with a businesses array — the screen shows the picker. `choosingId`
-   * is the business already picked while its resend is in flight, so the
-   * picker stays up showing which row is signing in rather than flashing
-   * away and back.
-   */
+  /** 409 with a businesses array — the screen shows the picker. */
   | {
       kind: 'ambiguous_username';
       businesses: BusinessRef[];
@@ -57,17 +38,12 @@ export type LoginState =
     };
 
 function classify(error: unknown): LoginFailure {
-  // No response at all — transport died. (Also what the mock's "offline"
-  // username throws.)
   if (!(error instanceof MockApiError)) return LOGIN_FAILURE.UNREACHABLE;
 
   const { code } = error.body.error;
   if (code === API_ERROR_CODE.INVALID_CREDENTIALS) {
     return LOGIN_FAILURE.INVALID_CREDENTIALS;
   }
-  // 429 carries a status but no code string (API Contract §15); everything
-  // else a login can receive — ambiguous_username handled before this, an
-  // expired token impossible pre-auth, server faults — reads as unreachable.
   if (error.status === 429) return LOGIN_FAILURE.RATE_LIMITED;
   return LOGIN_FAILURE.UNREACHABLE;
 }
@@ -75,9 +51,6 @@ function classify(error: unknown): LoginFailure {
 export function useLogin() {
   const queryClient_ = useQueryClient();
 
-  // Subscribed, never fetched (enabled: false) — the hook's window onto the
-  // identity the mutation's onSuccess writes. Home reads the same key
-  // through useMe.
   const { data: me } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => api.auth.me(),
@@ -85,14 +58,9 @@ export function useLogin() {
     staleTime: Infinity,
   });
 
-  // The businesses a 409 offered. Held beside the mutation because resending
-  // with a tenant_id replaces the mutation's error — and with it the list —
-  // while the picker still has to render. Cleared by anything that is not
-  // the picker's own flow: success, another failure, cancel.
   const [candidates, setCandidates] = React.useState<BusinessRef[] | null>(
     null,
   );
-  // What the resend repeats. A ref, not state: nothing renders from it.
   const lastRequest = React.useRef<LoginRequest | null>(null);
 
   const mutation = useMutation<LoginResponse, unknown, LoginRequest>({
@@ -113,17 +81,9 @@ export function useLogin() {
     },
 
     onSuccess: () => {
-      // Fill ['auth','me'] the way the real flow will — GET /auth/me after
-      // sign-in. Default staleTime (0) means every login refetches, so
-      // switching personas never serves the previous persona's identity.
-      // Fire-and-forget with a guard: the sign-in itself succeeded, so a
-      // failure here must not surface as a login failure — the screen stays
-      // on the form instead of showing a phantom error.
       queryClient_
         .fetchQuery({ queryKey: ['auth', 'me'], queryFn: () => api.auth.me() })
         .then((meResponse) => {
-          // §15: the language is a property of the user, not the device —
-          // sign-in adopts what /auth/me reports.
           useLanguageStore
             .getState()
             .setLanguage(meResponse.user.interface_language);
@@ -152,8 +112,6 @@ export function useLogin() {
       ) {
         return {
           kind: 'ambiguous_username',
-          // The 409 body is the error envelope plus the businesses array —
-          // the same intersection the mock types it with.
           businesses: (error.body as ApiErrorBody & AmbiguousUsernameBody)
             .businesses,
           choosingId: null,
@@ -162,11 +120,7 @@ export function useLogin() {
       return { kind: 'failure', failure: classify(error) };
     }
     if (mutation.isSuccess) {
-      // me-fill still in flight (or it failed — see the catch above); either
-      // way the screen holds the submitting state rather than flickering.
       if (!me) {
-        // A picked business keeps its picker (row spinning) until the
-        // redirect, instead of flashing the form between the two.
         const choosingId = mutation.variables?.tenant_id;
         if (candidates && choosingId !== undefined) {
           return {

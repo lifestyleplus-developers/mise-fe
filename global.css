@@ -2,13 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  Color tokens ported from mise-week-01.html's mockup CSS, converted to
-  H S% L% triples (not hex) so Tailwind's opacity modifiers work
-  (bg-primary/90 etc. — required by the pulled-in Button component).
-  --scrim / --nav-surface keep baked-in alpha as rgba(), since they're
-  already translucent by design and never take an opacity modifier.
-*/
+/* Colour tokens from the week-1 mockup, as H S% L% triples. */
 @layer base {
   :root {
     --background: 48 33% 97%;

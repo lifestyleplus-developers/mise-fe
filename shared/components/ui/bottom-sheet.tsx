@@ -11,12 +11,7 @@ type BottomSheetProps = {
   footer?: React.ReactNode;
 };
 
-/**
- * Sheet rising from the bottom over a scrim — the mockup's picker surface
- * (business picker, language list). Same close paths as ModalDialog: the
- * backdrop and the back button both route through `onDismiss`, so a caller
- * that must not be dismissed mid-request simply ignores it.
- */
+/** Sheet rising from the bottom over a scrim — the mockup's picker surface (business picker, language list). */
 export function BottomSheet({
   visible,
   title,
@@ -33,7 +28,6 @@ export function BottomSheet({
       onRequestClose={onDismiss}
     >
       <Pressable className="bg-scrim flex-1 justify-end" onPress={onDismiss}>
-        {/* No-op press so taps on the sheet do not reach the backdrop. */}
         <Pressable
           accessibilityViewIsModal
           onPress={() => {}}

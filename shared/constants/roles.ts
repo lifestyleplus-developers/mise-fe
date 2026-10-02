@@ -1,8 +1,4 @@
-/**
- * `user.tenant_role` — the schema's enum OWNER · ADMIN · MEMBER. CL_ADMIN and
- * CL_IMP are not here: they exist only as assignment memberships (Schema,
- * `assignment_member.role`), never as a user attribute.
- */
+/** `user.tenant_role`: OWNER · ADMIN · MEMBER. CL_ADMIN and CL_IMP are assignment memberships, not roles here. */
 export const ROLE = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',

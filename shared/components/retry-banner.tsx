@@ -11,11 +11,7 @@ type RetryBannerProps = {
   retrying?: boolean;
 };
 
-/**
- * Inline "can't reach the server" banner with a Retry (FE Spec §3.2, Error
- * state). Sits above a list that stays visible from cache underneath it —
- * it reports the failure, it does not replace the content.
- */
+/** Inline "can't reach the server" banner with a Retry (FE Spec §3.2, Error state). */
 function RetryBanner({
   message,
   retryLabel,

@@ -9,21 +9,16 @@ type ConfirmAction = { label: string; onPress: () => void };
 type ConfirmDialogProps = {
   visible: boolean;
   icon: React.ComponentType<{ className?: string }>;
-  /** `warning` is for a confirm that carries a consequence worth reading. */
   tone?: 'neutral' | 'warning';
   title: string;
   body?: string;
-  /** The way out that changes nothing — the filled, default button. */
+  /** Changes nothing; the filled button. */
   safe: ConfirmAction;
-  /** The way through — outlined and red, so it never reads as the default. */
+  /** The way through; outlined red. */
   other: ConfirmAction;
 };
 
-/**
- * Two-way confirm over RN's Modal. The safe action is the filled one on the
- * left and the consequential one is outlined destructive on the right; a backdrop
- * tap or Android back takes the safe action.
- */
+/** Two-way confirm. Backdrop tap and Android back take the safe action. */
 function ConfirmDialog({
   visible,
   icon: Icon,
@@ -77,10 +72,6 @@ function ConfirmDialog({
               {body}
             </Text>
           ) : null}
-          {/* Side by side, equal width. A long label (Malayalam and Kannada
-              run well past English) wraps inside its button, which grows to
-              fit — hence h-auto — instead of truncating or pushing the other
-              button off the card. */}
           <View className="mt-6 w-full flex-row gap-2">
             <Button
               onPress={safe.onPress}

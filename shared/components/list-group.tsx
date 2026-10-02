@@ -16,10 +16,7 @@ type ListGroupProps = {
   rows: ListGroupRow[];
 };
 
-/**
- * A titled card of tappable rows — icon tile, label, chevron. The More tab's
- * shape, and Modules' (week 8), so it lives here rather than in either.
- */
+/** A titled card of tappable rows: icon tile, label, chevron. */
 function ListGroup({ heading, rows }: ListGroupProps) {
   return (
     <View className="mx-4 mb-5">

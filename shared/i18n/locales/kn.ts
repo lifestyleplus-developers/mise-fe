@@ -15,7 +15,6 @@ export const kn = {
   'login.err.rate-limited': 'ಹಲವು ಪ್ರಯತ್ನಗಳು. ಒಂದು ನಿಮಿಷ ಕಾಯಿರಿ.',
   'login.err.unreachable': 'mise ಅನ್ನು ತಲುಪಲು ಆಗುತ್ತಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
 
-  // Shell and Home — stand-in wording from the week-1 mockup, unreviewed.
   'tab.home': 'ಮುಖಪುಟ',
   'tab.checklists': 'ಚೆಕ್‌ಲಿಸ್ಟ್‌ಗಳು',
   'tab.issues': 'ಸಮಸ್ಯೆಗಳು',
@@ -37,14 +36,12 @@ export const kn = {
   'theme.switch-to-light': 'ಲೈಟ್ ಥೀಮ್‌ಗೆ ಬದಲಿಸಿ',
   'theme.switch-to-dark': 'ಡಾರ್ಕ್ ಥೀಮ್‌ಗೆ ಬದಲಿಸಿ',
 
-  // More tab — stand-in wording from the week-2 mockup, unreviewed.
   'more.settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
   'more.administration': 'ಆಡಳಿತ',
   'more.outlets': 'ಔಟ್‌ಲೆಟ್‌ಗಳು',
   'more.users': 'ಬಳಕೆದಾರರು',
   'common.back': 'ಹಿಂದೆ',
 
-  // Settings — stand-in wording from the week-2 mockup, unreviewed.
   'language.title': 'ಭಾಷೆ',
   'language.waiting': 'ನಿಮ್ಮ ಖಾತೆಗೆ ಉಳಿಸಲು ಕಾಯುತ್ತಿದೆ',
   'settings.profile': 'ಪ್ರೊಫೈಲ್',

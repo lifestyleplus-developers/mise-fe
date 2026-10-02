@@ -10,11 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 
-/**
- * The tab bar's entries. The ids are also the route names under
- * `app/(tabs)/`, which is how the bar maps a route to its icon and label.
- * Order is display order (FE Spec §2).
- */
+/** The tab bar's entries. */
 export const TAB = {
   HOME: 'home',
   CHECKLISTS: 'checklists',
@@ -49,13 +45,7 @@ export const TAB_LABEL: Record<TabId, MessageKey> = {
   more: 'tab.more',
 };
 
-/**
- * Whether the person has any module to open — one the business has switched
- * on for an outlet (or at all, for inventory) *and* a role in it. ADMIN and
- * OWNER see every enabled module without holding a membership row (Schema:
- * module configuration is theirs). Per-module rows come with the Modules
- * screen; the tab only needs to know there is at least one.
- */
+/** Whether the person has a module to open. */
 function hasVisibleModule({ modules, memberships, user }: MeResponse) {
   const admin = canAdminister(user.role);
   return (
@@ -68,12 +58,7 @@ function hasVisibleModule({ modules, memberships, user }: MeResponse) {
   );
 }
 
-/**
- * Which tabs this person sees. Built from what /auth/me returned — modules
- * and memberships — not inferred from the role name (API Contract §2), apart
- * from ADMIN/OWNER standing in for the supervisor membership on Issues. A
- * tab that does not apply is absent, not disabled (FE Spec §1).
- */
+/** Which tabs this person sees. */
 export function visibleTabs(me: MeResponse): TabId[] {
   const visible: Record<TabId, boolean> = {
     home: true,

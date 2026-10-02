@@ -2,10 +2,7 @@ import { Text } from '@/shared/components/ui/text';
 import { Clock } from 'lucide-react-native';
 import { View } from 'react-native';
 
-/**
- * "Waiting to send" — distinct from both success and failure (FE Spec §11):
- * the work is not lost and must not look lost. Slate, not amber or red.
- */
+/** "Waiting to send" indicator (FE Spec §11). */
 function PendingPill({ label }: { label: string }) {
   return (
     <View

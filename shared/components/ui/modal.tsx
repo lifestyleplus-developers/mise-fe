@@ -12,18 +12,7 @@ type ModalDialogProps = {
   onDismiss: () => void;
 };
 
-/**
- * Themed alert dialog over RN's Modal — scrim backdrop, card, one action.
- *
- * Dismisses via the button, a backdrop tap, and Android's back button
- * (`onRequestClose`); all three route through `onDismiss` so callers have
- * one close path. Not a portal: RN's Modal renders above everything
- * natively, which is also what lets `statusBarTranslucent` put the scrim
- * over the status bar.
- *
- * Content is held in state and only updated while `visible`, so a fade-out
- * keeps the last message instead of collapsing to an empty card.
- */
+/** Themed alert dialog over RN's Modal — scrim backdrop, card, one action. */
 export function ModalDialog({
   visible,
   title,
@@ -45,8 +34,6 @@ export function ModalDialog({
       statusBarTranslucent
       onRequestClose={onDismiss}
     >
-      {/* Backdrop tap dismisses; the card is a Pressable with a no-op so the
-          press stops there instead of reaching the backdrop. */}
       <Pressable
         className="flex-1 items-center justify-center bg-scrim px-6"
         onPress={onDismiss}

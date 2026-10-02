@@ -11,11 +11,7 @@ type OptionListProps<T extends string> = {
   onChange: (value: T) => void;
 };
 
-/**
- * A card of mutually exclusive rows with a tick on the chosen one — the
- * inline form of a picker (Settings' language and theme). Selection is by
- * tap with no confirm step; the caller applies it at once.
- */
+/** Mutually exclusive rows with a tick on the chosen one. */
 function OptionList<T extends string>({
   value,
   options,
