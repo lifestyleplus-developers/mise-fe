@@ -16,6 +16,7 @@ module.exports = {
         'sans-semibold': ['Montserrat_600SemiBold'],
         'sans-bold': ['Montserrat_700Bold'],
         display: ['PlayfairDisplay_600SemiBold'],
+        script: ['BrittanySignature'],
         // Devanagari, Malayalam and Kannada faces (FE Spec §9).
         'sans-devanagari': ['NotoSansDevanagari_400Regular'],
         'sans-malayalam': ['NotoSansMalayalam_400Regular'],

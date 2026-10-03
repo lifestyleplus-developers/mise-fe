@@ -48,6 +48,7 @@ export default function RootLayout() {
     Montserrat_600SemiBold,
     Montserrat_700Bold,
     PlayfairDisplay_600SemiBold,
+    BrittanySignature: require('../assets/fonts/BrittanySignature.ttf'),
     NotoSansDevanagari_400Regular,
     NotoSansMalayalam_400Regular,
     NotoSansKannada_400Regular,

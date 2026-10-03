@@ -64,8 +64,8 @@ export function LoginScreen() {
         contentContainerClassName="flex-grow justify-center pb-16"
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="font-display mb-8 text-center text-[44px] leading-none tracking-[-0.015em]">
-          mise
+        <Text className="font-script mb-6 py-4 text-center text-[112px] leading-[1.3] text-[#eac469]">
+          Mise
         </Text>
 
         <View className="shadow-card border-border bg-card mx-4 flex flex-col gap-4 rounded-[1.75rem] border p-6">
