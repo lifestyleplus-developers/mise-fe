@@ -90,7 +90,7 @@
     "username": "anita",
     "password": "demo",
     "full_name": "Anita Menon",
-    "tenant_role": "OWNER",
+    "tenant_role": "ADMIN",
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [],
@@ -107,7 +107,7 @@
     "username": "test-1",
     "password": "1234",
     "full_name": "Porch Inn Tester",
-    "tenant_role": "ADMIN",
+    "tenant_role": "OWNER",
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [],

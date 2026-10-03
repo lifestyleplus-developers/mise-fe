@@ -13,9 +13,10 @@
  *   busy / anything                     — rate_limited
  *   offline / anything                  — unreachable (no response)
  *   network-error / anything            — 500
- *   test-1 / 1234 (Porch Inn)           — ADMIN
+ *   test-1 / 1234 (Porch Inn)           — OWNER
  *   test-2 / 1234 (Kebapci)             — MEMBER
- *   anita (Porch Inn), kabir (Kebapci)  — owners, "demo"
+ *   anita (Porch Inn)                   — ADMIN, "demo"
+ *   kabir (Kebapci)                     — OWNER, "demo"
  *   Give two businesses the same username to exercise the 409 picker.
  */
 import type {

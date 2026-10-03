@@ -1,9 +1,8 @@
 import { classifySaveError } from '@/features/outlets/outlet-errors';
 import { useOutletNotice } from '@/features/outlets/outlet-notice';
 import { useCreateOutlet } from '@/features/outlets/use-outlets';
-import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
+import { FormSheet } from '@/shared/components/form-sheet';
 import { Banner } from '@/shared/components/ui/banner';
-import { Button } from '@/shared/components/ui/button';
 import { TextField } from '@/shared/components/ui/text-field';
 import { Text } from '@/shared/components/ui/text';
 import { useT } from '@/shared/i18n';
@@ -39,53 +38,44 @@ export function AddOutletSheet({ visible, onClose }: AddOutletSheetProps) {
   }
 
   return (
-    <BottomSheet
+    <FormSheet
       visible={visible}
       title={t('outlets.new')}
-      onDismiss={close}
-      footer={
-        <View className="gap-2">
-          <Button
-            className="w-full"
-            disabled={!trimmed || create.isPending}
-            onPress={save}
-          >
-            <Text>{t('admin.save')}</Text>
-          </Button>
-          <Button variant="outline" className="w-full" onPress={close}>
-            <Text>{t('admin.cancel')}</Text>
-          </Button>
-        </View>
-      }
+      onClose={close}
+      onSubmit={save}
+      isSubmitting={create.isPending}
+      submitDisabled={!trimmed}
     >
       {failure && failure !== 'name-taken' ? (
-        <View className="mb-3">
-          <Banner
-            tone="error"
-            message={`${t('admin.save-failed')} ${t('common.offline')}`}
-          />
-        </View>
+        <Banner
+          tone="error"
+          message={`${t('admin.save-failed')} ${t('common.offline')}`}
+        />
       ) : null}
-      <TextField
-        label={t('outlets.name')}
-        value={name}
-        onChangeText={(value) => {
-          setName(value);
-          create.reset();
-        }}
-        onSubmitEditing={save}
-        returnKeyType="done"
-        autoFocus
-        className={failure === 'name-taken' ? 'border-destructive' : undefined}
-      />
-      {failure === 'name-taken' ? (
-        <Text
-          accessibilityRole="alert"
-          className="text-destructive-soft-foreground font-sans-medium mt-1.5 px-1 text-[13px]"
-        >
-          {t('outlets.name-taken')}
-        </Text>
-      ) : null}
-    </BottomSheet>
+      <View>
+        <TextField
+          label={t('outlets.name')}
+          value={name}
+          onChangeText={(value) => {
+            setName(value);
+            create.reset();
+          }}
+          onSubmitEditing={save}
+          returnKeyType="done"
+          autoFocus
+          className={
+            failure === 'name-taken' ? 'border-destructive' : undefined
+          }
+        />
+        {failure === 'name-taken' ? (
+          <Text
+            accessibilityRole="alert"
+            className="text-destructive-soft-foreground font-sans-medium mt-1.5 px-1 text-[13px]"
+          >
+            {t('outlets.name-taken')}
+          </Text>
+        ) : null}
+      </View>
+    </FormSheet>
   );
 }
