@@ -7,6 +7,7 @@ import {
   mockGetOutlet,
   mockGetUser,
   mockListOutlets,
+  mockListRuns,
   mockListUsers,
   mockLogin,
   mockLogout,
@@ -24,6 +25,7 @@ import type {
   Outlet,
   Page,
   ResetPasswordRequest,
+  Run,
   UpdateMeRequest,
   UpdateOutletRequest,
   UpdateUserRequest,
@@ -88,6 +90,13 @@ export const api = {
     archive(id: number): Promise<Outlet> {
       // TODO(server): POST {API_BASE_URL}/api/v1/outlets/{id}/archive
       return mockArchiveOutlet(id);
+    },
+  },
+  runs: {
+    /** GET /runs — only what the caller may act on; closed runs never come back. */
+    list(): Promise<Run[]> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/runs (paginated)
+      return mockListRuns();
     },
   },
   users: {

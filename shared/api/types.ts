@@ -137,3 +137,17 @@ export type UpdateUserRequest = Partial<
 
 /** POST /users/{id}/reset-password. */
 export type ResetPasswordRequest = { password: string };
+
+/** API Contract §7 — one occurrence of one assignment, as Home lists it. */
+export type Run = {
+  id: number;
+  checklist_name: string;
+  outlet_name: string;
+  window_open: string;
+  window_close: string;
+  total_tasks: number;
+  answered_count: number;
+  status: 'OPEN';
+  /** Which part the caller plays on this run's assignment. */
+  my_role: 'CL_ADMIN' | 'CL_IMP';
+};

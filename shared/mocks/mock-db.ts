@@ -30,6 +30,7 @@ import type {
   Outlet,
   Page,
   ResetPasswordRequest,
+  Run,
   UpdateMeRequest,
   UpdateOutletRequest,
   UpdateUserRequest,
@@ -548,4 +549,97 @@ export async function mockResetPassword(
     throw apiError(403, 'authoring_forbidden', 'Not permitted.');
   }
   user.password = request.password;
+}
+
+type RunTemplate = {
+  assignmentId: number;
+  checklist: string;
+  outlet: string;
+  /** Minutes after local midnight. */
+  open: number;
+  close: number;
+  total: number;
+  answered: number;
+};
+
+/** Daily checklists at Indiranagar; assignment ids match the fixture memberships. */
+const RUN_TEMPLATES: RunTemplate[] = [
+  {
+    assignmentId: 11,
+    checklist: 'Kitchen Opening',
+    outlet: 'Indiranagar',
+    open: 360,
+    close: 600,
+    total: 12,
+    answered: 7,
+  },
+  {
+    assignmentId: 13,
+    checklist: 'Fridge Temperatures',
+    outlet: 'Indiranagar',
+    open: 390,
+    close: 630,
+    total: 6,
+    answered: 6,
+  },
+  {
+    assignmentId: 16,
+    checklist: 'Store Opening',
+    outlet: 'Indiranagar',
+    open: 420,
+    close: 720,
+    total: 8,
+    answered: 0,
+  },
+  {
+    assignmentId: 12,
+    checklist: 'Kitchen Closing',
+    outlet: 'Indiranagar',
+    open: 1320,
+    close: 1470,
+    total: 10,
+    answered: 0,
+  },
+];
+
+/** GET /runs — today's and tomorrow's runs that have not closed, for the caller's assignments. */
+export async function mockListRuns(): Promise<Run[]> {
+  await delay();
+  const me = resolveMe();
+  const admin = new Set(me.memberships.cl_admin_assignments);
+  const implementer = new Set(me.memberships.cl_imp_assignments);
+  const now = Date.now();
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+
+  const runs: Run[] = [];
+  for (const dayOffset of [0, 1]) {
+    for (const template of RUN_TEMPLATES) {
+      const role = admin.has(template.assignmentId)
+        ? 'CL_ADMIN'
+        : implementer.has(template.assignmentId)
+          ? 'CL_IMP'
+          : null;
+      if (!role) continue;
+      const at = (minutes: number) => {
+        const day = new Date(midnight);
+        day.setDate(day.getDate() + dayOffset);
+        return new Date(day.getTime() + minutes * 60_000);
+      };
+      const close = at(template.close);
+      if (close.getTime() <= now) continue;
+      runs.push({
+        id: template.assignmentId * 100 + dayOffset,
+        checklist_name: template.checklist,
+        outlet_name: template.outlet,
+        window_open: at(template.open).toISOString(),
+        window_close: close.toISOString(),
+        total_tasks: template.total,
+        answered_count: dayOffset === 0 ? template.answered : 0,
+        status: 'OPEN',
+        my_role: role,
+      });
+    }
+  }
+  return runs;
 }

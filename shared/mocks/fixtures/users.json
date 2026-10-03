@@ -77,7 +77,7 @@
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [11],
-      "cl_imp_assignments": [],
+      "cl_imp_assignments": [13, 16],
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
@@ -179,7 +179,7 @@
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [],
-      "cl_imp_assignments": [],
+      "cl_imp_assignments": [11, 13, 16],
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
