@@ -36,6 +36,7 @@ export const en = {
   'more.outlets': 'Outlets',
   'more.users': 'Users',
   'common.back': 'Back',
+  'common.dismiss': 'Dismiss',
 
   'admin.new': 'New',
   'admin.save': 'Save',

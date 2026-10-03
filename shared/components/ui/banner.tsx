@@ -1,16 +1,26 @@
 import { cn } from '@/shared/lib/utils';
-import { CircleAlert, Info } from 'lucide-react-native';
+import { CircleAlert, Info, X } from 'lucide-react-native';
 import * as React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 type BannerProps = {
   tone: 'error' | 'notice';
   message: string;
   detail?: string;
   icon?: React.ComponentType<{ className?: string }>;
+  /** Adds a close button; `dismissLabel` is its accessibility label. */
+  onDismiss?: () => void;
+  dismissLabel?: string;
 };
 
-function Banner({ tone, message, detail, icon: Icon }: BannerProps) {
+function Banner({
+  tone,
+  message,
+  detail,
+  icon: Icon,
+  onDismiss,
+  dismissLabel,
+}: BannerProps) {
   const ResolvedIcon = Icon ?? (tone === 'error' ? CircleAlert : Info);
 
   return (
@@ -55,6 +65,24 @@ function Banner({ tone, message, detail, icon: Icon }: BannerProps) {
           </Text>
         ) : null}
       </View>
+      {onDismiss ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={dismissLabel}
+          onPress={onDismiss}
+          hitSlop={8}
+          className="-mt-1 -mr-2 size-8 shrink-0 items-center justify-center rounded-full active:opacity-60"
+        >
+          <X
+            className={cn(
+              'size-[18px]',
+              tone === 'error'
+                ? 'text-destructive-soft-foreground'
+                : 'text-foreground',
+            )}
+          />
+        </Pressable>
+      ) : null}
     </View>
   );
 }

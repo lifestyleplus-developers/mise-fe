@@ -1,5 +1,6 @@
 import { BusinessPicker } from '@/features/auth/business-picker';
 import { useLogin } from '@/features/auth/use-login';
+import { LanguageSelector } from '@/shared/components/language-selector';
 import { Button } from '@/shared/components/ui/button';
 import { ModalDialog } from '@/shared/components/ui/modal';
 import { Text } from '@/shared/components/ui/text';
@@ -8,6 +9,7 @@ import { TextField } from '@/shared/components/ui/text-field';
 import { LOGIN_FAILURE, type LoginFailure } from '@/shared/constants/errors';
 import { THEME } from '@/shared/lib/theme';
 import { useT, type MessageKey } from '@/shared/i18n';
+import { useLanguageStore } from '@/shared/stores/language-store';
 import { Redirect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
@@ -29,6 +31,8 @@ export function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { state, login, chooseBusiness, resetLogin } = useLogin();
   const t = useT();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -119,10 +123,11 @@ export function LoginScreen() {
         pointerEvents="box-none"
       >
         <View
-          className="h-11 flex-row items-center justify-end px-4"
+          className="h-11 flex-row items-center justify-end gap-2 px-4"
           pointerEvents="box-none"
         >
           <ThemeToggle />
+          <LanguageSelector value={language} onChange={setLanguage} />
         </View>
       </View>
 

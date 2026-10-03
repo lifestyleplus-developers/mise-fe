@@ -5,6 +5,7 @@ import { AddUserSheet } from '@/features/users/user-sheets';
 import { useUsers } from '@/features/users/use-users';
 import { PushedScreen } from '@/features/shell/pushed-screen';
 import { Avatar } from '@/shared/components/avatar';
+import { AutoDismissBanner } from '@/shared/components/auto-dismiss-banner';
 import { EmptyState } from '@/shared/components/empty-state';
 import { FilterChips } from '@/shared/components/filter-chips';
 import { NewButton } from '@/shared/components/new-button';
@@ -36,6 +37,7 @@ export function UsersScreen() {
   const [role, setRole] = React.useState<'all' | Role>('all');
   const [adding, setAdding] = React.useState(false);
   const [added, setAdded] = React.useState<{
+    id: number;
     name: string;
     username: string;
   } | null>(null);
@@ -118,9 +120,14 @@ export function UsersScreen() {
           ) : null}
           {added ? (
             <View className="mx-4 mb-3">
-              <Banner
+              <AutoDismissBanner
+                key={added.id}
                 tone="notice"
-                message={format(t('users.added-notice'), added)}
+                message={format(t('users.added-notice'), {
+                  name: added.name,
+                  username: added.username,
+                })}
+                onDismiss={() => setAdded(null)}
               />
             </View>
           ) : null}
@@ -209,7 +216,11 @@ export function UsersScreen() {
         viewer={{ id: me.user.id, role: me.user.role }}
         onClose={() => setAdding(false)}
         onAdded={(user) =>
-          setAdded({ name: user.full_name, username: user.username })
+          setAdded({
+            id: user.id,
+            name: user.full_name,
+            username: user.username,
+          })
         }
       />
     </PushedScreen>

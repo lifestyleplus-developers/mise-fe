@@ -1,12 +1,15 @@
-import { INTERFACE_LANGUAGES } from '@/shared/constants/languages';
-import { cn } from '@/shared/lib/utils';
-import { Check, Globe } from 'lucide-react-native';
+import { OptionList } from '@/shared/components/option-list';
+import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
+import { Button } from '@/shared/components/ui/button';
+import { Text } from '@/shared/components/ui/text';
+import {
+  INTERFACE_LANGUAGES,
+  type InterfaceLanguage,
+} from '@/shared/constants/languages';
+import { useT } from '@/shared/i18n';
+import { Globe } from 'lucide-react-native';
 import * as React from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
-
-export type InterfaceLanguage = 'EN' | 'HI' | 'ML' | 'KN';
-
-const LANGUAGES = INTERFACE_LANGUAGES;
+import { Pressable } from 'react-native';
 
 type LanguageSelectorProps = {
   value: InterfaceLanguage;
@@ -14,13 +17,17 @@ type LanguageSelectorProps = {
   disabled?: boolean;
 };
 
+/** A pill showing the current language; tapping it opens the list. */
 function LanguageSelector({
   value,
   onChange,
   disabled,
 }: LanguageSelectorProps) {
+  const t = useT();
   const [open, setOpen] = React.useState(false);
-  const current = LANGUAGES.find((l) => l.code === value) ?? LANGUAGES[0];
+  const current =
+    INTERFACE_LANGUAGES.find((language) => language.code === value) ??
+    INTERFACE_LANGUAGES[0];
 
   return (
     <>
@@ -28,79 +35,39 @@ function LanguageSelector({
         onPress={() => setOpen(true)}
         disabled={disabled}
         accessibilityRole="button"
-        accessibilityLabel={`Language: ${current.label}`}
-        className="border-input-edge bg-card active:bg-accent min-h-11 flex-row items-center gap-1.5 self-start rounded-full border px-3.5 disabled:opacity-60"
+        accessibilityLabel={`${t('language.title')}: ${current.label}`}
+        className="border-input-edge bg-card active:bg-accent h-11 flex-row items-center gap-1.5 rounded-full border px-3.5 disabled:opacity-60"
       >
         <Globe className="text-foreground size-[18px]" />
-        <Text className="text-foreground font-sans-semibold text-[14px]">
-          {current.label}
-        </Text>
+        <Text className="font-sans-semibold text-[14px]">{current.label}</Text>
       </Pressable>
 
-      <Modal
+      <BottomSheet
         visible={open}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setOpen(false)}
-      >
-        <Pressable
-          className="bg-scrim flex-1 justify-end"
-          onPress={() => setOpen(false)}
-          accessibilityLabel="Close"
-        >
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            className="border-border bg-card rounded-t-[1.75rem] border-t px-4 pt-2 pb-6"
+        title={t('language.title')}
+        onDismiss={() => setOpen(false)}
+        footer={
+          <Button
+            variant="outline"
+            className="w-full"
+            onPress={() => setOpen(false)}
           >
-            <View className="bg-border mx-auto mb-3 h-1.5 w-10 rounded-full" />
-            <Text className="font-display mb-3 px-1 text-[22px] leading-tight">
-              Language
-            </Text>
-            <View className="border-border overflow-hidden rounded-3xl border">
-              {LANGUAGES.map((language, index) => {
-                const selected = language.code === value;
-                return (
-                  <Pressable
-                    key={language.code}
-                    onPress={() => {
-                      onChange(language.code);
-                      setOpen(false);
-                    }}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: selected }}
-                    className={cn(
-                      'active:bg-accent min-h-14 flex-row items-center gap-3 px-4 py-2',
-                      index > 0 && 'border-border border-t',
-                    )}
-                  >
-                    <Text
-                      className={cn(
-                        'text-foreground min-w-0 flex-1 text-[16px]',
-                        selected ? 'font-sans-bold' : 'font-sans-medium',
-                      )}
-                    >
-                      {language.label}
-                    </Text>
-                    {selected ? (
-                      <Check className="text-foreground size-5" />
-                    ) : (
-                      <View className="size-5" />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-            <Pressable
-              onPress={() => setOpen(false)}
-              className="border-border bg-card active:bg-accent mt-4 min-h-11 w-full items-center justify-center rounded-full border"
-            >
-              <Text className="text-foreground font-sans-semibold text-[14px]">
-                Cancel
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+            <Text>{t('admin.cancel')}</Text>
+          </Button>
+        }
+      >
+        <OptionList
+          value={value}
+          options={INTERFACE_LANGUAGES.map(({ code, label }) => ({
+            value: code,
+            label,
+          }))}
+          onChange={(language) => {
+            onChange(language);
+            setOpen(false);
+          }}
+        />
+      </BottomSheet>
     </>
   );
 }
