@@ -17,10 +17,12 @@ type PushedScreenProps = {
   /** Sits opposite Back, e.g. a New button. */
   action?: React.ReactNode;
   /** Where Back goes when nothing is behind this screen. Defaults to More. */
-  backHref?: '/more' | '/outlets';
+  backHref?: '/more' | '/outlets' | '/users';
   /** Wires pull to refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;
+  /** Called when the scroll nears the bottom, for paged lists. */
+  onEndReached?: () => void;
   children: React.ReactNode;
 };
 
@@ -32,6 +34,7 @@ export function PushedScreen({
   backHref = '/more',
   onRefresh,
   refreshing = false,
+  onEndReached,
   children,
 }: PushedScreenProps) {
   const { data: me, isError, error } = useMe();
@@ -85,6 +88,21 @@ export function PushedScreen({
         <ScrollView
           contentContainerClassName="pt-2 pb-8"
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={100}
+          onScroll={
+            onEndReached
+              ? ({ nativeEvent }) => {
+                  const { contentOffset, layoutMeasurement, contentSize } =
+                    nativeEvent;
+                  if (
+                    contentOffset.y + layoutMeasurement.height >=
+                    contentSize.height - 240
+                  ) {
+                    onEndReached();
+                  }
+                }
+              : undefined
+          }
           refreshControl={
             onRefresh ? (
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

@@ -2,22 +2,33 @@
 import {
   mockArchiveOutlet,
   mockCreateOutlet,
+  mockCreateUser,
   mockFetchMe,
   mockGetOutlet,
+  mockGetUser,
   mockListOutlets,
+  mockListUsers,
   mockLogin,
   mockLogout,
+  mockResetPassword,
   mockUpdateMe,
   mockUpdateOutlet,
+  mockUpdateUser,
 } from '@/shared/mocks/mock-db';
 import type {
   CreateOutletRequest,
+  CreateUserRequest,
   LoginRequest,
   LoginResponse,
   MeResponse,
   Outlet,
+  Page,
+  ResetPasswordRequest,
   UpdateMeRequest,
   UpdateOutletRequest,
+  UpdateUserRequest,
+  User,
+  UsersQuery,
 } from './types';
 
 export { MockApiError } from '@/shared/mocks/mock-db';
@@ -77,6 +88,37 @@ export const api = {
     archive(id: number): Promise<Outlet> {
       // TODO(server): POST {API_BASE_URL}/api/v1/outlets/{id}/archive
       return mockArchiveOutlet(id);
+    },
+  },
+  users: {
+    /** GET /users?role=&is_active=&search=&page=&page_size= */
+    list(query: UsersQuery): Promise<Page<User>> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/users
+      return mockListUsers(query);
+    },
+
+    /** GET /users/{id} */
+    get(id: number): Promise<User> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/users/{id}
+      return mockGetUser(id);
+    },
+
+    /** POST /users */
+    create(request: CreateUserRequest): Promise<User> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/users
+      return mockCreateUser(request);
+    },
+
+    /** PATCH /users/{id} */
+    update(id: number, request: UpdateUserRequest): Promise<User> {
+      // TODO(server): PATCH {API_BASE_URL}/api/v1/users/{id}
+      return mockUpdateUser(id, request);
+    },
+
+    /** POST /users/{id}/reset-password */
+    resetPassword(id: number, request: ResetPasswordRequest): Promise<void> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/users/{id}/reset-password
+      return mockResetPassword(id, request);
     },
   },
 } as const;

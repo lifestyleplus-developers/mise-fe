@@ -24,10 +24,16 @@ import type {
   LoginRequest,
   LoginResponse,
   CreateOutletRequest,
+  CreateUserRequest,
   MeResponse,
   Outlet,
+  Page,
+  ResetPasswordRequest,
   UpdateMeRequest,
   UpdateOutletRequest,
+  UpdateUserRequest,
+  User,
+  UsersQuery,
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
@@ -46,6 +52,7 @@ type DbUser = {
   tenant_role: Role;
   interface_language: 'EN' | 'HI' | 'ML' | 'KN';
   memberships: MeResponse['memberships'];
+  is_active: boolean;
 };
 
 /** Long enough to see the loading state, short enough not to feel broken. */
@@ -53,18 +60,25 @@ const NETWORK_DELAY_MS = 700;
 
 type Session = { userId: number; token: string };
 
-/** In-session state — login writes it, logout clears it. */
-let db: {
+type MockDb = {
   users: DbUser[];
   businesses: typeof businesses;
   outlets: DbOutlet[];
   session: Session | null;
-} = {
+};
+
+/**
+ * Kept on `globalThis` so a hot reload of this file does not wipe the session
+ * and every edit made so far, which would make each call answer token_expired
+ * while the screens still show a cached identity.
+ */
+const store = globalThis as typeof globalThis & { __miseMockDb?: MockDb };
+const db: MockDb = (store.__miseMockDb ??= {
   users: users as DbUser[],
   businesses,
   outlets: outletFixtures.map((outlet) => ({ ...outlet })),
   session: null,
-};
+});
 
 export class MockApiError extends Error {
   readonly status: number;
@@ -141,7 +155,7 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
       ? matches.find((candidate) => candidate.tenant_id === request.tenant_id)
       : matches[0];
 
-  if (!user || user.password !== request.password) {
+  if (!user || !user.is_active || user.password !== request.password) {
     return {
       status: 401,
       body: {
@@ -367,4 +381,170 @@ export async function mockArchiveOutlet(id: number): Promise<Outlet> {
   const outlet = findOutlet(me.business.id, id);
   outlet.is_archived = true;
   return toOutlet(outlet);
+}
+
+const ROLE_RANK: Record<Role, number> = { OWNER: 0, ADMIN: 1, MEMBER: 2 };
+
+function toUser(user: DbUser): User {
+  return {
+    id: user.id,
+    username: user.username,
+    full_name: user.full_name,
+    role: user.tenant_role,
+    is_active: user.is_active,
+  };
+}
+
+function findUser(tenantId: number, id: number): DbUser {
+  const user = db.users.find(
+    (candidate) => candidate.id === id && candidate.tenant_id === tenantId,
+  );
+  if (!user) throw apiError(404, 'not_found', 'Not found.');
+  return user;
+}
+
+/** Who may act on whom: nobody on themselves, the Owner, or (for an Admin) a peer Admin. */
+function actorRelation(viewer: { id: number; role: Role }, target: DbUser) {
+  const self = target.id === viewer.id;
+  const ownerTarget = target.tenant_role === 'OWNER';
+  const peerAdmin =
+    viewer.role === 'ADMIN' && target.tenant_role === 'ADMIN' && !self;
+  return { self, ownerTarget, peerAdmin };
+}
+
+/** GET /users — filtered, searched and paginated. */
+export async function mockListUsers(query: UsersQuery): Promise<Page<User>> {
+  await delay();
+  const me = requireAdmin();
+  const needle = query.search?.trim().toLowerCase();
+  const matches = db.users
+    .filter((user) => user.tenant_id === me.business.id)
+    .filter(
+      (user) => query.role === undefined || user.tenant_role === query.role,
+    )
+    .filter(
+      (user) =>
+        query.isActive === undefined || user.is_active === query.isActive,
+    )
+    .filter(
+      (user) =>
+        !needle ||
+        user.full_name.toLowerCase().includes(needle) ||
+        user.username.toLowerCase().includes(needle),
+    )
+    .sort(
+      (a, b) =>
+        ROLE_RANK[a.tenant_role] - ROLE_RANK[b.tenant_role] ||
+        a.full_name.localeCompare(b.full_name),
+    );
+  const start = (query.page - 1) * query.pageSize;
+  return {
+    count: matches.length,
+    next: start + query.pageSize < matches.length ? query.page + 1 : null,
+    previous: query.page > 1 ? query.page - 1 : null,
+    results: matches.slice(start, start + query.pageSize).map(toUser),
+  };
+}
+
+/** GET /users/{id} */
+export async function mockGetUser(id: number): Promise<User> {
+  await delay();
+  const me = requireAdmin();
+  return toUser(findUser(me.business.id, id));
+}
+
+/** POST /users */
+export async function mockCreateUser(
+  request: CreateUserRequest,
+): Promise<User> {
+  await delay();
+  const me = requireAdmin();
+  const username = request.username.trim().toLowerCase();
+  if (username === 'offline') throw new Error('Network request failed');
+  if (request.role === 'OWNER') {
+    throw apiError(409, 'owner_exists', 'There is already an Owner.');
+  }
+  if (request.role === 'ADMIN' && me.user.role !== 'OWNER') {
+    throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+  }
+  const taken = db.users.some(
+    (user) => user.tenant_id === me.business.id && user.username === username,
+  );
+  if (taken) {
+    throw apiError(
+      400,
+      API_ERROR_CODE.VALIDATION_ERROR,
+      'This username is already used.',
+      'username',
+    );
+  }
+  const user: DbUser = {
+    id: Math.max(0, ...db.users.map((candidate) => candidate.id)) + 1,
+    tenant_id: me.business.id,
+    username,
+    password: request.password,
+    full_name: request.full_name.trim(),
+    tenant_role: request.role,
+    interface_language: 'EN',
+    memberships: {
+      cl_admin_assignments: [],
+      cl_imp_assignments: [],
+      attendance_configs: [],
+      inventory_outlets: [],
+      spot_check_outlets: [],
+    },
+    is_active: true,
+  };
+  db.users.push(user);
+  return toUser(user);
+}
+
+/** PATCH /users/{id} */
+export async function mockUpdateUser(
+  id: number,
+  request: UpdateUserRequest,
+): Promise<User> {
+  await delay();
+  const me = requireAdmin();
+  const user = findUser(me.business.id, id);
+  const { self, ownerTarget, peerAdmin } = actorRelation(me.user, user);
+  const forbidden = self || ownerTarget || peerAdmin;
+
+  if (request.role !== undefined && request.role !== user.tenant_role) {
+    if (forbidden) throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+    if (request.role === 'OWNER') {
+      throw apiError(409, 'owner_exists', 'There is already an Owner.');
+    }
+    if (request.role === 'ADMIN' && me.user.role !== 'OWNER') {
+      throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+    }
+  }
+  if (request.is_active !== undefined && request.is_active !== user.is_active) {
+    if (forbidden) throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+  }
+
+  if (request.full_name !== undefined)
+    user.full_name = request.full_name.trim();
+  if (request.role !== undefined) user.tenant_role = request.role;
+  if (request.is_active !== undefined) user.is_active = request.is_active;
+  return toUser(user);
+}
+
+/** POST /users/{id}/reset-password */
+export async function mockResetPassword(
+  id: number,
+  request: ResetPasswordRequest,
+): Promise<void> {
+  await delay();
+  const me = requireAdmin();
+  const user = findUser(me.business.id, id);
+  const { ownerTarget, peerAdmin } = actorRelation(me.user, user);
+  if (
+    !user.is_active ||
+    peerAdmin ||
+    (ownerTarget && me.user.role !== 'OWNER')
+  ) {
+    throw apiError(403, 'authoring_forbidden', 'Not permitted.');
+  }
+  user.password = request.password;
 }

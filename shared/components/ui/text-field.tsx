@@ -9,6 +9,8 @@ type TextFieldProps = React.ComponentProps<typeof Input> & {
   label: string;
   /** Renders a show/hide toggle and treats the value as a password. */
   isPassword?: boolean;
+  /** Starts with a password visible, for one a manager is setting. */
+  initiallyShown?: boolean;
   showLabel?: string;
   hideLabel?: string;
   containerClassName?: string;
@@ -17,6 +19,7 @@ type TextFieldProps = React.ComponentProps<typeof Input> & {
 function TextField({
   label,
   isPassword = false,
+  initiallyShown = false,
   showLabel = 'Show password',
   hideLabel = 'Hide password',
   containerClassName,
@@ -24,7 +27,7 @@ function TextField({
   ...props
 }: TextFieldProps) {
   const id = React.useId();
-  const [shown, setShown] = React.useState(false);
+  const [shown, setShown] = React.useState(initiallyShown);
 
   return (
     <View className={cn('flex flex-col gap-1.5', containerClassName)}>

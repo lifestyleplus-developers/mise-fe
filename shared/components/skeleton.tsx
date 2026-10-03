@@ -7,7 +7,13 @@ function Skeleton({ className }: { className?: string }) {
 }
 
 /** Placeholder for a loading list card. */
-function SkeletonRows({ count = 3 }: { count?: number }) {
+function SkeletonRows({
+  count = 3,
+  avatar = false,
+}: {
+  count?: number;
+  avatar?: boolean;
+}) {
   return (
     <View
       accessibilityElementsHidden
@@ -22,8 +28,10 @@ function SkeletonRows({ count = 3 }: { count?: number }) {
             index > 0 && 'border-border border-t',
           )}
         >
-          <Skeleton className="size-9 rounded-xl" />
-          <Skeleton className="h-3.5 flex-1" />
+          <Skeleton
+            className={avatar ? 'size-10 rounded-full' : 'size-9 rounded-xl'}
+          />
+          <Skeleton className="h-3.5 w-2/5" />
         </View>
       ))}
     </View>

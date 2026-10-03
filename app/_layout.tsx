@@ -1,5 +1,6 @@
+import '@/shared/lib/icons';
 import { ApiProvider } from '@/shared/api/query-client';
-import { NAV_THEME, WASH } from '@/shared/lib/theme';
+import { NAV_THEME, THEME, WASH } from '@/shared/lib/theme';
 import { useLanguageStore } from '@/shared/stores/language-store';
 import { useAppliedTheme, useThemeStore } from '@/shared/stores/theme-store';
 import {
@@ -14,6 +15,7 @@ import { NotoSansMalayalam_400Regular } from '@expo-google-fonts/noto-sans-malay
 import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { ThemeTransition } from '@/shared/components/theme-transition';
 import { PortalHost } from '@rn-primitives/portal';
+import { LucideProvider } from 'lucide-react-native';
 import { colorScheme } from 'nativewind';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -63,25 +65,27 @@ export default function RootLayout() {
         />
       ) : (
         <SafeAreaProvider>
-          <StatusBar style={applied === 'dark' ? 'light' : 'dark'} />
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: WASH[applied].backgroundColor,
-              experimental_backgroundImage: WASH[applied].backgroundImage,
-            }}
-          >
-            <ThemeProvider value={NAV_THEME[applied]}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: 'transparent' },
-                }}
-              />
-            </ThemeProvider>
-          </View>
-          <ThemeTransition />
-          <PortalHost />
+          <LucideProvider color={THEME[applied].foreground}>
+            <StatusBar style={applied === 'dark' ? 'light' : 'dark'} />
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: WASH[applied].backgroundColor,
+                experimental_backgroundImage: WASH[applied].backgroundImage,
+              }}
+            >
+              <ThemeProvider value={NAV_THEME[applied]}>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: 'transparent' },
+                  }}
+                />
+              </ThemeProvider>
+            </View>
+            <ThemeTransition />
+            <PortalHost />
+          </LucideProvider>
         </SafeAreaProvider>
       )}
     </ApiProvider>

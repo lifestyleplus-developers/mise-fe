@@ -95,3 +95,45 @@ export type CreateOutletRequest = { name: string };
 export type UpdateOutletRequest = Partial<
   Pick<Outlet, 'name' | 'attendance_enabled' | 'spot_checks_enabled'>
 >;
+
+/** API Contract §1 — every list is paginated. */
+export type Page<T> = {
+  count: number;
+  next: number | null;
+  previous: number | null;
+  results: T[];
+};
+
+/** API Contract §4 — a person in the business. No email field exists. */
+export type User = {
+  id: number;
+  username: string;
+  full_name: string;
+  role: Role;
+  is_active: boolean;
+};
+
+/** GET /users filters. */
+export type UsersQuery = {
+  page: number;
+  pageSize: number;
+  role?: Role;
+  isActive?: boolean;
+  search?: string;
+};
+
+/** POST /users. */
+export type CreateUserRequest = {
+  username: string;
+  password: string;
+  full_name: string;
+  role: Role;
+};
+
+/** PATCH /users/{id}. */
+export type UpdateUserRequest = Partial<
+  Pick<User, 'full_name' | 'role' | 'is_active'>
+>;
+
+/** POST /users/{id}/reset-password. */
+export type ResetPasswordRequest = { password: string };

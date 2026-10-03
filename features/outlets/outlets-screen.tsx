@@ -9,6 +9,7 @@ import { useOutlets } from '@/features/outlets/use-outlets';
 import { PushedScreen } from '@/features/shell/pushed-screen';
 import { EmptyState } from '@/shared/components/empty-state';
 import { ListGroup } from '@/shared/components/list-group';
+import { NewButton } from '@/shared/components/new-button';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SkeletonRows } from '@/shared/components/skeleton';
 import { SwitchRow } from '@/shared/components/switch-row';
@@ -17,7 +18,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { useT } from '@/shared/i18n';
 import { useRouter } from 'expo-router';
-import { Plus, Store } from 'lucide-react-native';
+import { Store } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 
@@ -50,14 +51,7 @@ export function OutletsScreen() {
       adminOnly
       onRefresh={() => void refetch()}
       refreshing={isRefetching}
-      action={
-        showNew ? (
-          <Button size="sm" onPress={openAdd}>
-            <Plus className="size-4 text-white dark:text-primary-foreground" />
-            <Text>{t('admin.new')}</Text>
-          </Button>
-        ) : undefined
-      }
+      action={showNew ? <NewButton onPress={openAdd} /> : undefined}
     >
       {forbidden ? (
         <View className="mx-4">

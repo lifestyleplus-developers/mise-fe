@@ -65,6 +65,46 @@ export const en = {
   'outlets.archived-note': "Archived. Its history stays; it can't be edited.",
   'outlets.archived-done': '{name} archived. Its history stays.',
 
+  'users.new': 'New user',
+  'users.search': 'Search name or username',
+  'users.clear': 'Clear',
+  'users.clear-filters': 'Clear filters',
+  'users.status': 'Status',
+  'users.active': 'Active',
+  'users.inactive': 'Inactive',
+  'users.role-filter': 'Role',
+  'users.all': 'All',
+  'users.no-match': 'No one matches “{q}”',
+  'users.no-one-here': 'No one here',
+  'users.full-name': 'Full name',
+  'users.username': 'Username',
+  'users.username-taken': 'This username is already used in your business.',
+  'users.username-locked': "Usernames can't be changed.",
+  'users.password': 'Password',
+  'users.new-password': 'New password',
+  'users.role': 'Role',
+  'users.role-hint': 'Checklist roles are given per checklist.',
+  'users.added-notice':
+    '{name} added. Tell them their username (@{username}) and the password you set.',
+  'users.set-password': 'Set new password',
+  'users.set-password-warn': '{name} will be signed out on every phone.',
+  'users.set-password-warn-self':
+    'You will be signed out on your other phones.',
+  'users.password-saved': 'Saved. Tell {name} the new password.',
+  'users.password-saved-self':
+    'Saved. Use the new password next time you sign in.',
+  'users.owner-note':
+    "Only the Owner can change this password. If it's forgotten, the mise platform team resets it.",
+  'users.peer-admin-note':
+    "Only the Owner can change another Administrator's password.",
+  'users.deactivate': 'Deactivate',
+  'users.deactivate-title': 'Deactivate {name}?',
+  'users.deactivate-body':
+    "{name} will be signed out on every phone now and can't sign in again until reactivated. Past answers stay.",
+  'users.reactivate': 'Reactivate',
+  'users.no-longer-access':
+    'You no longer have access. Your role may have changed.',
+
   'placeholder.label': 'Placeholder',
   'placeholder.week': 'Specced and built in week {n}',
 

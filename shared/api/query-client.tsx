@@ -33,9 +33,9 @@ onlineManager.setEventListener((setOnline) => {
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
-/** Auth never persists. */
-function shouldDehydrateAuth(query: Query) {
-  return query.queryKey[0] !== 'auth';
+/** Auth never persists; neither does a query still in flight. */
+function shouldPersist(query: Query) {
+  return query.queryKey[0] !== 'auth' && query.state.status === 'success';
 }
 
 /** Resume any mutations that went offline mid-flight (retry queue seed). */
@@ -68,7 +68,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
       client={queryClient}
       persistOptions={{
         persister,
-        dehydrateOptions: { shouldDehydrateQuery: shouldDehydrateAuth },
+        dehydrateOptions: { shouldDehydrateQuery: shouldPersist },
       }}
       onSuccess={resumePaused}
     >

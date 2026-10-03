@@ -13,7 +13,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 2,
@@ -29,7 +30,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 3,
@@ -45,7 +47,8 @@
       "attendance_configs": [],
       "inventory_outlets": [3],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 4,
@@ -61,7 +64,8 @@
       "attendance_configs": [2],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 5,
@@ -77,7 +81,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 6,
@@ -93,7 +98,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 7,
@@ -109,7 +115,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 8,
@@ -125,7 +132,8 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
   },
   {
     "id": 9,
@@ -141,6 +149,109 @@
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []
-    }
+    },
+    "is_active": true
+  },
+  {
+    "id": 10,
+    "tenant_id": 7,
+    "username": "zoya",
+    "password": "demo",
+    "full_name": "Zoya",
+    "tenant_role": "ADMIN",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 11,
+    "tenant_id": 7,
+    "username": "kiran",
+    "password": "demo",
+    "full_name": "Kiran",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 12,
+    "tenant_id": 7,
+    "username": "sana",
+    "password": "demo",
+    "full_name": "Sana",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 13,
+    "tenant_id": 7,
+    "username": "anil",
+    "password": "demo",
+    "full_name": "Anil",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": false
+  },
+  {
+    "id": 14,
+    "tenant_id": 7,
+    "username": "ananthu",
+    "password": "demo",
+    "full_name": "അനന്തകൃഷ്ണൻ പുത്തൻവീട്ടിൽ",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 15,
+    "tenant_id": 7,
+    "username": "sreelakshmi.un",
+    "password": "demo",
+    "full_name": "Sreelakshmi Unnikrishnan Nair",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
   }
 ]
