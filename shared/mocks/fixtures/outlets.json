@@ -2,7 +2,7 @@
   {
     "id": 3,
     "tenant_id": 7,
-    "name": "Indiranagar",
+    "name": "ZamZam",
     "attendance_enabled": true,
     "spot_checks_enabled": true,
     "is_archived": false
@@ -10,7 +10,7 @@
   {
     "id": 5,
     "tenant_id": 7,
-    "name": "Koramangala",
+    "name": "Elegance",
     "attendance_enabled": true,
     "spot_checks_enabled": false,
     "is_archived": false
@@ -18,7 +18,7 @@
   {
     "id": 8,
     "tenant_id": 7,
-    "name": "Whitefield",
+    "name": "Icefruits",
     "attendance_enabled": false,
     "spot_checks_enabled": false,
     "is_archived": false
@@ -26,7 +26,7 @@
   {
     "id": 11,
     "tenant_id": 7,
-    "name": "Indiranagar 100 Feet Road Central Kitchen",
+    "name": "ZamZam Grande",
     "attendance_enabled": false,
     "spot_checks_enabled": false,
     "is_archived": false
@@ -34,7 +34,7 @@
   {
     "id": 9,
     "tenant_id": 7,
-    "name": "MG Road",
+    "name": "Mini(P) & Office",
     "attendance_enabled": false,
     "spot_checks_enabled": false,
     "is_archived": true

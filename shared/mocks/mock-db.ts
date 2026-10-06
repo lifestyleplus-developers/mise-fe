@@ -558,43 +558,48 @@ type RunTemplate = {
   /** Minutes after local midnight. */
   open: number;
   close: number;
+  /** Today's window as minutes from now, so the run is open whenever the app is demoed. */
+  todayFromNow?: { open: number; close: number };
   total: number;
   answered: number;
 };
 
-/** Daily checklists at Indiranagar; assignment ids match the fixture memberships. */
+/** Daily checklists at ZamZam; assignment ids match the fixture memberships. */
 const RUN_TEMPLATES: RunTemplate[] = [
   {
     assignmentId: 11,
     checklist: 'Kitchen Opening',
-    outlet: 'Indiranagar',
+    outlet: 'ZamZam',
     open: 360,
     close: 600,
+    todayFromNow: { open: -90, close: 150 },
     total: 12,
     answered: 7,
   },
   {
     assignmentId: 13,
     checklist: 'Fridge Temperatures',
-    outlet: 'Indiranagar',
+    outlet: 'ZamZam',
     open: 390,
     close: 630,
+    todayFromNow: { open: -60, close: 120 },
     total: 6,
-    answered: 6,
+    answered: 4,
   },
   {
     assignmentId: 16,
     checklist: 'Store Opening',
-    outlet: 'Indiranagar',
+    outlet: 'ZamZam',
     open: 420,
     close: 720,
+    todayFromNow: { open: -30, close: 180 },
     total: 8,
-    answered: 0,
+    answered: 3,
   },
   {
     assignmentId: 12,
     checklist: 'Kitchen Closing',
-    outlet: 'Indiranagar',
+    outlet: 'ZamZam',
     open: 1320,
     close: 1470,
     total: 10,
@@ -626,13 +631,19 @@ export async function mockListRuns(): Promise<Run[]> {
         day.setDate(day.getDate() + dayOffset);
         return new Date(day.getTime() + minutes * 60_000);
       };
-      const close = at(template.close);
+      const rolling = dayOffset === 0 ? template.todayFromNow : undefined;
+      const open = rolling
+        ? new Date(now + rolling.open * 60_000)
+        : at(template.open);
+      const close = rolling
+        ? new Date(now + rolling.close * 60_000)
+        : at(template.close);
       if (close.getTime() <= now) continue;
       runs.push({
         id: template.assignmentId * 100 + dayOffset,
         checklist_name: template.checklist,
         outlet_name: template.outlet,
-        window_open: at(template.open).toISOString(),
+        window_open: open.toISOString(),
         window_close: close.toISOString(),
         total_tasks: template.total,
         answered_count: dayOffset === 0 ? template.answered : 0,
