@@ -26,6 +26,7 @@ import type {
   LoginResponse,
   CreateOutletRequest,
   CreateUserRequest,
+  ChecklistListItem,
   MeResponse,
   Outlet,
   Page,
@@ -40,6 +41,7 @@ import type {
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
 import businesses from './fixtures/businesses.json';
+import checklistFixtures from './fixtures/checklists.json';
 import outletFixtures from './fixtures/outlets.json';
 import users from './fixtures/users.json';
 
@@ -653,4 +655,55 @@ export async function mockListRuns(): Promise<Run[]> {
     }
   }
   return runs;
+}
+
+/**
+ * GET /checklists — scoped to what the caller can see (§5): ADMIN/OWNER get
+ * every checklist, anyone else only those where they are CL_ADMIN or CL_IMP.
+ * Archived ones are left out.
+ */
+export async function mockListChecklists(
+  page: number,
+  pageSize: number,
+): Promise<Page<ChecklistListItem>> {
+  await delay();
+  const me = resolveMe();
+  const admin = new Set(me.memberships.cl_admin_assignments);
+  const implementer = new Set(me.memberships.cl_imp_assignments);
+
+  const all: ChecklistListItem[] = [];
+  for (const { tenant_id, ...checklist } of checklistFixtures.checklists) {
+    if (tenant_id !== me.business.id || checklist.is_archived) continue;
+    const assignments = checklistFixtures.assignments
+      .filter(
+        (a) =>
+          a.tenant_id === me.business.id && a.checklist_id === checklist.id,
+      )
+      .map((a) => ({
+        id: a.id,
+        outlet_name: a.outlet_name,
+        score: a.score,
+        my_role: admin.has(a.id)
+          ? ('CL_ADMIN' as const)
+          : implementer.has(a.id)
+            ? ('CL_IMP' as const)
+            : null,
+      }));
+    if (canAdminister(me.user.role)) {
+      all.push({ ...checklist, assignments } as ChecklistListItem);
+    } else if (assignments.some((a) => a.my_role)) {
+      all.push({
+        ...checklist,
+        assignments: assignments.filter((a) => a.my_role),
+      } as ChecklistListItem);
+    }
+  }
+
+  const start = (page - 1) * pageSize;
+  return {
+    count: all.length,
+    next: start + pageSize < all.length ? page + 1 : null,
+    previous: page > 1 ? page - 1 : null,
+    results: all.slice(start, start + pageSize),
+  };
 }

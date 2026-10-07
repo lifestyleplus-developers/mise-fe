@@ -110,7 +110,7 @@
     "tenant_role": "OWNER",
     "interface_language": "EN",
     "memberships": {
-      "cl_admin_assignments": [],
+      "cl_admin_assignments": [707, 703, 704],
       "cl_imp_assignments": [],
       "attendance_configs": [],
       "inventory_outlets": [],

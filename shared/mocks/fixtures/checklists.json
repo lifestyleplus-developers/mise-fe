@@ -1,0 +1,435 @@
+{
+  "checklists": [
+    {
+      "id": 101,
+      "tenant_id": 7,
+      "name": "Washroom Check",
+      "recurrence": "DAILY",
+      "st_time": "06:00",
+      "deadline_minutes": 240,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 102,
+      "tenant_id": 7,
+      "name": "Kitchen Opening",
+      "recurrence": "DAILY",
+      "st_time": "06:30",
+      "deadline_minutes": 240,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 103,
+      "tenant_id": 7,
+      "name": "Fridge Temperatures",
+      "recurrence": "DAILY",
+      "st_time": "07:00",
+      "deadline_minutes": 240,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 104,
+      "tenant_id": 7,
+      "name": "Store Opening",
+      "recurrence": "DAILY",
+      "st_time": "07:00",
+      "deadline_minutes": 300,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 105,
+      "tenant_id": 7,
+      "name": "Delivery Receiving",
+      "recurrence": "DAILY",
+      "st_time": "08:00",
+      "deadline_minutes": 240,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 106,
+      "tenant_id": 7,
+      "name": "Kitchen Closing",
+      "recurrence": "DAILY",
+      "st_time": "22:00",
+      "deadline_minutes": 150,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 107,
+      "tenant_id": 7,
+      "name": "Monthly Deep Clean",
+      "recurrence": "MONTHLY",
+      "st_time": "09:00",
+      "deadline_minutes": 480,
+      "weekdays": null,
+      "day_of_month": 1,
+      "is_archived": false
+    },
+    {
+      "id": 120,
+      "tenant_id": 7,
+      "name": "Oil Quality Check",
+      "recurrence": "HOURLY",
+      "st_time": "11:00",
+      "deadline_minutes": 30,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 121,
+      "tenant_id": 7,
+      "name": "Pest Control Walk",
+      "recurrence": "WEEKLY",
+      "st_time": "09:00",
+      "deadline_minutes": 240,
+      "weekdays": [1, 4],
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 122,
+      "tenant_id": 7,
+      "name": "Old Audit",
+      "recurrence": "DAILY",
+      "st_time": "10:00",
+      "deadline_minutes": 60,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": true
+    },
+    {
+      "id": 201,
+      "tenant_id": 11,
+      "name": "Front Desk Shift Handover",
+      "recurrence": "DAILY",
+      "st_time": "07:00",
+      "deadline_minutes": 180,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 203,
+      "tenant_id": 11,
+      "name": "Public Area Walk",
+      "recurrence": "HOURLY",
+      "st_time": "08:00",
+      "deadline_minutes": 45,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 206,
+      "tenant_id": 11,
+      "name": "Preventive Maintenance",
+      "recurrence": "MONTHLY",
+      "st_time": "09:00",
+      "deadline_minutes": 480,
+      "weekdays": null,
+      "day_of_month": 1,
+      "is_archived": false
+    },
+    {
+      "id": 202,
+      "tenant_id": 11,
+      "name": "Room Turnover Check",
+      "recurrence": "DAILY",
+      "st_time": "09:00",
+      "deadline_minutes": 300,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 205,
+      "tenant_id": 11,
+      "name": "Fire & Life Safety Check",
+      "recurrence": "WEEKLY",
+      "st_time": "10:00",
+      "deadline_minutes": 240,
+      "weekdays": [1, 4],
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 207,
+      "tenant_id": 11,
+      "name": "Pool & Spa Check",
+      "recurrence": "DAILY",
+      "st_time": "11:00",
+      "deadline_minutes": 240,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 208,
+      "tenant_id": 11,
+      "name": "Banquet Setup",
+      "recurrence": "DAILY",
+      "st_time": "14:00",
+      "deadline_minutes": 180,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
+      "id": 204,
+      "tenant_id": 11,
+      "name": "Night Audit",
+      "recurrence": "DAILY",
+      "st_time": "23:00",
+      "deadline_minutes": 120,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    }
+  ],
+  "assignments": [
+    {
+      "id": 17,
+      "tenant_id": 7,
+      "checklist_id": 101,
+      "outlet_name": "ZamZam",
+      "score": 96
+    },
+    {
+      "id": 21,
+      "tenant_id": 7,
+      "checklist_id": 101,
+      "outlet_name": "Elegance",
+      "score": 90
+    },
+    {
+      "id": 31,
+      "tenant_id": 7,
+      "checklist_id": 101,
+      "outlet_name": "Icefruits",
+      "score": 82
+    },
+    {
+      "id": 11,
+      "tenant_id": 7,
+      "checklist_id": 102,
+      "outlet_name": "ZamZam",
+      "score": 94
+    },
+    {
+      "id": 22,
+      "tenant_id": 7,
+      "checklist_id": 102,
+      "outlet_name": "Elegance",
+      "score": 71
+    },
+    {
+      "id": 32,
+      "tenant_id": 7,
+      "checklist_id": 102,
+      "outlet_name": "Icefruits",
+      "score": 88
+    },
+    {
+      "id": 13,
+      "tenant_id": 7,
+      "checklist_id": 103,
+      "outlet_name": "ZamZam",
+      "score": 91
+    },
+    {
+      "id": 23,
+      "tenant_id": 7,
+      "checklist_id": 103,
+      "outlet_name": "Elegance",
+      "score": 85
+    },
+    {
+      "id": 33,
+      "tenant_id": 7,
+      "checklist_id": 103,
+      "outlet_name": "Icefruits",
+      "score": 97
+    },
+    {
+      "id": 16,
+      "tenant_id": 7,
+      "checklist_id": 104,
+      "outlet_name": "ZamZam",
+      "score": 89
+    },
+    {
+      "id": 24,
+      "tenant_id": 7,
+      "checklist_id": 104,
+      "outlet_name": "Elegance",
+      "score": 93
+    },
+    {
+      "id": 34,
+      "tenant_id": 7,
+      "checklist_id": 104,
+      "outlet_name": "Icefruits",
+      "score": 78
+    },
+    {
+      "id": 18,
+      "tenant_id": 7,
+      "checklist_id": 105,
+      "outlet_name": "ZamZam",
+      "score": 87
+    },
+    {
+      "id": 25,
+      "tenant_id": 7,
+      "checklist_id": 105,
+      "outlet_name": "Elegance",
+      "score": null
+    },
+    {
+      "id": 12,
+      "tenant_id": 7,
+      "checklist_id": 106,
+      "outlet_name": "ZamZam",
+      "score": 92
+    },
+    {
+      "id": 26,
+      "tenant_id": 7,
+      "checklist_id": 106,
+      "outlet_name": "Elegance",
+      "score": 84
+    },
+    {
+      "id": 35,
+      "tenant_id": 7,
+      "checklist_id": 106,
+      "outlet_name": "Icefruits",
+      "score": 90
+    },
+    {
+      "id": 41,
+      "tenant_id": 7,
+      "checklist_id": 102,
+      "outlet_name": "ZamZam Grande",
+      "score": 83
+    },
+    {
+      "id": 600,
+      "tenant_id": 7,
+      "checklist_id": 120,
+      "outlet_name": "ZamZam",
+      "score": null
+    },
+    {
+      "id": 601,
+      "tenant_id": 7,
+      "checklist_id": 121,
+      "outlet_name": "ZamZam",
+      "score": 77
+    },
+    {
+      "id": 701,
+      "tenant_id": 11,
+      "checklist_id": 201,
+      "outlet_name": "Porch Inn Main",
+      "score": 93
+    },
+    {
+      "id": 702,
+      "tenant_id": 11,
+      "checklist_id": 201,
+      "outlet_name": "Porch Inn Annex",
+      "score": 88
+    },
+    {
+      "id": 703,
+      "tenant_id": 11,
+      "checklist_id": 202,
+      "outlet_name": "Porch Inn Main",
+      "score": 76
+    },
+    {
+      "id": 704,
+      "tenant_id": 11,
+      "checklist_id": 202,
+      "outlet_name": "Porch Inn Annex",
+      "score": 91
+    },
+    {
+      "id": 705,
+      "tenant_id": 11,
+      "checklist_id": 203,
+      "outlet_name": "Porch Inn Main",
+      "score": 84
+    },
+    {
+      "id": 706,
+      "tenant_id": 11,
+      "checklist_id": 203,
+      "outlet_name": "Porch Inn Annex",
+      "score": 79
+    },
+    {
+      "id": 707,
+      "tenant_id": 11,
+      "checklist_id": 204,
+      "outlet_name": "Porch Inn Main",
+      "score": 97
+    },
+    {
+      "id": 708,
+      "tenant_id": 11,
+      "checklist_id": 204,
+      "outlet_name": "Porch Inn Annex",
+      "score": 95
+    },
+    {
+      "id": 709,
+      "tenant_id": 11,
+      "checklist_id": 205,
+      "outlet_name": "Porch Inn Main",
+      "score": 90
+    },
+    {
+      "id": 710,
+      "tenant_id": 11,
+      "checklist_id": 205,
+      "outlet_name": "Porch Inn Annex",
+      "score": 82
+    },
+    {
+      "id": 711,
+      "tenant_id": 11,
+      "checklist_id": 206,
+      "outlet_name": "Porch Inn Main",
+      "score": 71
+    },
+    {
+      "id": 712,
+      "tenant_id": 11,
+      "checklist_id": 206,
+      "outlet_name": "Porch Inn Annex",
+      "score": 86
+    },
+    {
+      "id": 713,
+      "tenant_id": 11,
+      "checklist_id": 207,
+      "outlet_name": "Porch Inn Main",
+      "score": null
+    }
+  ]
+}

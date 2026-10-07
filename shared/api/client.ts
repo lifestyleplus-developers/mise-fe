@@ -3,6 +3,7 @@ import {
   mockArchiveOutlet,
   mockCreateOutlet,
   mockCreateUser,
+  mockListChecklists,
   mockFetchMe,
   mockGetOutlet,
   mockGetUser,
@@ -17,6 +18,7 @@ import {
   mockUpdateUser,
 } from '@/shared/mocks/mock-db';
 import type {
+  ChecklistListItem,
   CreateOutletRequest,
   CreateUserRequest,
   LoginRequest,
@@ -97,6 +99,13 @@ export const api = {
     list(): Promise<Run[]> {
       // TODO(server): GET {API_BASE_URL}/api/v1/runs (paginated)
       return mockListRuns();
+    },
+  },
+  checklists: {
+    /** GET /checklists?page=&page_size= — scoped to what the caller can see. */
+    list(page: number, pageSize: number): Promise<Page<ChecklistListItem>> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/checklists
+      return mockListChecklists(page, pageSize);
     },
   },
   users: {

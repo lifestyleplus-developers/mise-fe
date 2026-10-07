@@ -14,10 +14,17 @@ type TabScreenProps = {
   /** Small line above the title — the business name, on Home. */
   eyebrow?: string;
   children: React.ReactNode;
+  /** Fires once as the user scrolls near the bottom, for paginated lists. */
+  onEndReached?: () => void;
 };
 
 /** Frame for every tab root: header, offline banner, scroll area. */
-export function TabScreen({ title, eyebrow, children }: TabScreenProps) {
+export function TabScreen({
+  title,
+  eyebrow,
+  children,
+  onEndReached,
+}: TabScreenProps) {
   const t = useT();
   const insets = useSafeAreaInsets();
   const { data, isError, isRefetching, refetch } = useMe();
@@ -27,6 +34,18 @@ export function TabScreen({ title, eyebrow, children }: TabScreenProps) {
   return (
     <SafeAreaView edges={['top']} className="flex-1">
       <ScrollView
+        scrollEventThrottle={100}
+        onScroll={
+          onEndReached
+            ? ({ nativeEvent: e }) => {
+                const distance =
+                  e.contentSize.height -
+                  e.layoutMeasurement.height -
+                  e.contentOffset.y;
+                if (distance < 400) onEndReached();
+              }
+            : undefined
+        }
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}

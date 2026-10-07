@@ -151,3 +151,38 @@ export type Run = {
   /** Which part the caller plays on this run's assignment. */
   my_role: 'CL_ADMIN' | 'CL_IMP';
 };
+
+/** API Contract §5 — a checklist template. */
+export type Checklist = {
+  id: number;
+  name: string;
+  recurrence: 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  /** HH:MM, business-local. */
+  st_time: string;
+  deadline_minutes: number;
+  /** WEEKLY only; 1 = Monday … 7 = Sunday. */
+  weekdays: number[] | null;
+  /** MONTHLY only. */
+  day_of_month: number | null;
+  is_archived: boolean;
+};
+
+/** One outlet a checklist runs at, with the caller's part on it. */
+export type ChecklistAssignment = {
+  id: number;
+  outlet_name: string;
+  /** Latest finished period's score, 0–100; null before any period has closed. */
+  score: number | null;
+  /** Null for an ADMIN/OWNER who is on the assignment as neither bucket. */
+  my_role: 'CL_ADMIN' | 'CL_IMP' | null;
+};
+
+/**
+ * GET /checklists row. The contract (§5) lists only the checklist fields; the
+ * assignments and scores FE Spec §3.4 asks for ("the outlets it runs at that
+ * you can see, and the most recent score") are not in it yet. Assumed here as
+ * a nested array until Lamax confirms the shape.
+ */
+export type ChecklistListItem = Checklist & {
+  assignments: ChecklistAssignment[];
+};

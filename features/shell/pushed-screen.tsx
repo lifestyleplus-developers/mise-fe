@@ -17,7 +17,7 @@ type PushedScreenProps = {
   /** Sits opposite Back, e.g. a New button. */
   action?: React.ReactNode;
   /** Where Back goes when nothing is behind this screen. Defaults to More. */
-  backHref?: '/more' | '/outlets' | '/users';
+  backHref?: '/more' | '/outlets' | '/users' | '/checklists';
   /** Wires pull to refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;

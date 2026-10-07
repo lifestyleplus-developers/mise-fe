@@ -1,9 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'tab.checklists',
-  frame: 'tab',
-  id: 'CHK-05',
-  name: 'Checklist list',
-  week: 4,
-});
+export { ChecklistsScreen as default } from '@/features/checklists/checklists-screen';

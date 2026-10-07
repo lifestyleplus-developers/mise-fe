@@ -47,6 +47,8 @@ type PlaceholderConfig = PlaceholderCardProps & {
   frame: 'tab' | 'pushed';
   /** Pushed screens only: ADMIN and OWNER. */
   adminOnly?: boolean;
+  /** Pushed screens only: where Back goes when nothing is behind this screen. */
+  backHref?: React.ComponentProps<typeof PushedScreen>['backHref'];
 };
 
 /** A whole placeholder screen. Route files export its result. */
@@ -54,6 +56,7 @@ export function createPlaceholder({
   title,
   frame,
   adminOnly,
+  backHref,
   ...card
 }: PlaceholderConfig) {
   return function Placeholder() {
@@ -62,7 +65,7 @@ export function createPlaceholder({
     return frame === 'tab' ? (
       <TabScreen title={t(title)}>{body}</TabScreen>
     ) : (
-      <PushedScreen title={t(title)} adminOnly={adminOnly}>
+      <PushedScreen title={t(title)} adminOnly={adminOnly} backHref={backHref}>
         {body}
       </PushedScreen>
     );
