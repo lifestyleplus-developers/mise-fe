@@ -5,11 +5,13 @@ import {
 } from '@/features/checklists/checklist-card';
 import { useChecklists } from '@/features/checklists/use-checklists';
 import { FilterChip } from '@/features/home/filter-chip';
+import { useRuns } from '@/features/home/use-runs';
 import { useOutlets } from '@/features/outlets/use-outlets';
 import { TabScreen } from '@/features/shell/tab-screen';
 import type {
   ChecklistAssignment,
   ChecklistListItem,
+  Run,
 } from '@/shared/api/types';
 import { AutoDismissBanner } from '@/shared/components/auto-dismiss-banner';
 import { EmptyState } from '@/shared/components/empty-state';
@@ -19,6 +21,7 @@ import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { canAdminister } from '@/shared/constants/roles';
+import { useNow } from '@/shared/lib/use-now';
 import { format, useT, type MessageKey } from '@/shared/i18n';
 import { useRouter } from 'expo-router';
 import { ClipboardList, SearchX } from 'lucide-react-native';
@@ -82,7 +85,10 @@ export function ChecklistsScreen() {
     name: string;
   } | null>(null);
   const [removedFrom, setRemovedFrom] = React.useState<string | null>(null);
+  const [runFor, setRunFor] = React.useState<number | null>(null);
   const router = useRouter();
+  const runsQuery = useRuns();
+  const now = useNow();
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
 
@@ -177,11 +183,46 @@ export function ChecklistsScreen() {
     };
   }
 
+  /** Runs of this checklist that are open for the caller right now. */
+  function openRunsOf(row: Row) {
+    const outlets = new Set(row.shown.map((a) => a.outlet_name));
+    return (runsQuery.data ?? []).filter(
+      (run) =>
+        run.checklist_name === row.checklist.name &&
+        outlets.has(run.outlet_name) &&
+        (!outlet || run.outlet_name === outlet) &&
+        new Date(run.window_open).getTime() <= now &&
+        now < new Date(run.window_close).getTime(),
+    );
+  }
+
+  function openRun(run: Run) {
+    router.push({
+      pathname: '/runs/[id]',
+      params: {
+        id: run.id,
+        name: run.checklist_name,
+        outlet: run.outlet_name,
+      },
+    });
+  }
+
   function openAnalytics(row: Row) {
     router.push({
       pathname: '/checklists/[id]/analytics',
       params: { id: row.checklist.id, name: row.checklist.name },
     });
+  }
+
+  /**
+   * A card leads into the work: the checklist's open run if there is one, a
+   * choice of outlet if there are several, otherwise its analytics.
+   */
+  function onCard(row: Row) {
+    const runs = openRunsOf(row);
+    if (runs.length === 1) openRun(runs[0]);
+    else if (runs.length > 1) setRunFor(row.checklist.id);
+    else openAnalytics(row);
   }
 
   function openTeam(row: Row, outletName: string) {
@@ -262,9 +303,19 @@ export function ChecklistsScreen() {
               more={more}
               note={row.unassigned ? t('checklists.not-assigned') : undefined}
               onOpen={
-                row.part === 'member' ? undefined : () => openAnalytics(row)
+                // An implementer has no analytics: their card opens only when there is a run to do.
+                row.part === 'member' && openRunsOf(row).length === 0
+                  ? undefined
+                  : () => onCard(row)
               }
-              openLabel={format(t('checklists.open-analytics'), { name })}
+              openLabel={format(
+                t(
+                  openRunsOf(row).length > 0
+                    ? 'checklists.open-run'
+                    : 'checklists.open-analytics',
+                ),
+                { name },
+              )}
               team={
                 row.managed.length > 0
                   ? {
@@ -281,6 +332,11 @@ export function ChecklistsScreen() {
       </>
     );
   }
+
+  const runRow =
+    runFor === null
+      ? null
+      : (rows.find((r) => r.checklist.id === runFor) ?? null);
 
   const teamRow =
     teamFor === null
@@ -372,6 +428,34 @@ export function ChecklistsScreen() {
           onChange={(value) => {
             if (teamRow) openTeam(teamRow, value);
             setTeamFor(null);
+          }}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={runRow != null}
+        title={format(t('checklists.run-sheet'), {
+          name: runRow?.checklist.name ?? '',
+        })}
+        onDismiss={() => setRunFor(null)}
+        footer={
+          <Button variant="outline" onPress={() => setRunFor(null)}>
+            <Text>{t('admin.cancel')}</Text>
+          </Button>
+        }
+      >
+        <OptionList
+          value=""
+          options={(runRow ? openRunsOf(runRow) : []).map((run) => ({
+            value: String(run.id),
+            label: run.outlet_name,
+          }))}
+          onChange={(value) => {
+            const run = runRow
+              ? openRunsOf(runRow).find((r) => String(r.id) === value)
+              : undefined;
+            setRunFor(null);
+            if (run) openRun(run);
           }}
         />
       </BottomSheet>

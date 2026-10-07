@@ -1,5 +1,6 @@
 import { useMe } from '@/features/auth/use-me';
 import { FilterChip } from '@/features/home/filter-chip';
+import { useHomeNotice } from '@/features/home/home-notice';
 import { clockTime, dayKey } from '@/features/home/run-time';
 import { RunRow, type RunRowVariant } from '@/features/home/run-row';
 import { RunSection, RunSectionSkeleton } from '@/features/home/run-section';
@@ -11,8 +12,10 @@ import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
 import { EmptyState } from '@/shared/components/empty-state';
 import { OptionList } from '@/shared/components/option-list';
 import { RetryBanner } from '@/shared/components/retry-banner';
+import { AutoDismissBanner } from '@/shared/components/auto-dismiss-banner';
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
+import { useNow } from '@/shared/lib/use-now';
 import { canAdminister } from '@/shared/constants/roles';
 import { format, useT } from '@/shared/i18n';
 import { useRouter } from 'expo-router';
@@ -26,16 +29,6 @@ import {
 } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
-
-/** Re-evaluates which runs are open or closed without waiting for a refetch. */
-function useNow(intervalMs = 30_000): number {
-  const [now, setNow] = React.useState(() => Date.now());
-  React.useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
 
 const ALL = '';
 
@@ -51,6 +44,8 @@ export function HomeScreen() {
   const [outlet, setOutlet] = React.useState<string>();
   const [checklist, setChecklist] = React.useState<string>();
   const [sheet, setSheet] = React.useState<Sheet>(null);
+  const notice = useHomeNotice((state) => state.notice);
+  const clearNotice = useHomeNotice((state) => state.clearNotice);
 
   const live = React.useMemo(
     () =>
@@ -118,7 +113,16 @@ export function HomeScreen() {
         isComplete={done(run)}
         completeLabel={t('home.complete')}
         watchLabel={t('home.watch-only')}
-        // The run screen lands in week 4–5; until then a tap does nothing.
+        onPress={() =>
+          router.push({
+            pathname: '/runs/[id]',
+            params: {
+              id: run.id,
+              name: run.checklist_name,
+              outlet: run.outlet_name,
+            },
+          })
+        }
       />
     );
   }
@@ -239,6 +243,16 @@ export function HomeScreen() {
           onRetry={() => void runsQuery.refetch()}
           retrying={runsQuery.isRefetching}
         />
+      ) : null}
+
+      {notice ? (
+        <View className="mx-4 mb-3">
+          <AutoDismissBanner
+            tone="notice"
+            message={notice}
+            onDismiss={clearNotice}
+          />
+        </View>
       ) : null}
 
       {showChips ? (

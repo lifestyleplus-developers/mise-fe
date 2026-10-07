@@ -111,7 +111,7 @@
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [707, 703, 704],
-      "cl_imp_assignments": [],
+      "cl_imp_assignments": [701, 705, 702],
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []

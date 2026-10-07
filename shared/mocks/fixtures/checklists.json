@@ -197,6 +197,314 @@
       "weekdays": null,
       "day_of_month": null,
       "is_archived": false
+    },
+    {
+      "id": 301,
+      "tenant_id": 12,
+      "name": "Bar Opening",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "06:00",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 302,
+      "tenant_id": 12,
+      "name": "Bar Closing",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "07:15",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 303,
+      "tenant_id": 12,
+      "name": "Dining Room Setup",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "08:30",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 304,
+      "tenant_id": 12,
+      "name": "Dish Area Check",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "HOURLY",
+      "st_time": "09:45",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 305,
+      "tenant_id": 12,
+      "name": "Gas and Fire Check",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "WEEKLY",
+      "st_time": "10:00",
+      "weekdays": [1, 4],
+      "day_of_month": null
+    },
+    {
+      "id": 306,
+      "tenant_id": 12,
+      "name": "Staff Hygiene Check",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "MONTHLY",
+      "st_time": "11:15",
+      "weekdays": null,
+      "day_of_month": 1
+    },
+    {
+      "id": 307,
+      "tenant_id": 12,
+      "name": "Walk-in Freezer",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "12:30",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 308,
+      "tenant_id": 12,
+      "name": "Waste and Bins",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "13:45",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 309,
+      "tenant_id": 12,
+      "name": "Grill Station Setup",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "14:00",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 310,
+      "tenant_id": 12,
+      "name": "Fryer Oil Quality",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "HOURLY",
+      "st_time": "15:15",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 311,
+      "tenant_id": 12,
+      "name": "Delivery Receiving",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "WEEKLY",
+      "st_time": "16:30",
+      "weekdays": [1, 4],
+      "day_of_month": null
+    },
+    {
+      "id": 312,
+      "tenant_id": 12,
+      "name": "Cold Storage Log",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "MONTHLY",
+      "st_time": "17:45",
+      "weekdays": null,
+      "day_of_month": 1
+    },
+    {
+      "id": 313,
+      "tenant_id": 12,
+      "name": "Prep Table Sanitising",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "18:00",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 314,
+      "tenant_id": 12,
+      "name": "Allergen Labels",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "19:15",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 315,
+      "tenant_id": 12,
+      "name": "Pest Control Walk",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "20:30",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 316,
+      "tenant_id": 12,
+      "name": "Handwash Stations",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "HOURLY",
+      "st_time": "06:45",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 317,
+      "tenant_id": 12,
+      "name": "Cash Float Count",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "WEEKLY",
+      "st_time": "07:00",
+      "weekdays": [1, 4],
+      "day_of_month": null
+    },
+    {
+      "id": 318,
+      "tenant_id": 12,
+      "name": "Takeaway Counter",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "MONTHLY",
+      "st_time": "08:15",
+      "weekdays": null,
+      "day_of_month": 1
+    },
+    {
+      "id": 319,
+      "tenant_id": 12,
+      "name": "Restroom Check",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "09:30",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 320,
+      "tenant_id": 12,
+      "name": "Terrace Setup",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "10:45",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 321,
+      "tenant_id": 12,
+      "name": "Cutlery Polish",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "11:00",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 322,
+      "tenant_id": 12,
+      "name": "Ice Machine Check",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "HOURLY",
+      "st_time": "12:15",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 323,
+      "tenant_id": 12,
+      "name": "Staff Briefing",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "WEEKLY",
+      "st_time": "13:30",
+      "weekdays": [1, 4],
+      "day_of_month": null
+    },
+    {
+      "id": 324,
+      "tenant_id": 12,
+      "name": "Closing Lockup",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "MONTHLY",
+      "st_time": "14:45",
+      "weekdays": null,
+      "day_of_month": 1
+    },
+    {
+      "id": 325,
+      "tenant_id": 12,
+      "name": "Spice Rack Audit",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "15:00",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 326,
+      "tenant_id": 12,
+      "name": "Dessert Fridge",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "16:15",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 327,
+      "tenant_id": 12,
+      "name": "Beverage Cooler",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "DAILY",
+      "st_time": "17:30",
+      "weekdays": null,
+      "day_of_month": null
+    },
+    {
+      "id": 328,
+      "tenant_id": 12,
+      "name": "Linen Count",
+      "deadline_minutes": 240,
+      "is_archived": false,
+      "recurrence": "HOURLY",
+      "st_time": "18:45",
+      "weekdays": null,
+      "day_of_month": null
     }
   ],
   "assignments": [
@@ -430,6 +738,202 @@
       "checklist_id": 207,
       "outlet_name": "Porch Inn Main",
       "score": null
+    },
+    {
+      "id": 801,
+      "tenant_id": 12,
+      "checklist_id": 301,
+      "outlet_name": "Kebapci Central",
+      "score": null
+    },
+    {
+      "id": 802,
+      "tenant_id": 12,
+      "checklist_id": 302,
+      "outlet_name": "Kebapci Central",
+      "score": 75
+    },
+    {
+      "id": 803,
+      "tenant_id": 12,
+      "checklist_id": 303,
+      "outlet_name": "Kebapci Central",
+      "score": 82
+    },
+    {
+      "id": 804,
+      "tenant_id": 12,
+      "checklist_id": 304,
+      "outlet_name": "Kebapci Central",
+      "score": 89
+    },
+    {
+      "id": 805,
+      "tenant_id": 12,
+      "checklist_id": 305,
+      "outlet_name": "Kebapci Central",
+      "score": 96
+    },
+    {
+      "id": 806,
+      "tenant_id": 12,
+      "checklist_id": 306,
+      "outlet_name": "Kebapci Central",
+      "score": 72
+    },
+    {
+      "id": 807,
+      "tenant_id": 12,
+      "checklist_id": 307,
+      "outlet_name": "Kebapci Central",
+      "score": 79
+    },
+    {
+      "id": 808,
+      "tenant_id": 12,
+      "checklist_id": 308,
+      "outlet_name": "Kebapci Central",
+      "score": null
+    },
+    {
+      "id": 809,
+      "tenant_id": 12,
+      "checklist_id": 309,
+      "outlet_name": "Kebapci Central",
+      "score": 93
+    },
+    {
+      "id": 810,
+      "tenant_id": 12,
+      "checklist_id": 310,
+      "outlet_name": "Kebapci Central",
+      "score": 69
+    },
+    {
+      "id": 811,
+      "tenant_id": 12,
+      "checklist_id": 311,
+      "outlet_name": "Kebapci Central",
+      "score": 76
+    },
+    {
+      "id": 812,
+      "tenant_id": 12,
+      "checklist_id": 312,
+      "outlet_name": "Kebapci Central",
+      "score": 83
+    },
+    {
+      "id": 813,
+      "tenant_id": 12,
+      "checklist_id": 313,
+      "outlet_name": "Kebapci Central",
+      "score": 90
+    },
+    {
+      "id": 814,
+      "tenant_id": 12,
+      "checklist_id": 314,
+      "outlet_name": "Kebapci Central",
+      "score": 97
+    },
+    {
+      "id": 815,
+      "tenant_id": 12,
+      "checklist_id": 315,
+      "outlet_name": "Kebapci Central",
+      "score": null
+    },
+    {
+      "id": 816,
+      "tenant_id": 12,
+      "checklist_id": 316,
+      "outlet_name": "Kebapci Central",
+      "score": 80
+    },
+    {
+      "id": 817,
+      "tenant_id": 12,
+      "checklist_id": 317,
+      "outlet_name": "Kebapci Central",
+      "score": 87
+    },
+    {
+      "id": 818,
+      "tenant_id": 12,
+      "checklist_id": 318,
+      "outlet_name": "Kebapci Central",
+      "score": 94
+    },
+    {
+      "id": 819,
+      "tenant_id": 12,
+      "checklist_id": 319,
+      "outlet_name": "Kebapci Central",
+      "score": 70
+    },
+    {
+      "id": 820,
+      "tenant_id": 12,
+      "checklist_id": 320,
+      "outlet_name": "Kebapci Central",
+      "score": 77
+    },
+    {
+      "id": 821,
+      "tenant_id": 12,
+      "checklist_id": 321,
+      "outlet_name": "Kebapci Central",
+      "score": 84
+    },
+    {
+      "id": 822,
+      "tenant_id": 12,
+      "checklist_id": 322,
+      "outlet_name": "Kebapci Central",
+      "score": null
+    },
+    {
+      "id": 823,
+      "tenant_id": 12,
+      "checklist_id": 323,
+      "outlet_name": "Kebapci Central",
+      "score": 98
+    },
+    {
+      "id": 824,
+      "tenant_id": 12,
+      "checklist_id": 324,
+      "outlet_name": "Kebapci Central",
+      "score": 74
+    },
+    {
+      "id": 825,
+      "tenant_id": 12,
+      "checklist_id": 325,
+      "outlet_name": "Kebapci Central",
+      "score": 81
+    },
+    {
+      "id": 826,
+      "tenant_id": 12,
+      "checklist_id": 326,
+      "outlet_name": "Kebapci Central",
+      "score": 88
+    },
+    {
+      "id": 827,
+      "tenant_id": 12,
+      "checklist_id": 327,
+      "outlet_name": "Kebapci Central",
+      "score": 95
+    },
+    {
+      "id": 828,
+      "tenant_id": 12,
+      "checklist_id": 328,
+      "outlet_name": "Kebapci Central",
+      "score": 71
     }
   ]
 }

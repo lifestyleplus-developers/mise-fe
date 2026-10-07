@@ -1,10 +1,12 @@
 import { cssInterop } from 'nativewind';
 import {
   Archive,
+  Camera,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Circle,
   CircleAlert,
   CircleCheck,
   CirclePlay,
@@ -43,10 +45,12 @@ import {
  */
 const ICONS = [
   Archive,
+  Camera,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Circle,
   CircleAlert,
   CircleCheck,
   CirclePlay,

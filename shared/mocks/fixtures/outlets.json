@@ -62,5 +62,21 @@
     "attendance_enabled": false,
     "spot_checks_enabled": false,
     "is_archived": false
+  },
+  {
+    "id": 12,
+    "tenant_id": 7,
+    "name": "Central Kitchen",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
+  },
+  {
+    "id": 23,
+    "tenant_id": 11,
+    "name": "Rooftop Bar",
+    "attendance_enabled": false,
+    "spot_checks_enabled": false,
+    "is_archived": false
   }
 ]

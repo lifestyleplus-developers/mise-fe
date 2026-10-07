@@ -186,3 +186,29 @@ export type ChecklistAssignment = {
 export type ChecklistListItem = Checklist & {
   assignments: ChecklistAssignment[];
 };
+
+/** API Contract §7 — one task inside a run: the snapshot plus its answer. */
+export type RunTask = {
+  id: number;
+  position: number;
+  answer_type: 'BINARY' | 'NUMBER' | 'IMAGE';
+  text: string;
+  unit: string | null;
+  min_value: number | null;
+  max_value: number | null;
+  weight: number;
+  requires_comment_on_fail: boolean;
+  answer_number: number | null;
+  answer_bool: boolean | null;
+  image_key: string | null;
+  image_url: string | null;
+  comment: string | null;
+  outcome: 'PASS' | 'FAIL' | 'MISSED' | 'PENDING_JUDGEMENT' | null;
+  answered_by: { id: number; full_name: string } | null;
+  answered_at: string | null;
+};
+
+/** GET /runs/{id} — the run as Home lists it, plus its tasks. */
+export type RunDetail = Run & {
+  tasks: RunTask[];
+};

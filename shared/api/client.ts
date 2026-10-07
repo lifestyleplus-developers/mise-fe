@@ -6,6 +6,7 @@ import {
   mockListChecklists,
   mockFetchMe,
   mockGetOutlet,
+  mockGetRun,
   mockGetUser,
   mockListOutlets,
   mockListRuns,
@@ -28,6 +29,7 @@ import type {
   Page,
   ResetPasswordRequest,
   Run,
+  RunDetail,
   UpdateMeRequest,
   UpdateOutletRequest,
   UpdateUserRequest,
@@ -99,6 +101,12 @@ export const api = {
     list(): Promise<Run[]> {
       // TODO(server): GET {API_BASE_URL}/api/v1/runs (paginated)
       return mockListRuns();
+    },
+
+    /** GET /runs/{id} — the run with its tasks and answers. */
+    get(id: number): Promise<RunDetail> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/runs/{id}
+      return mockGetRun(id);
     },
   },
   checklists: {

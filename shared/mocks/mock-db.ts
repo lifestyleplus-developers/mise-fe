@@ -32,6 +32,8 @@ import type {
   Page,
   ResetPasswordRequest,
   Run,
+  RunDetail,
+  RunTask,
   UpdateMeRequest,
   UpdateOutletRequest,
   UpdateUserRequest,
@@ -607,12 +609,73 @@ const RUN_TEMPLATES: RunTemplate[] = [
     total: 10,
     answered: 0,
   },
+  // Porch Inn — assignment ids match the fixture memberships.
+  {
+    assignmentId: 701,
+    checklist: 'Front Desk Shift Handover',
+    outlet: 'Porch Inn Main',
+    open: 420,
+    close: 600,
+    todayFromNow: { open: -45, close: 135 },
+    total: 6,
+    answered: 2,
+  },
+  {
+    assignmentId: 702,
+    checklist: 'Front Desk Shift Handover',
+    outlet: 'Porch Inn Annex',
+    open: 420,
+    close: 600,
+    todayFromNow: { open: -75, close: 105 },
+    total: 6,
+    answered: 6,
+  },
+  {
+    assignmentId: 705,
+    checklist: 'Public Area Walk',
+    outlet: 'Porch Inn Main',
+    open: 480,
+    close: 525,
+    todayFromNow: { open: -10, close: 35 },
+    total: 5,
+    answered: 0,
+  },
+  {
+    assignmentId: 703,
+    checklist: 'Room Turnover Check',
+    outlet: 'Porch Inn Main',
+    open: 540,
+    close: 840,
+    todayFromNow: { open: -60, close: 200 },
+    total: 7,
+    answered: 4,
+  },
+  {
+    assignmentId: 704,
+    checklist: 'Room Turnover Check',
+    outlet: 'Porch Inn Annex',
+    open: 540,
+    close: 840,
+    todayFromNow: { open: -20, close: 240 },
+    total: 7,
+    answered: 7,
+  },
+  {
+    assignmentId: 707,
+    checklist: 'Night Audit',
+    outlet: 'Porch Inn Main',
+    open: 1380,
+    close: 1500,
+    total: 5,
+    answered: 0,
+  },
 ];
 
-/** GET /runs — today's and tomorrow's runs that have not closed, for the caller's assignments. */
-export async function mockListRuns(): Promise<Run[]> {
-  await delay();
-  const me = resolveMe();
+/** Today's and tomorrow's runs for the caller's assignments. */
+function buildRuns(
+  me: MeResponse,
+  { includeClosed = false }: { includeClosed?: boolean } = {},
+): Run[] {
   const admin = new Set(me.memberships.cl_admin_assignments);
   const implementer = new Set(me.memberships.cl_imp_assignments);
   const now = Date.now();
@@ -640,7 +703,7 @@ export async function mockListRuns(): Promise<Run[]> {
       const close = rolling
         ? new Date(now + rolling.close * 60_000)
         : at(template.close);
-      if (close.getTime() <= now) continue;
+      if (!includeClosed && close.getTime() <= now) continue;
       runs.push({
         id: template.assignmentId * 100 + dayOffset,
         checklist_name: template.checklist,
@@ -655,6 +718,404 @@ export async function mockListRuns(): Promise<Run[]> {
     }
   }
   return runs;
+}
+
+/** GET /runs — today's and tomorrow's runs that have not closed, for the caller's assignments. */
+export async function mockListRuns(): Promise<Run[]> {
+  await delay();
+  return buildRuns(resolveMe());
+}
+
+type TaskTemplate = {
+  type: RunTask['answer_type'];
+  text: string;
+  unit?: string;
+  min?: number;
+  max?: number;
+  /** What the answer is, for the first `answered` tasks of the run. */
+  answer?: { n?: number; b?: boolean; comment?: string; by: string };
+};
+
+/** Authored task content, shown exactly as typed — never translated (Model §15). */
+const TASK_TEMPLATES: Record<number, TaskTemplate[]> = {
+  // Kitchen Opening
+  11: [
+    {
+      type: 'NUMBER',
+      text: 'Walk-in cooler temperature',
+      unit: '°C',
+      max: 4,
+      answer: { n: 3.8, by: 'kiran' },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Walk-in freezer temperature',
+      unit: '°C',
+      max: -18,
+      answer: {
+        n: -15,
+        comment: 'Door was left open during the delivery',
+        by: 'suresh',
+      },
+    },
+    {
+      type: 'BINARY',
+      text: 'Sanitation stations are stocked',
+      answer: { b: true, by: 'suresh' },
+    },
+    {
+      type: 'BINARY',
+      text: 'No expired items in open containers',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Gas valves are checked and burners light',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Exhaust hood is running',
+      answer: { b: true, by: 'suresh' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Chopping boards and knives are sanitised',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Staff are in clean uniform and caps',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Sanitiser solution strength',
+      unit: 'ppm',
+      min: 50,
+      max: 200,
+      answer: { n: 100, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Handwash sink has soap and towels',
+      answer: {
+        b: false,
+        comment: 'Soap dispenser empty, refill requested',
+        by: 'kiran',
+      },
+    },
+    {
+      type: 'IMAGE',
+      text: 'Photograph the prep counter',
+      answer: { by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Waste bins are lined and covered',
+      answer: { b: true, by: 'kiran' },
+    },
+  ],
+  // Fridge Temperatures
+  13: [
+    {
+      type: 'NUMBER',
+      text: 'Walk-in cooler temperature',
+      unit: '°C',
+      max: 4,
+      answer: { n: 3.5, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Freezer door seals are intact',
+      answer: {
+        b: false,
+        comment: 'Seal damaged, engineer called',
+        by: 'suresh',
+      },
+    },
+    {
+      type: 'BINARY',
+      text: 'Thermometers are in place',
+      answer: { b: true, by: 'suresh' },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Walk-in freezer temperature',
+      unit: '°C',
+      max: -18,
+      answer: { n: -19, by: 'kiran' },
+    },
+    { type: 'NUMBER', text: 'Display chiller temperature', unit: '°C', max: 5 },
+    { type: 'IMAGE', text: 'Photograph the walk-in cooler thermometer' },
+  ],
+  // Store Opening
+  16: [
+    {
+      type: 'BINARY',
+      text: 'Entrance and waiting area are clean',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'ഹാൻഡ് വാഷ് ലിക്വിഡ് എല്ലാ വാഷ് ബേസിനുകളിലും നിറച്ചിട്ടുണ്ടെന്നും ടിഷ്യൂ പേപ്പർ ആവശ്യത്തിന് ഉണ്ടെന്നും ഉറപ്പാക്കുക',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Lights and fans are working',
+      answer: { b: true, by: 'kiran' },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Dining room temperature',
+      unit: '°C',
+      min: 22,
+      max: 26,
+    },
+    { type: 'BINARY', text: 'Tables and chairs are set' },
+    { type: 'BINARY', text: 'Drinking water is filled' },
+    { type: 'BINARY', text: 'Floor is clean and dry' },
+    { type: 'IMAGE', text: 'Photograph the dining room' },
+  ],
+  // Front Desk Shift Handover
+  701: [
+    {
+      type: 'NUMBER',
+      text: 'Cash drawer count',
+      unit: '₹',
+      min: 9500,
+      max: 10500,
+      answer: { n: 10120, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'VIP arrivals are noted for the next shift',
+      answer: { b: true, by: 'test-1' },
+    },
+    { type: 'BINARY', text: 'Pending guest complaints are handed over' },
+    { type: 'BINARY', text: 'Room status matches the system' },
+    { type: 'BINARY', text: 'Key cards are counted and stored' },
+    { type: 'IMAGE', text: 'Photograph the signed handover sheet' },
+  ],
+  // Front Desk Shift Handover, Annex: every task answered
+  702: [
+    {
+      type: 'NUMBER',
+      text: 'Cash drawer count',
+      unit: '₹',
+      min: 9500,
+      max: 10500,
+      answer: { n: 10240, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'VIP arrivals are noted for the next shift',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Pending guest complaints are handed over',
+      answer: {
+        b: false,
+        comment: 'Room 12 AC complaint still open',
+        by: 'test-1',
+      },
+    },
+    {
+      type: 'BINARY',
+      text: 'Room status matches the system',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Key cards are counted and stored',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'IMAGE',
+      text: 'Photograph the signed handover sheet',
+      answer: { by: 'test-1' },
+    },
+  ],
+  // Public Area Walk
+  705: [
+    { type: 'BINARY', text: 'Lobby floor is clean and dry' },
+    { type: 'BINARY', text: 'Lift is clean and working' },
+    { type: 'BINARY', text: 'Corridor lights are all on' },
+    { type: 'BINARY', text: 'Restrooms are stocked and clean' },
+    { type: 'IMAGE', text: 'Photograph the lobby' },
+  ],
+  // Room Turnover Check
+  703: [
+    {
+      type: 'BINARY',
+      text: 'Bed linen is changed',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Bathroom is sanitised',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Minibar is restocked',
+      answer: {
+        b: false,
+        comment: 'Two soft drinks missing from stores',
+        by: 'test-1',
+      },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Room temperature',
+      unit: '°C',
+      min: 22,
+      max: 26,
+      answer: { n: 28, comment: 'AC filter being cleaned', by: 'test-1' },
+    },
+    { type: 'BINARY', text: 'Amenities are replenished' },
+    { type: 'BINARY', text: 'Do-not-disturb sign is removed' },
+    { type: 'IMAGE', text: 'Photograph the finished room' },
+  ],
+  704: [
+    {
+      type: 'BINARY',
+      text: 'Bed linen is changed',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Bathroom is sanitised',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Minibar is restocked',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'NUMBER',
+      text: 'Room temperature',
+      unit: '°C',
+      min: 22,
+      max: 26,
+      answer: { n: 24, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Amenities are replenished',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'BINARY',
+      text: 'Do-not-disturb sign is removed',
+      answer: { b: true, by: 'test-1' },
+    },
+    {
+      type: 'IMAGE',
+      text: 'Photograph the finished room',
+      answer: { by: 'test-1' },
+    },
+  ],
+  // Night Audit
+  707: [
+    { type: 'BINARY', text: 'Revenue is reconciled' },
+    { type: 'BINARY', text: 'No-shows are processed' },
+    { type: 'BINARY', text: 'System backup has run' },
+    { type: 'BINARY', text: "Tomorrow's arrival list is printed" },
+    { type: 'IMAGE', text: 'Photograph the signed audit summary' },
+  ],
+  // Kitchen Closing
+  12: [
+    { type: 'BINARY', text: 'Burners and gas valves are off' },
+    { type: 'NUMBER', text: 'Walk-in cooler temperature', unit: '°C', max: 4 },
+    { type: 'BINARY', text: 'Perishables are covered and labelled' },
+    { type: 'BINARY', text: 'Chopping boards and knives are washed' },
+    { type: 'BINARY', text: 'Floors are mopped and drains are clear' },
+    { type: 'BINARY', text: 'Exhaust hood is switched off' },
+    { type: 'IMAGE', text: 'Photograph the cleaned prep counter' },
+    { type: 'BINARY', text: 'Waste is out and bins are relined' },
+    { type: 'BINARY', text: 'Back door is locked' },
+    { type: 'BINARY', text: 'Alarm is set' },
+  ],
+};
+
+function outcomeFor(
+  task: TaskTemplate,
+  answer: NonNullable<TaskTemplate['answer']>,
+): RunTask['outcome'] {
+  if (task.type === 'BINARY') return answer.b ? 'PASS' : 'FAIL';
+  if (task.type === 'NUMBER') {
+    const n = answer.n ?? 0;
+    const low = task.min !== undefined && n < task.min;
+    const high = task.max !== undefined && n > task.max;
+    return low || high ? 'FAIL' : 'PASS';
+  }
+  return 'PASS';
+}
+
+function buildTasks(
+  assignmentId: number,
+  answered: number,
+  opensAt: string,
+): RunTask[] {
+  const templates = TASK_TEMPLATES[assignmentId] ?? [];
+  const open = new Date(opensAt).getTime();
+  return templates.map((task, index) => {
+    const answer = index < answered ? task.answer : undefined;
+    const person = answer
+      ? db.users.find((u) => u.username === answer.by)
+      : undefined;
+    const isImage = task.type === 'IMAGE';
+    return {
+      id: assignmentId * 1000 + index + 1,
+      position: index + 1,
+      answer_type: task.type,
+      text: task.text,
+      unit: task.unit ?? null,
+      min_value: task.min ?? null,
+      max_value: task.max ?? null,
+      weight: 5,
+      requires_comment_on_fail: task.type !== 'IMAGE',
+      answer_number: answer?.n ?? null,
+      answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
+      image_key:
+        answer && isImage ? `t7/mock/${assignmentId}-${index + 1}.jpg` : null,
+      image_url: null,
+      comment: answer?.comment ?? null,
+      outcome: answer ? outcomeFor(task, answer) : null,
+      answered_by: person
+        ? { id: person.id, full_name: person.full_name }
+        : null,
+      answered_at: answer
+        ? new Date(open + (index + 1) * 4 * 60_000).toISOString()
+        : null,
+    };
+  });
+}
+
+/**
+ * GET /runs/{id} — the run with its tasks. A CL_ADMIN may still read a run
+ * after it closes (the final state stays); a CL_IMP never receives a closed
+ * run, so it 404s for them (§7).
+ */
+export async function mockGetRun(id: number): Promise<RunDetail> {
+  await delay();
+  const me = resolveMe();
+  const run = buildRuns(me, { includeClosed: true }).find((r) => r.id === id);
+  const closed = run
+    ? new Date(run.window_close).getTime() <= Date.now()
+    : false;
+  if (!run || (closed && run.my_role === 'CL_IMP')) {
+    throw apiError(404, 'not_found', 'Not found.');
+  }
+  const assignmentId = Math.floor(run.id / 100);
+  return {
+    ...run,
+    tasks: buildTasks(assignmentId, run.answered_count, run.window_open),
+  };
 }
 
 /**

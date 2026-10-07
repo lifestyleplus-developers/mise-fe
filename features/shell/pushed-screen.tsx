@@ -17,10 +17,12 @@ type PushedScreenProps = {
   /** Sits opposite Back, e.g. a New button. */
   action?: React.ReactNode;
   /** Where Back goes when nothing is behind this screen. Defaults to More. */
-  backHref?: '/more' | '/outlets' | '/users' | '/checklists';
+  backHref?: '/more' | '/outlets' | '/users' | '/checklists' | '/home';
   /** Wires pull to refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;
+  /** Lets the screen scroll itself, e.g. to jump to a row. */
+  scrollRef?: React.Ref<ScrollView>;
   /** Called when the scroll nears the bottom, for paged lists. */
   onEndReached?: () => void;
   children: React.ReactNode;
@@ -34,6 +36,7 @@ export function PushedScreen({
   backHref = '/more',
   onRefresh,
   refreshing = false,
+  scrollRef,
   onEndReached,
   children,
 }: PushedScreenProps) {
@@ -86,6 +89,7 @@ export function PushedScreen({
           </Text>
         </View>
         <ScrollView
+          ref={scrollRef}
           contentContainerClassName="pt-2 pb-8"
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={100}
