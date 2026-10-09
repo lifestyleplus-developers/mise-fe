@@ -1,0 +1,257 @@
+[
+  {
+    "id": 1,
+    "tenant_id": 7,
+    "username": "priya",
+    "password": "demo",
+    "full_name": "Priya Nair",
+    "tenant_role": "OWNER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "tenant_id": 7,
+    "username": "raheem",
+    "password": "demo",
+    "full_name": "Raheem Ali",
+    "tenant_role": "ADMIN",
+    "interface_language": "HI",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 3,
+    "tenant_id": 7,
+    "username": "suresh",
+    "password": "demo",
+    "full_name": "Suresh Kumar",
+    "tenant_role": "MEMBER",
+    "interface_language": "KN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [12],
+      "attendance_configs": [],
+      "inventory_outlets": [3],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 4,
+    "tenant_id": 7,
+    "username": "meera",
+    "password": "demo",
+    "full_name": "Meera Pillai",
+    "tenant_role": "MEMBER",
+    "interface_language": "ML",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [2],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 5,
+    "tenant_id": 7,
+    "username": "nadia",
+    "password": "demo",
+    "full_name": "Nadia Sheikh",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [11],
+      "cl_imp_assignments": [13, 16],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 6,
+    "tenant_id": 11,
+    "username": "anita",
+    "password": "demo",
+    "full_name": "Anita Menon",
+    "tenant_role": "ADMIN",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 7,
+    "tenant_id": 11,
+    "username": "test-1",
+    "password": "1234",
+    "full_name": "Porch Inn Tester",
+    "tenant_role": "OWNER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [707, 703, 704],
+      "cl_imp_assignments": [701, 705, 702],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 8,
+    "tenant_id": 12,
+    "username": "kabir",
+    "password": "demo",
+    "full_name": "Kabir Rao",
+    "tenant_role": "OWNER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 9,
+    "tenant_id": 12,
+    "username": "test-2",
+    "password": "1234",
+    "full_name": "Kebapci Tester",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 10,
+    "tenant_id": 7,
+    "username": "zoya",
+    "password": "demo",
+    "full_name": "Zoya",
+    "tenant_role": "ADMIN",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 11,
+    "tenant_id": 7,
+    "username": "kiran",
+    "password": "demo",
+    "full_name": "Kiran",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [11, 13, 16],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 12,
+    "tenant_id": 7,
+    "username": "sana",
+    "password": "demo",
+    "full_name": "Sana",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 13,
+    "tenant_id": 7,
+    "username": "anil",
+    "password": "demo",
+    "full_name": "Anil",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": false
+  },
+  {
+    "id": 14,
+    "tenant_id": 7,
+    "username": "ananthu",
+    "password": "demo",
+    "full_name": "അനന്തകൃഷ്ണൻ പുത്തൻവീട്ടിൽ",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  },
+  {
+    "id": 15,
+    "tenant_id": 7,
+    "username": "sreelakshmi.un",
+    "password": "demo",
+    "full_name": "Sreelakshmi Unnikrishnan Nair",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
+  }
+]
