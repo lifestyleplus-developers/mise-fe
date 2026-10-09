@@ -1,6 +1,6 @@
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
-const id = IS_PREVIEW ? 'com.mise.preview' : 'com.mise.app';
+const id = IS_PREVIEW ? 'com.lifestyleplus.mise.preview' : 'com.lifestyleplus.mise';
 
 module.exports = ({ config }) => ({
   ...config,

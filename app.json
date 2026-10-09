@@ -22,9 +22,19 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-status-bar"],
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9ff72b36-bbf7-4fb2-bd32-21321242265f"
+      }
+    },
+    "owner": "lplusdevelopers"
   }
 }
