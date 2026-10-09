@@ -7,20 +7,36 @@ type AutoDismissBannerProps = Omit<BannerProps, 'onDismiss'> & {
   onDismiss: () => void;
   /** How long it stays before fading, in ms. */
   duration?: number;
+  /**
+   * Restarts the countdown when it changes. Defaults to the message, which
+   * covers one notice replacing another; pass something that changes on every
+   * occurrence where the *same* text can be raised twice.
+   */
+  resetKey?: string | number;
 };
 
 /** A banner with a close button that fades itself away after `duration`. */
 function AutoDismissBanner({
   onDismiss,
   duration = 5000,
+  resetKey,
   ...banner
 }: AutoDismissBannerProps) {
   const t = useT();
-  const opacity = React.useRef(new Animated.Value(1)).current;
+  const [opacity] = React.useState(() => new Animated.Value(1));
   const dismiss = React.useRef(onDismiss);
-  dismiss.current = onDismiss;
+  React.useEffect(() => {
+    dismiss.current = onDismiss;
+  });
+
+  // React reuses this element for the next notice, so without restarting here
+  // a second message would inherit the first's expiring countdown and flash
+  // away. Resetting the opacity matters too: the element may already be
+  // part-way through its fade.
+  const restartOn = resetKey ?? banner.message;
 
   React.useEffect(() => {
+    opacity.setValue(1);
     let fade: Animated.CompositeAnimation | undefined;
     const timer = setTimeout(() => {
       fade = Animated.timing(opacity, {
@@ -37,7 +53,7 @@ function AutoDismissBanner({
       clearTimeout(timer);
       fade?.stop();
     };
-  }, [duration, opacity]);
+  }, [duration, opacity, restartOn]);
 
   return (
     <Animated.View style={{ opacity }}>

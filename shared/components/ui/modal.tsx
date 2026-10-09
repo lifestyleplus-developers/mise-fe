@@ -22,9 +22,10 @@ export function ModalDialog({
 }: ModalDialogProps) {
   const [shown, setShown] = React.useState({ title, message });
 
-  React.useEffect(() => {
-    if (visible) setShown({ title, message });
-  }, [visible, title, message]);
+  // Keep the last shown text while the dialog fades out, so it doesn't blank.
+  if (visible && (shown.title !== title || shown.message !== message)) {
+    setShown({ title, message });
+  }
 
   return (
     <RNModal

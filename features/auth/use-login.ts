@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as React from 'react';
 
 import { api, MockApiError } from '@/shared/api/client';
-import { queryClient } from '@/shared/api/query-client';
+import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 import {
   API_ERROR_CODE,
   type AmbiguousUsernameBody,
@@ -81,6 +81,8 @@ export function useLogin() {
     },
 
     onSuccess: () => {
+      // Whoever just signed in must never read what the last session cached.
+      dropSessionCache();
       queryClient_
         .fetchQuery({ queryKey: ['auth', 'me'], queryFn: () => api.auth.me() })
         .then((meResponse) => {

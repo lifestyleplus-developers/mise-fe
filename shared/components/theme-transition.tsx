@@ -11,7 +11,7 @@ import { Animated, Easing, StyleSheet } from 'react-native';
 export function ThemeTransition() {
   const theme = useThemeStore((state) => state.theme);
   const applied = useAppliedTheme();
-  const opacity = React.useRef(new Animated.Value(0)).current;
+  const [opacity] = React.useState(() => new Animated.Value(0));
   const previous = React.useRef(theme);
 
   React.useEffect(() => {

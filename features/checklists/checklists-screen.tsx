@@ -84,7 +84,14 @@ export function ChecklistsScreen() {
     id: number;
     name: string;
   } | null>(null);
-  const [removedFrom, setRemovedFrom] = React.useState<string | null>(null);
+  // The count makes a repeat of the *same* message a new occurrence, so the
+  // banner restarts rather than ignoring the tap.
+  const [removed, setRemoved] = React.useState<{
+    name: string;
+    count: number;
+  } | null>(null);
+  const showRemoved = (name: string) =>
+    setRemoved((previous) => ({ name, count: (previous?.count ?? 0) + 1 }));
   const [runFor, setRunFor] = React.useState<number | null>(null);
   const router = useRouter();
   const runsQuery = useRuns();
@@ -115,17 +122,18 @@ export function ChecklistsScreen() {
     );
   }, [query.data, isAdmin]);
 
-  const openSheetFor = teamFor;
-  React.useEffect(() => {
-    if (!openSheetFor || !query.data) return;
+  // If the open Team sheet's checklist stops being managed by this user, close
+  // it and say why. Adjusted during render rather than in an effect, so the
+  // stale sheet never paints.
+  if (teamFor && query.data) {
     const stillManaged = rows.some(
-      (r) => r.checklist.id === openSheetFor.id && r.managed.length > 0,
+      (r) => r.checklist.id === teamFor.id && r.managed.length > 0,
     );
     if (!stillManaged) {
       setTeamFor(null);
-      setRemovedFrom(openSheetFor.name);
+      showRemoved(teamFor.name);
     }
-  }, [openSheetFor, rows, query.data]);
+  }
 
   if (!me) return null;
 
@@ -229,7 +237,7 @@ export function ChecklistsScreen() {
     const assignment = row.managed.find((a) => a.outlet_name === outletName);
     // Taken off the checklist since the card was drawn: say so, don't navigate.
     if (!assignment) {
-      setRemovedFrom(row.checklist.name);
+      showRemoved(row.checklist.name);
       return;
     }
     router.push({
@@ -244,7 +252,7 @@ export function ChecklistsScreen() {
 
   function onTeam(row: Row) {
     if (row.managed.length === 0) {
-      setRemovedFrom(row.checklist.name);
+      showRemoved(row.checklist.name);
     } else if (row.managed.length === 1) {
       openTeam(row, row.managed[0].outlet_name);
     } else {
@@ -360,12 +368,13 @@ export function ChecklistsScreen() {
         />
       ) : null}
 
-      {removedFrom ? (
+      {removed ? (
         <View className="mx-4 mb-3">
           <AutoDismissBanner
             tone="notice"
-            message={format(t('checklists.removed'), { name: removedFrom })}
-            onDismiss={() => setRemovedFrom(null)}
+            resetKey={removed.count}
+            message={format(t('checklists.removed'), { name: removed.name })}
+            onDismiss={() => setRemoved(null)}
           />
         </View>
       ) : null}

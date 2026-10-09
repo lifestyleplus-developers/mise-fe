@@ -71,6 +71,8 @@ type MockDb = {
   businesses: typeof businesses;
   outlets: DbOutlet[];
   session: Session | null;
+  /** When this mock session began — the fixed point today's runs hang off. */
+  startedAt: number;
 };
 
 /**
@@ -84,6 +86,7 @@ const db: MockDb = (store.__miseMockDb ??= {
   businesses,
   outlets: outletFixtures.map((outlet) => ({ ...outlet })),
   session: null,
+  startedAt: Date.now(),
 });
 
 export class MockApiError extends Error {
@@ -678,6 +681,11 @@ function buildRuns(
 ): Run[] {
   const admin = new Set(me.memberships.cl_admin_assignments);
   const implementer = new Set(me.memberships.cl_imp_assignments);
+  // Two different moments, and they must not be confused. `anchor` is fixed
+  // when the app starts, so a window placed relative to it stays put and the
+  // run genuinely closes. `now` is the present, which is what decides whether
+  // it already has.
+  const anchor = db.startedAt;
   const now = Date.now();
   const midnight = new Date();
   midnight.setHours(0, 0, 0, 0);
@@ -698,10 +706,10 @@ function buildRuns(
       };
       const rolling = dayOffset === 0 ? template.todayFromNow : undefined;
       const open = rolling
-        ? new Date(now + rolling.open * 60_000)
+        ? new Date(anchor + rolling.open * 60_000)
         : at(template.open);
       const close = rolling
-        ? new Date(now + rolling.close * 60_000)
+        ? new Date(anchor + rolling.close * 60_000)
         : at(template.close);
       if (!includeClosed && close.getTime() <= now) continue;
       runs.push({

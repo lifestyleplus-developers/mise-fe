@@ -8,6 +8,15 @@ module.exports = {
   ],
   presets: [require('nativewind/preset')],
   theme: {
+    // shadow-<colour> is only ever black with an alpha here. Left at its
+    // default (the whole palette) a colour named `card` also claims
+    // `shadow-card`, and wins, colouring the shadow with the card's own
+    // background instead of applying the shadow below.
+    boxShadowColor: {
+      transparent: 'transparent',
+      black: '#000',
+      white: '#fff',
+    },
     extend: {
       // One family per weight; RN cannot select a weight within a family.
       fontFamily: {
@@ -89,6 +98,17 @@ module.exports = {
         },
 
         scrim: 'var(--scrim)',
+      },
+      // The mockup's card shadow is two CSS layers. React Native keeps only
+      // the first and forces full opacity, so the layers are merged into one
+      // and the alpha lives in --shadow-card, which dark mode strengthens.
+      boxShadow: {
+        card: '0px 4px 12px var(--shadow-card)',
+      },
+      // Android ignores shadow colour and radius and draws from elevation;
+      // without this it would derive 12 from the blur, which is far too heavy.
+      elevation: {
+        card: 2,
       },
       borderRadius: {
         lg: 'var(--radius)',

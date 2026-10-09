@@ -59,6 +59,8 @@
     --nav-segment: 0 0% 93%;
     --nav-active: 210 100% 40%;
 
+    --shadow-card: rgba(0, 0, 0, 0.12);
+
     --scrim: rgba(24, 24, 27, 0.4);
   }
 
@@ -114,6 +116,8 @@
     --nav-foreground: 240 5% 96%;
     --nav-segment: 240 6% 24%;
     --nav-active: 211 100% 68%;
+
+    --shadow-card: rgba(0, 0, 0, 0.5);
 
     --scrim: rgba(0, 0, 0, 0.53);
   }
