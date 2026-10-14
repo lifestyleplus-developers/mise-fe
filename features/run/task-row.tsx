@@ -19,6 +19,8 @@ type TaskRowProps = {
   /** Stands in for the answer control until it is built (week 5). */
   controlPlaceholder?: string;
   onLayout?: (y: number) => void;
+  /** The answer control (week 5): Yes/No, a reading field, or a photo row. */
+  children?: React.ReactNode;
 };
 
 /** One task on a run. */
@@ -32,6 +34,7 @@ export function TaskRow({
   notAnsweredLabel,
   controlPlaceholder,
   onLayout,
+  children,
 }: TaskRowProps) {
   return (
     <View
@@ -72,6 +75,7 @@ export function TaskRow({
             {controlPlaceholder}
           </Text>
         ) : null}
+        {children}
       </View>
     </View>
   );

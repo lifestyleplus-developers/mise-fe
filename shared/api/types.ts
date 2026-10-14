@@ -16,6 +16,9 @@ export const API_ERROR_CODE = {
   TOKEN_EXPIRED: 'token_expired',
   AMBIGUOUS_USERNAME: 'ambiguous_username',
   VALIDATION_ERROR: 'validation_error',
+  COMMENT_REQUIRED_ON_FAILURE: 'comment_required_on_failure',
+  WINDOW_CLOSED: 'window_closed',
+  SUPERVISORS_CANNOT_ANSWER: 'supervisors_cannot_answer',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -211,4 +214,35 @@ export type RunTask = {
 /** GET /runs/{id} — the run as Home lists it, plus its tasks. */
 export type RunDetail = Run & {
   tasks: RunTask[];
+};
+
+/**
+ * PATCH /run-tasks/{id} — §7. Send only the field for the task's type:
+ * `answer_bool` for a binary, `answer_number` for a reading, `image_key` for
+ * a photo. Comment is required whenever the written answer fails and the
+ * task asks for one (`comment_required_on_failure`, 400).
+ */
+export type AnswerTaskRequest = {
+  answer_bool?: boolean;
+  answer_number?: number;
+  image_key?: string;
+  comment?: string | null;
+};
+
+/**
+ * POST /uploads/sign — §8. The photograph never passes through the platform:
+ * sign, PUT the bytes to object storage, then PATCH the run task with the key.
+ */
+export type UploadSignRequest = {
+  purpose: 'run_task';
+  target_id: number;
+  content_type: 'image/jpeg';
+};
+
+/** → 200. */
+export type UploadSignResponse = {
+  upload_url: string;
+  method: 'PUT';
+  headers: Record<string, string>;
+  key: string;
 };

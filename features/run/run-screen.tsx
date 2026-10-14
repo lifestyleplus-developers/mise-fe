@@ -3,11 +3,18 @@ import { useHomeNotice } from '@/features/home/home-notice';
 import { clockTime, dayKey } from '@/features/home/run-time';
 import { useRuns } from '@/features/home/use-runs';
 import { AnswerDisplay, type AnswerView } from '@/features/run/answer-display';
+import { CommentSheet } from '@/features/run/comment-sheet';
+import { PhotoRow } from '@/features/run/photo-row';
 import { RunProgressCard } from '@/features/run/run-progress';
 import { TaskRow, TaskRowsSkeleton } from '@/features/run/task-row';
+import { useAnswerTask } from '@/features/run/use-answer-task';
+import { useCountdown } from '@/features/run/use-countdown';
+import { useImageUpload } from '@/features/run/use-image-upload';
 import { useRun } from '@/features/run/use-run';
+import { ReadingField, parseReading } from '@/features/run/reading-field';
+import { YesNo } from '@/features/run/yes-no';
 import { PushedScreen } from '@/features/shell/pushed-screen';
-import type { RunTask } from '@/shared/api/types';
+import { type RunTask } from '@/shared/api/types';
 import { Banner } from '@/shared/components/ui/banner';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { Text } from '@/shared/components/ui/text';
@@ -21,7 +28,13 @@ import { Pressable, ScrollView, View } from 'react-native';
 /** A real minus sign, so "−18" doesn't read as a hyphen. */
 const signed = (n: number) => String(n).replace('-', '−');
 
-/** Run execution (CHK-02, FE Spec §3.3). Answer controls arrive in week 5. */
+type RowError = { message: string } | null;
+
+/**
+ * Run execution (CHK-02 week-5 v2, FE Spec §3.3). Answers are written as
+ * they are given; a failing binary or number demands a comment in the same
+ * interaction; a photo is judged afterwards, and raises an incident then.
+ */
 export function RunScreen() {
   const { id, name, outlet } = useLocalSearchParams<{
     id: string;
@@ -36,6 +49,7 @@ export function RunScreen() {
   const query = useRun(runId);
   const listed = useRuns().data?.find((run) => run.id === runId);
   const setNotice = useHomeNotice((state) => state.setNotice);
+  const answer = useAnswerTask(runId);
   const scrollRef = React.useRef<ScrollView>(null);
   const rowY = React.useRef(new Map<number, number>());
   const listY = React.useRef(0);
@@ -43,10 +57,51 @@ export function RunScreen() {
   const run = query.data;
   const isSupervisor = run?.my_role === 'CL_ADMIN';
   const closeIso = run?.window_close ?? listed?.window_close;
+  const countdown = useCountdown(closeIso);
   const closed = closeIso ? now >= new Date(closeIso).getTime() : false;
 
-  // A run nothing can be done about is not shown to an implementer (§7). A
-  // supervisor keeps the final state.
+  const [drafts, setDrafts] = React.useState<Record<number, string>>({});
+  const [rowErrors, setRowErrors] = React.useState<Record<number, RowError>>(
+    {},
+  );
+  const [sheetFor, setSheetFor] = React.useState<number | null>(null);
+  const [sheetAnswer, setSheetAnswer] = React.useState<{
+    answer_bool?: boolean;
+    answer_number?: number;
+  }>({});
+  const [pendingPhotoTask, setPendingPhotoTask] = React.useState<number | null>(
+    null,
+  );
+
+  const tasks = run?.tasks ?? [];
+
+  const imageUpload = useImageUpload({
+    onSuccess: (key) => {
+      if (pendingPhotoTask !== null) {
+        void (async () => {
+          const task = tasks.find((t) => t.id === pendingPhotoTask);
+          if (task) {
+            await writeAnswer(task, { image_key: key, comment: null });
+          }
+          setPendingPhotoTask(null);
+        })();
+      }
+    },
+    onError: () => {
+      setPendingPhotoTask(null);
+    },
+  });
+
+  React.useEffect(() => {
+    if (pendingPhotoTask !== null && !imageUpload.uploading) {
+      void imageUpload.upload(pendingPhotoTask);
+    }
+  }, [pendingPhotoTask, imageUpload]);
+
+  const answered = tasks.filter((task) => task.answered_at !== null);
+  const unanswered = tasks.filter((task) => task.answered_at === null);
+  const complete = tasks.length > 0 && unanswered.length === 0;
+
   const gone = Boolean(run && closed && !isSupervisor);
   const missing = query.isError && !run && isNotFound(query.error);
   React.useEffect(() => {
@@ -66,19 +121,6 @@ export function RunScreen() {
 
   const title = run?.checklist_name ?? name ?? '';
   const outletName = run?.outlet_name ?? outlet;
-  const tasks = run?.tasks ?? [];
-  const answered = tasks.filter((task) => task.answered_at !== null);
-  const unanswered = tasks.filter((task) => task.answered_at === null);
-  const complete = tasks.length > 0 && unanswered.length === 0;
-
-  const closesLabel = closeIso
-    ? closed
-      ? format(t('run.closed'), { time: clockTime(closeIso) })
-      : format(
-          t(dayKey(closeIso, now, 'home.closes', 'home.closes-tomorrow')),
-          { time: clockTime(closeIso) },
-        )
-    : undefined;
 
   function limitOf(task: RunTask): string | undefined {
     const unit = task.unit ?? '';
@@ -127,6 +169,67 @@ export function RunScreen() {
     return `${who} · ${clockTime(task.answered_at)}`;
   }
 
+  async function writeAnswer(
+    task: RunTask,
+    request: {
+      answer_bool?: boolean;
+      answer_number?: number;
+      image_key?: string;
+      comment?: string | null;
+    },
+  ): Promise<boolean> {
+    const verify = isSupervisor ? false : true;
+    if (!verify) return false;
+    try {
+      setRowErrors((current) => ({ ...current, [task.id]: null }));
+      await answer.mutateAsync({ taskId: task.id, request });
+      return true;
+    } catch (error) {
+      const message =
+        error instanceof Error && 'body' in error
+          ? ((error as { body?: { error?: { message?: string } } }).body?.error
+              ?.message ?? t('run.write-failed'))
+          : t('run.write-failed');
+      setRowErrors((current) => ({ ...current, [task.id]: { message } }));
+      return false;
+    }
+  }
+
+  async function answerBinary(task: RunTask, value: boolean) {
+    if (value) {
+      await writeAnswer(task, { answer_bool: true, comment: null });
+      return;
+    }
+    if (task.requires_comment_on_fail) {
+      setSheetAnswer({ answer_bool: false });
+      setSheetFor(task.id);
+    } else {
+      await writeAnswer(task, { answer_bool: false, comment: null });
+    }
+  }
+
+  async function answerReading(task: RunTask) {
+    const draft = drafts[task.id] ?? '';
+    const parsed = parseReading(draft);
+    if (parsed === null) return;
+    await writeAnswer(task, { answer_number: parsed, comment: null });
+  }
+
+  async function saveComment(task: RunTask, text: string) {
+    const written = await writeAnswer(task, {
+      ...sheetAnswer,
+      comment: text,
+    });
+    if (written) {
+      setDrafts((current) => {
+        const { [task.id]: _dropping, ...rest } = current;
+        return rest;
+      });
+    }
+    setSheetFor(null);
+    setSheetAnswer({});
+  }
+
   function jumpToFirstUnanswered() {
     const first = unanswered[0];
     const y = first ? rowY.current.get(first.id) : undefined;
@@ -143,6 +246,7 @@ export function RunScreen() {
         });
 
   const showCard = Boolean(closeIso) && !(query.isError && !run);
+  const isAnswering = !isSupervisor && !closed;
 
   return (
     <PushedScreen title={title} backHref="/home" scrollRef={scrollRef}>
@@ -161,9 +265,9 @@ export function RunScreen() {
         />
       ) : null}
 
-      {showCard && closesLabel ? (
+      {showCard && closeIso ? (
         <RunProgressCard
-          closes={closesLabel}
+          closes={countdown.label || closedLabelOf(closeIso, now, t)}
           progressLabel={
             run
               ? `${format(t('run.answered'), {
@@ -175,6 +279,13 @@ export function RunScreen() {
           value={answered.length}
           total={tasks.length}
         >
+          {complete && closeIso ? (
+            <Text className="text-muted-foreground mt-2 px-1 text-[13px]">
+              {format(t('run.you-can-change'), {
+                time: clockTime(closeIso),
+              })}
+            </Text>
+          ) : null}
           {isSupervisor && run ? (
             <View className="mt-2 items-start gap-2 px-1">
               {closed ? null : (
@@ -223,30 +334,108 @@ export function RunScreen() {
           }}
           className="shadow-card border-border bg-card mx-4 overflow-hidden rounded-3xl border"
         >
-          {tasks.map((task, index) => {
-            const answer = answerOf(task);
+          {run.tasks.map((task, index) => {
+            const answerView = answerOf(task);
             const open = task.answered_at === null;
+            const rowError = rowErrors[task.id];
+            const isImage = task.answer_type === 'IMAGE';
+            const isReading = task.answer_type === 'NUMBER';
+            const isBinary = task.answer_type === 'BINARY';
+            const sheetOpen = sheetFor === task.id;
+
             return (
-              <TaskRow
-                key={task.id}
-                first={index === 0}
-                position={task.position}
-                text={task.text}
-                answer={answer ? <AnswerDisplay {...answer} /> : undefined}
-                attribution={attributionOf(task)}
-                notAnsweredLabel={
-                  isSupervisor && open ? t('run.not-answered') : undefined
-                }
-                controlPlaceholder={
-                  !isSupervisor && open ? t('run.week5') : undefined
-                }
-                onLayout={(y) => rowY.current.set(task.id, y)}
-              />
+              <View key={task.id}>
+                <TaskRow
+                  first={index === 0}
+                  position={task.position}
+                  text={task.text}
+                  answer={
+                    !isAnswering || (isReading && open) ? (
+                      answerView ? (
+                        <AnswerDisplay {...answerView} />
+                      ) : undefined
+                    ) : undefined
+                  }
+                  attribution={attributionOf(task)}
+                  notAnsweredLabel={
+                    isSupervisor && open ? t('run.not-answered') : undefined
+                  }
+                  onLayout={(y) => rowY.current.set(task.id, y)}
+                >
+                  {isAnswering && open ? (
+                    <View className="mt-2 gap-2">
+                      {isBinary ? (
+                        <YesNo
+                          answer={null}
+                          onAnswer={(value) => void answerBinary(task, value)}
+                        />
+                      ) : null}
+                      {isReading ? (
+                        <ReadingField
+                          draft={drafts[task.id] ?? ''}
+                          unit={task.unit}
+                          limit={limitOf(task)}
+                          error={rowError?.message}
+                          onDraftChange={(text) =>
+                            setDrafts((current) => ({
+                              ...current,
+                              [task.id]: text,
+                            }))
+                          }
+                          onSubmit={() => void answerReading(task)}
+                        />
+                      ) : null}
+                      {isImage ? (
+                        <PhotoRow
+                          url={task.image_url || imageUpload.url}
+                          uploading={
+                            pendingPhotoTask === task.id ||
+                            imageUpload.uploading
+                          }
+                          failed={
+                            Boolean(rowError) || Boolean(imageUpload.error)
+                          }
+                          onCapture={() => setPendingPhotoTask(task.id)}
+                          onRetake={() => setPendingPhotoTask(task.id)}
+                          onAddComment={() => setSheetFor(task.id)}
+                        />
+                      ) : null}
+                      {!isImage && rowError?.message ? (
+                        <Text className="font-sans-medium text-[13px] text-destructive-soft-foreground">
+                          {rowError.message}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : null}
+                </TaskRow>
+                {sheetOpen ? (
+                  <CommentSheet
+                    visible={sheetOpen}
+                    title={task.text}
+                    context={limitOf(task)}
+                    initialValue={task.comment ?? ''}
+                    key={`sheet-${task.id}-${sheetAnswer.answer_bool ?? ''}`}
+                    onClose={() => setSheetFor(null)}
+                    onSave={(comment) => void saveComment(task, comment)}
+                  />
+                ) : null}
+              </View>
             );
           })}
         </View>
       ) : null}
     </PushedScreen>
+  );
+}
+
+function closedLabelOf(
+  closeIso: string,
+  now: number,
+  t: ReturnType<typeof useT>,
+): string {
+  return format(
+    t(dayKey(closeIso, now, 'home.closes', 'home.closes-tomorrow')),
+    { time: clockTime(closeIso) },
   );
 }
 

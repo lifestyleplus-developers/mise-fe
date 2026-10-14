@@ -1,5 +1,6 @@
 /** The transport seam. */
 import {
+  mockAnswerTask,
   mockArchiveOutlet,
   mockCreateOutlet,
   mockCreateUser,
@@ -14,11 +15,13 @@ import {
   mockLogin,
   mockLogout,
   mockResetPassword,
+  mockSignUpload,
   mockUpdateMe,
   mockUpdateOutlet,
   mockUpdateUser,
 } from '@/shared/mocks/mock-db';
 import type {
+  AnswerTaskRequest,
   ChecklistListItem,
   CreateOutletRequest,
   CreateUserRequest,
@@ -30,11 +33,14 @@ import type {
   ResetPasswordRequest,
   Run,
   RunDetail,
+  RunTask,
   UpdateMeRequest,
   UpdateOutletRequest,
   UpdateUserRequest,
   User,
   UsersQuery,
+  UploadSignRequest,
+  UploadSignResponse,
 } from './types';
 
 export { MockApiError } from '@/shared/mocks/mock-db';
@@ -107,6 +113,27 @@ export const api = {
     get(id: number): Promise<RunDetail> {
       // TODO(server): GET {API_BASE_URL}/api/v1/runs/{id}
       return mockGetRun(id);
+    },
+  },
+  runTasks: {
+    /**
+     * PATCH /run-tasks/{id} — one answer, written as it is given (§7). The
+     * platform returns 409 `window_closed` outside the window, 403 for a
+     * supervisor, and 400 `comment_required_on_failure` without a comment.
+     */
+    answer(id: number, request: AnswerTaskRequest): Promise<RunTask> {
+      // TODO(server): PATCH {API_BASE_URL}/api/v1/run-tasks/{id}
+      return mockAnswerTask(id, request);
+    },
+  },
+  uploads: {
+    /**
+     * POST /uploads/sign — §8. The photo is PUT straight to storage, then the
+     * object key is written against the run task.
+     */
+    sign(request: UploadSignRequest): Promise<UploadSignResponse> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/uploads/sign
+      return mockSignUpload(request);
     },
   },
   checklists: {
