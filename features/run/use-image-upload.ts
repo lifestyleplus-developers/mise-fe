@@ -41,7 +41,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 
         // Launch camera - live capture only, no gallery
         const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: ['images'],
           allowsEditing: false,
           quality: 0.8,
           exif: false,
@@ -64,18 +64,21 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           content_type: 'image/jpeg',
         });
 
-        // Upload directly to storage
-        const response = await fetch(sign.upload_url, {
-          method: sign.method,
-          headers: {
-            'Content-Type': 'image/jpeg',
-            ...sign.headers,
-          },
-          body: await fetch(asset.uri).then((r) => r.blob()),
-        });
+        // The mock backend hands out `mock://` locations there is nothing to
+        // PUT to; skip the transfer and keep the rest of the flow real.
+        if (!sign.upload_url.startsWith('mock://')) {
+          const response = await fetch(sign.upload_url, {
+            method: sign.method,
+            headers: {
+              'Content-Type': 'image/jpeg',
+              ...sign.headers,
+            },
+            body: await fetch(asset.uri).then((r) => r.blob()),
+          });
 
-        if (!response.ok) {
-          throw new Error('Upload failed');
+          if (!response.ok) {
+            throw new Error('Upload failed');
+          }
         }
 
         setState((prev) => ({

@@ -69,34 +69,32 @@ export function RunScreen() {
     answer_bool?: boolean;
     answer_number?: number;
   }>({});
+  /** Answered rows the user has opened for changing (bundle: changing). */
+  const [changing, setChanging] = React.useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
   const [pendingPhotoTask, setPendingPhotoTask] = React.useState<number | null>(
     null,
   );
 
   const tasks = run?.tasks ?? [];
 
-  const imageUpload = useImageUpload({
-    onSuccess: (key) => {
-      if (pendingPhotoTask !== null) {
-        void (async () => {
-          const task = tasks.find((t) => t.id === pendingPhotoTask);
-          if (task) {
-            await writeAnswer(task, { image_key: key, comment: null });
-          }
-          setPendingPhotoTask(null);
-        })();
-      }
-    },
-    onError: () => {
-      setPendingPhotoTask(null);
-    },
-  });
+  const imageUpload = useImageUpload();
 
-  React.useEffect(() => {
-    if (pendingPhotoTask !== null && !imageUpload.uploading) {
-      void imageUpload.upload(pendingPhotoTask);
+  /** Capture, upload, then write the key. Cancel or failure just ends it. */
+  async function takePhoto(task: RunTask) {
+    setPendingPhotoTask(task.id);
+    try {
+      const uploaded = await imageUpload.upload(task.id);
+      if (uploaded) {
+        await writeAnswer(task, { image_key: uploaded.key, comment: null });
+      }
+    } catch {
+      // The hook has recorded the failure; the row shows it.
+    } finally {
+      setPendingPhotoTask(null);
     }
-  }, [pendingPhotoTask, imageUpload]);
+  }
 
   const answered = tasks.filter((task) => task.answered_at !== null);
   const unanswered = tasks.filter((task) => task.answered_at === null);
@@ -146,7 +144,7 @@ export function RunScreen() {
     }
     if (task.answer_type === 'BINARY') {
       return task.answer_bool
-        ? { kind: 'yes', label: t('run.yes') }
+        ? { kind: 'yes', label: t('run.yes'), comment: task.comment }
         : { kind: 'no', label: t('run.no'), comment: task.comment };
     }
     const inRange = task.outcome !== 'FAIL';
@@ -169,6 +167,35 @@ export function RunScreen() {
     return `${who} · ${clockTime(task.answered_at)}`;
   }
 
+  function setChangingFor(task: RunTask, on: boolean) {
+    setChanging((current) => {
+      const next = new Set(current);
+      if (on) next.add(task.id);
+      else next.delete(task.id);
+      return next;
+    });
+  }
+
+  function startChange(task: RunTask) {
+    if (task.answer_type === 'NUMBER' && task.answer_number !== null) {
+      setDrafts((current) => ({
+        ...current,
+        [task.id]: String(task.answer_number),
+      }));
+    }
+    setRowErrors((current) => ({ ...current, [task.id]: null }));
+    setChangingFor(task, true);
+  }
+
+  function keepAnswer(task: RunTask) {
+    setDrafts((current) => {
+      const { [task.id]: _dropping, ...rest } = current;
+      return rest;
+    });
+    setRowErrors((current) => ({ ...current, [task.id]: null }));
+    setChangingFor(task, false);
+  }
+
   async function writeAnswer(
     task: RunTask,
     request: {
@@ -183,6 +210,7 @@ export function RunScreen() {
     try {
       setRowErrors((current) => ({ ...current, [task.id]: null }));
       await answer.mutateAsync({ taskId: task.id, request });
+      setChangingFor(task, false);
       return true;
     } catch (error) {
       const message =
@@ -196,8 +224,13 @@ export function RunScreen() {
   }
 
   async function answerBinary(task: RunTask, value: boolean) {
+    if (task.answer_bool === value) {
+      keepAnswer(task);
+      return;
+    }
     if (value) {
-      await writeAnswer(task, { answer_bool: true, comment: null });
+      // An earlier comment stays under the new answer (bundle: changedKeptComment).
+      await writeAnswer(task, { answer_bool: true });
       return;
     }
     if (task.requires_comment_on_fail) {
@@ -212,6 +245,19 @@ export function RunScreen() {
     const draft = drafts[task.id] ?? '';
     const parsed = parseReading(draft);
     if (parsed === null) return;
+    if (task.answered_at !== null && parsed === task.answer_number) {
+      keepAnswer(task);
+      return;
+    }
+    const { min_value: min, max_value: max } = task;
+    const fails =
+      (min !== null && parsed < min) || (max !== null && parsed > max);
+    if (fails && task.requires_comment_on_fail) {
+      // Ask for the reason in the same interaction (FE Spec §3.3).
+      setSheetAnswer({ answer_number: parsed });
+      setSheetFor(task.id);
+      return;
+    }
     await writeAnswer(task, { answer_number: parsed, comment: null });
   }
 
@@ -342,6 +388,8 @@ export function RunScreen() {
             const isReading = task.answer_type === 'NUMBER';
             const isBinary = task.answer_type === 'BINARY';
             const sheetOpen = sheetFor === task.id;
+            const editing = isAnswering && !open && changing.has(task.id);
+            const showControl = isAnswering && (open || editing);
 
             return (
               <View key={task.id}>
@@ -350,10 +398,8 @@ export function RunScreen() {
                   position={task.position}
                   text={task.text}
                   answer={
-                    !isAnswering || (isReading && open) ? (
-                      answerView ? (
-                        <AnswerDisplay {...answerView} />
-                      ) : undefined
+                    answerView && !editing ? (
+                      <AnswerDisplay {...answerView} />
                     ) : undefined
                   }
                   attribution={attributionOf(task)}
@@ -362,11 +408,22 @@ export function RunScreen() {
                   }
                   onLayout={(y) => rowY.current.set(task.id, y)}
                 >
-                  {isAnswering && open ? (
+                  {isAnswering && !open && !editing ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => startChange(task)}
+                      className="border-input-edge bg-card active:bg-accent mt-2 min-h-10 flex-row items-center self-start rounded-full border px-3.5"
+                    >
+                      <Text className="font-sans-semibold text-[13px]">
+                        {t('run.change')}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  {showControl ? (
                     <View className="mt-2 gap-2">
                       {isBinary ? (
                         <YesNo
-                          answer={null}
+                          answer={task.answer_bool}
                           onAnswer={(value) => void answerBinary(task, value)}
                         />
                       ) : null}
@@ -395,10 +452,21 @@ export function RunScreen() {
                           failed={
                             Boolean(rowError) || Boolean(imageUpload.error)
                           }
-                          onCapture={() => setPendingPhotoTask(task.id)}
-                          onRetake={() => setPendingPhotoTask(task.id)}
+                          onCapture={() => void takePhoto(task)}
+                          onRetake={() => void takePhoto(task)}
                           onAddComment={() => setSheetFor(task.id)}
                         />
+                      ) : null}
+                      {editing ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => keepAnswer(task)}
+                          className="border-input-edge bg-card active:bg-accent min-h-10 flex-row items-center self-start rounded-full border px-3.5"
+                        >
+                          <Text className="font-sans-semibold text-[13px]">
+                            {t('run.keep')}
+                          </Text>
+                        </Pressable>
                       ) : null}
                       {!isImage && rowError?.message ? (
                         <Text className="font-sans-medium text-[13px] text-destructive-soft-foreground">
