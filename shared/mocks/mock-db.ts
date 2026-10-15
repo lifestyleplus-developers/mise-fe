@@ -21,6 +21,7 @@
  */
 import type {
   AmbiguousUsernameBody,
+  AnswerTaskRequest,
   ApiErrorBody,
   LoginRequest,
   LoginResponse,
@@ -39,6 +40,8 @@ import type {
   UpdateUserRequest,
   User,
   UsersQuery,
+  UploadSignRequest,
+  UploadSignResponse,
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
@@ -73,6 +76,10 @@ type MockDb = {
   session: Session | null;
   /** When this mock session began — the fixed point today's runs hang off. */
   startedAt: number;
+  /** Answered task id → the write that landed on it (answers survive refetches). */
+  answers: Map<number, AnswerTaskRequest>;
+  /** Upload keys per run task, so an answer's `image_url` can resolve. */
+  signedUploadKeys: Map<number, string>;
 };
 
 /**
@@ -82,6 +89,8 @@ type MockDb = {
  */
 const store = globalThis as typeof globalThis & { __miseMockDb?: MockDb };
 const db: MockDb = (store.__miseMockDb ??= {
+  answers: new Map(),
+  signedUploadKeys: new Map(),
   users: users as DbUser[],
   businesses,
   outlets: outletFixtures.map((outlet) => ({ ...outlet })),
@@ -1052,14 +1061,26 @@ const TASK_TEMPLATES: Record<number, TaskTemplate[]> = {
 
 function outcomeFor(
   task: TaskTemplate,
-  answer: NonNullable<TaskTemplate['answer']>,
+  fallback: NonNullable<TaskTemplate['answer']> | undefined,
+  written?: AnswerTaskRequest,
 ): RunTask['outcome'] {
-  if (task.type === 'BINARY') return answer.b ? 'PASS' : 'FAIL';
-  if (task.type === 'NUMBER') {
-    const n = answer.n ?? 0;
+  if (task.type === 'IMAGE') {
+    return written?.image_key !== undefined ? 'PENDING_JUDGEMENT' : 'PASS';
+  }
+  if (task.type === 'BINARY') {
+    if (written?.answer_bool !== undefined) {
+      return written.answer_bool ? 'PASS' : 'FAIL';
+    }
+    return fallback ? (fallback.b ? 'PASS' : 'FAIL') : 'PASS';
+  }
+  if (written?.answer_number !== undefined) {
+    const n = written.answer_number;
     const low = task.min !== undefined && n < task.min;
     const high = task.max !== undefined && n > task.max;
     return low || high ? 'FAIL' : 'PASS';
+  }
+  if (fallback?.n !== undefined) {
+    return outcomeFor(task, fallback, { answer_number: fallback.n });
   }
   return 'PASS';
 }
@@ -1072,13 +1093,28 @@ function buildTasks(
   const templates = TASK_TEMPLATES[assignmentId] ?? [];
   const open = new Date(opensAt).getTime();
   return templates.map((task, index) => {
-    const answer = index < answered ? task.answer : undefined;
+    const id = assignmentId * 1000 + index + 1;
+    const templateAnswer = index < answered ? task.answer : undefined;
+    const written = db.answers.get(id);
+    /** The task's own fixture answer, overlaid by anything written this session. */
+    const answer: NonNullable<TaskTemplate['answer']> | undefined = written
+      ? {
+          by: templateAnswer?.by ?? 'kiran',
+          n: written.answer_number ?? templateAnswer?.n,
+          b: written.answer_bool ?? templateAnswer?.b,
+          comment:
+            written.comment === undefined
+              ? templateAnswer?.comment
+              : (written.comment ?? undefined),
+        }
+      : templateAnswer;
+    const writtenImage =
+      written?.image_key !== undefined ? written.image_key : undefined;
     const person = answer
       ? db.users.find((u) => u.username === answer.by)
       : undefined;
-    const isImage = task.type === 'IMAGE';
     return {
-      id: assignmentId * 1000 + index + 1,
+      id,
       position: index + 1,
       answer_type: task.type,
       text: task.text,
@@ -1090,15 +1126,25 @@ function buildTasks(
       answer_number: answer?.n ?? null,
       answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
       image_key:
-        answer && isImage ? `t7/mock/${assignmentId}-${index + 1}.jpg` : null,
-      image_url: null,
+        writtenImage !== undefined
+          ? writtenImage
+          : answer && task.type === 'IMAGE'
+            ? `t7/mock/${assignmentId}-${index + 1}.jpg`
+            : null,
+      image_url: writtenImage ? `mock://storage/${writtenImage}` : null,
       comment: answer?.comment ?? null,
-      outcome: answer ? outcomeFor(task, answer) : null,
+      outcome: written
+        ? outcomeFor(task, templateAnswer, written)
+        : templateAnswer
+          ? outcomeFor(task, templateAnswer)
+          : null,
       answered_by: person
         ? { id: person.id, full_name: person.full_name }
         : null,
       answered_at: answer
-        ? new Date(open + (index + 1) * 4 * 60_000).toISOString()
+        ? new Date(
+            written ? Date.now() : open + (index + 1) * 4 * 60_000,
+          ).toISOString()
         : null,
     };
   });
@@ -1174,5 +1220,86 @@ export async function mockListChecklists(
     next: start + pageSize < all.length ? page + 1 : null,
     previous: page > 1 ? page - 1 : null,
     results: all.slice(start, start + pageSize),
+  };
+}
+
+/**
+ * PATCH /run-tasks/{id} — one answer, written as it is given (§7).
+ *
+ * Enforces the platform's rules so the screens meet them: writes outside a
+ * window are 409 `window_closed`, a supervisor's write is 403, and a failing
+ * answer on a task that wants one is 400 `comment_required_on_failure`.
+ */
+export async function mockAnswerTask(
+  id: number,
+  request: AnswerTaskRequest,
+): Promise<RunTask> {
+  await delay();
+  const me = resolveMe();
+  const assignmentId = Math.floor(id / 1000);
+  const run = buildRuns(me, { includeClosed: true }).find(
+    (candidate) => Math.floor(candidate.id / 100) === assignmentId,
+  );
+  if (!run) throw apiError(404, 'not_found', 'Not found.');
+  if (run.my_role !== 'CL_IMP') {
+    throw apiError(
+      403,
+      'supervisors_cannot_answer',
+      'A Checklist Manager cannot answer.',
+    );
+  }
+  if (new Date(run.window_close).getTime() <= Date.now()) {
+    throw apiError(409, 'window_closed', 'This checklist closed.');
+  }
+
+  const templates = TASK_TEMPLATES[assignmentId] ?? [];
+  const index = (id % 1000) - 1;
+  const task = templates[index];
+  if (!task) throw apiError(404, 'not_found', 'Not found.');
+
+  const existing = db.answers.get(id);
+  const next = { ...existing, ...request } as AnswerTaskRequest;
+
+  if (task.type === 'BINARY' || task.type === 'NUMBER') {
+    const fails =
+      (task.type === 'BINARY' && next.answer_bool === false) ||
+      (task.type === 'NUMBER' &&
+        next.answer_number !== undefined &&
+        ((task.min !== undefined && next.answer_number < task.min) ||
+          (task.max !== undefined && next.answer_number > task.max)));
+    if (fails && !next.comment) {
+      throw apiError(
+        400,
+        API_ERROR_CODE.COMMENT_REQUIRED_ON_FAILURE,
+        'A comment is required when something fails.',
+        'comment',
+      );
+    }
+  }
+
+  db.answers.set(id, next);
+  const built = buildTasks(assignmentId, run.answered_count, run.window_open);
+  const answered = built.find((candidate) => candidate.id === id);
+  if (!answered) throw apiError(404, 'not_found', 'Not found.');
+  return answered;
+}
+
+/**
+ * POST /uploads/sign — §8. Returns a location the client PUTs to. The mock
+ * cannot accept real bytes; the key is recorded so the PATCH that follows
+ * the upload carries it.
+ */
+export async function mockSignUpload(
+  request: UploadSignRequest,
+): Promise<UploadSignResponse> {
+  await delay();
+  const me = resolveMe();
+  const key = `t${me.business.id}/mock/${request.target_id}-${Date.now()}.jpg`;
+  db.signedUploadKeys.set(request.target_id, key);
+  return {
+    upload_url: `mock://storage/${key}`,
+    method: 'PUT',
+    headers: { 'content-type': request.content_type },
+    key,
   };
 }

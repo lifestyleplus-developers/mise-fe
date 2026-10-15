@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 export type AnswerView =
   | { kind: 'photo'; label: string }
-  | { kind: 'yes'; label: string }
+  | { kind: 'yes'; label: string; comment?: string | null }
   | { kind: 'no'; label: string; comment: string | null }
   | {
       kind: 'reading';
@@ -24,8 +24,7 @@ export type AnswerView =
 export function AnswerDisplay(answer: AnswerView) {
   const flagged =
     answer.kind === 'no' || (answer.kind === 'reading' && !answer.inRange);
-  const comment =
-    answer.kind === 'no' || answer.kind === 'reading' ? answer.comment : null;
+  const comment = answer.kind === 'photo' ? null : (answer.comment ?? null);
 
   return (
     <View className="mt-1.5">
