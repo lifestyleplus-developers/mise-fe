@@ -81,7 +81,20 @@ export default function RootLayout() {
                     headerShown: false,
                     contentStyle: { backgroundColor: 'transparent' },
                   }}
-                />
+                >
+                  {/* Screens are transparent over the shared wash, so a slide
+                      shows both at once. Login and the tabs are only ever
+                      entered by replace: fade them instead, and keep Login
+                      from being swiped back out of. */}
+                  <Stack.Screen
+                    name="index"
+                    options={{ animation: 'fade', gestureEnabled: false }}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ animation: 'fade', gestureEnabled: false }}
+                  />
+                </Stack>
               </ThemeProvider>
             </View>
             <ThemeTransition />

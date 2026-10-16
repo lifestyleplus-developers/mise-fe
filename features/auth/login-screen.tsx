@@ -37,6 +37,7 @@ export function LoginScreen() {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const passwordRef = React.useRef<TextInput>(null);
+  const pickedLanguage = React.useRef(false);
 
   const isSubmitting = state.kind === 'submitting';
   const canSubmit =
@@ -44,7 +45,7 @@ export function LoginScreen() {
 
   function handleSubmit() {
     if (!canSubmit) return;
-    login({ username, password });
+    login({ username, password }, { pickedLanguage: pickedLanguage.current });
   }
 
   function dismissError() {
@@ -127,7 +128,13 @@ export function LoginScreen() {
           pointerEvents="box-none"
         >
           <ThemeToggle />
-          <LanguageSelector value={language} onChange={setLanguage} />
+          <LanguageSelector
+            value={language}
+            onChange={(next) => {
+              pickedLanguage.current = true;
+              setLanguage(next);
+            }}
+          />
         </View>
       </View>
 
