@@ -1,6 +1,8 @@
 import { cssInterop } from 'nativewind';
 import {
   Archive,
+  ArrowDown,
+  ArrowUp,
   Camera,
   Check,
   ChevronDown,
@@ -12,10 +14,12 @@ import {
   CirclePlay,
   ClipboardList,
   Clock,
+  EllipsisVertical,
   Eye,
   EyeOff,
   Flag,
   Globe,
+  GripVertical,
   House,
   Info,
   KeyRound,
@@ -45,6 +49,8 @@ import {
  */
 const ICONS = [
   Archive,
+  ArrowDown,
+  ArrowUp,
   Camera,
   Check,
   ChevronDown,
@@ -56,10 +62,12 @@ const ICONS = [
   CirclePlay,
   ClipboardList,
   Clock,
+  EllipsisVertical,
   Eye,
   EyeOff,
   Flag,
   Globe,
+  GripVertical,
   House,
   Info,
   KeyRound,
