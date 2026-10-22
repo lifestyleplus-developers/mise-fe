@@ -19,6 +19,11 @@ export const API_ERROR_CODE = {
   COMMENT_REQUIRED_ON_FAILURE: 'comment_required_on_failure',
   WINDOW_CLOSED: 'window_closed',
   SUPERVISORS_CANNOT_ANSWER: 'supervisors_cannot_answer',
+  AUTHORING_FORBIDDEN: 'authoring_forbidden',
+  NOT_YOUR_ASSIGNMENT: 'not_your_assignment',
+  NOT_FOUND: 'not_found',
+  ROLE_CONFLICT: 'role_conflict',
+  WINDOW_OVERLAPS_NEXT_PERIOD: 'window_overlaps_next_period',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -188,7 +193,90 @@ export type ChecklistAssignment = {
  */
 export type ChecklistListItem = Checklist & {
   assignments: ChecklistAssignment[];
+  /**
+   * Counts the admin list (CHK-10) shows. Not in the contract yet, so both are
+   * optional and the list must read fine without them.
+   */
+  task_count?: number;
+  outlet_count?: number;
 };
+
+/** API Contract §5 — a task on the authored checklist (not a run's snapshot). */
+export type Task = {
+  id: number;
+  position: number;
+  answer_type: 'BINARY' | 'NUMBER' | 'IMAGE';
+  text: string;
+  /** NUMBER only. */
+  unit: string | null;
+  /** NUMBER only; either bound may be set alone, neither means log-only. */
+  min_value: number | null;
+  max_value: number | null;
+  requires_comment_on_fail: boolean;
+  /** 1–10, default 5. */
+  weight: number;
+};
+
+/** GET /checklists/{id} — the checklist with its tasks, in order. */
+export type ChecklistDetail = Checklist & { tasks: Task[] };
+
+/** POST /checklists. weekdays is WEEKLY only, day_of_month MONTHLY only. */
+export type CreateChecklistRequest = Pick<
+  Checklist,
+  'name' | 'recurrence' | 'st_time' | 'deadline_minutes'
+> &
+  Partial<Pick<Checklist, 'weekdays' | 'day_of_month'>>;
+
+/** PATCH /checklists/{id} — name and schedule. */
+export type UpdateChecklistRequest = Partial<CreateChecklistRequest>;
+
+/** POST /checklists/{id}/tasks. The type is fixed once the task exists. */
+export type CreateTaskRequest = Pick<Task, 'answer_type' | 'text'> &
+  Partial<
+    Pick<
+      Task,
+      'unit' | 'min_value' | 'max_value' | 'requires_comment_on_fail' | 'weight'
+    >
+  >;
+
+/** PATCH /tasks/{id}. */
+export type UpdateTaskRequest = Partial<Omit<CreateTaskRequest, 'answer_type'>>;
+
+/** POST /checklists/{id}/tasks/reorder. */
+export type ReorderTasksRequest = { task_ids: number[] };
+
+/**
+ * GET /checklists/{id}/assignments — one outlet a checklist runs, or ran, at.
+ * An inactive row is history: no further runs, and its people are kept.
+ * Whether inactive rows come back is assumed until Lamax confirms (§6).
+ */
+export type OutletAssignment = {
+  id: number;
+  checklist_id: number;
+  outlet_id: number;
+  outlet_name: string;
+  is_active: boolean;
+};
+
+/** POST /checklists/{id}/assignments — bulk. */
+export type CreateAssignmentsRequest = { outlet_ids: number[] };
+
+export type AssignmentRole = 'CL_ADMIN' | 'CL_IMP';
+
+/**
+ * GET /assignments/{id}/members. The contract says "both buckets" without a
+ * shape; a flat list with the role on each row is assumed.
+ */
+export type AssignmentMember = {
+  user_id: number;
+  full_name: string;
+  role: AssignmentRole;
+  /** False for a deactivated account that is still on the assignment. */
+  is_active: boolean;
+};
+
+/** POST /assignments/{id}/members. */
+export type AddMemberRequest = { user_id: number; role: AssignmentRole };
 
 /** API Contract §7 — one task inside a run: the snapshot plus its answer. */
 export type RunTask = {

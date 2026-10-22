@@ -1,41 +1,69 @@
 /** The transport seam. */
 import {
+  mockAddMember,
   mockAnswerTask,
+  mockArchiveChecklist,
   mockArchiveOutlet,
+  mockArchiveTask,
+  mockCreateAssignments,
+  mockCreateChecklist,
   mockCreateOutlet,
+  mockCreateTask,
   mockCreateUser,
-  mockListChecklists,
+  mockDeactivateAssignment,
   mockFetchMe,
+  mockGetChecklist,
   mockGetOutlet,
   mockGetRun,
   mockGetUser,
+  mockListAssignments,
+  mockListChecklists,
+  mockListMembers,
   mockListOutlets,
   mockListRuns,
+  mockListTasks,
   mockListUsers,
   mockLogin,
   mockLogout,
+  mockRemoveMember,
+  mockReorderTasks,
   mockResetPassword,
+  mockRestoreChecklist,
   mockSignUpload,
+  mockUpdateChecklist,
   mockUpdateMe,
   mockUpdateOutlet,
+  mockUpdateTask,
   mockUpdateUser,
 } from '@/shared/mocks/mock-db';
 import type {
+  AddMemberRequest,
   AnswerTaskRequest,
+  AssignmentMember,
+  Checklist,
+  ChecklistDetail,
   ChecklistListItem,
+  CreateAssignmentsRequest,
+  CreateChecklistRequest,
   CreateOutletRequest,
+  CreateTaskRequest,
   CreateUserRequest,
   LoginRequest,
   LoginResponse,
   MeResponse,
   Outlet,
+  OutletAssignment,
   Page,
+  ReorderTasksRequest,
   ResetPasswordRequest,
   Run,
   RunDetail,
   RunTask,
+  Task,
+  UpdateChecklistRequest,
   UpdateMeRequest,
   UpdateOutletRequest,
+  UpdateTaskRequest,
   UpdateUserRequest,
   User,
   UsersQuery,
@@ -137,10 +165,121 @@ export const api = {
     },
   },
   checklists: {
-    /** GET /checklists?page=&page_size= — scoped to what the caller can see. */
-    list(page: number, pageSize: number): Promise<Page<ChecklistListItem>> {
+    /**
+     * GET /checklists?page=&page_size= — scoped to what the caller can see.
+     * `includeArchived` is for the admin list's Archived filter.
+     */
+    list(
+      page: number,
+      pageSize: number,
+      options?: { includeArchived?: boolean },
+    ): Promise<Page<ChecklistListItem>> {
       // TODO(server): GET {API_BASE_URL}/api/v1/checklists
-      return mockListChecklists(page, pageSize);
+      return mockListChecklists(page, pageSize, options);
+    },
+
+    /** GET /checklists/{id} — with its tasks. */
+    get(id: number): Promise<ChecklistDetail> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/checklists/{id}
+      return mockGetChecklist(id);
+    },
+
+    /** POST /checklists — ADMIN/OWNER. 409 `window_overlaps_next_period`. */
+    create(request: CreateChecklistRequest): Promise<Checklist> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists
+      return mockCreateChecklist(request);
+    },
+
+    /** PATCH /checklists/{id} — name and schedule; applies to future runs only. */
+    update(id: number, request: UpdateChecklistRequest): Promise<Checklist> {
+      // TODO(server): PATCH {API_BASE_URL}/api/v1/checklists/{id}
+      return mockUpdateChecklist(id, request);
+    },
+
+    /** POST /checklists/{id}/archive */
+    archive(id: number): Promise<Checklist> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/archive
+      return mockArchiveChecklist(id);
+    },
+
+    /** POST /checklists/{id}/restore — not in the contract yet; see the mock. */
+    restore(id: number): Promise<Checklist> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/restore
+      return mockRestoreChecklist(id);
+    },
+
+    /** GET /checklists/{id}/tasks — ordered. */
+    tasks(id: number): Promise<Task[]> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/checklists/{id}/tasks
+      return mockListTasks(id);
+    },
+
+    /** POST /checklists/{id}/tasks */
+    createTask(id: number, request: CreateTaskRequest): Promise<Task> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/tasks
+      return mockCreateTask(id, request);
+    },
+
+    /** POST /checklists/{id}/tasks/reorder — every task id, once, in order. */
+    reorderTasks(id: number, request: ReorderTasksRequest): Promise<Task[]> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/tasks/reorder
+      return mockReorderTasks(id, request);
+    },
+
+    /** GET /checklists/{id}/assignments — the outlets it runs or ran at. */
+    assignments(id: number): Promise<OutletAssignment[]> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/checklists/{id}/assignments
+      return mockListAssignments(id);
+    },
+
+    /** POST /checklists/{id}/assignments — bulk. */
+    assign(
+      id: number,
+      request: CreateAssignmentsRequest,
+    ): Promise<OutletAssignment[]> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/assignments
+      return mockCreateAssignments(id, request);
+    },
+  },
+  tasks: {
+    /** PATCH /tasks/{id} — the answer type is fixed. */
+    update(id: number, request: UpdateTaskRequest): Promise<Task> {
+      // TODO(server): PATCH {API_BASE_URL}/api/v1/tasks/{id}
+      return mockUpdateTask(id, request);
+    },
+
+    /** POST /tasks/{id}/archive */
+    archive(id: number): Promise<void> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/tasks/{id}/archive
+      return mockArchiveTask(id);
+    },
+  },
+  assignments: {
+    /** DELETE /assignments/{id} — deactivates; history survives. */
+    deactivate(id: number): Promise<void> {
+      // TODO(server): DELETE {API_BASE_URL}/api/v1/assignments/{id}
+      return mockDeactivateAssignment(id);
+    },
+
+    /** GET /assignments/{id}/members — both buckets. */
+    members(id: number): Promise<AssignmentMember[]> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/assignments/{id}/members
+      return mockListMembers(id);
+    },
+
+    /** POST /assignments/{id}/members — 409 `role_conflict` if already on it. */
+    addMember(
+      id: number,
+      request: AddMemberRequest,
+    ): Promise<AssignmentMember> {
+      // TODO(server): POST {API_BASE_URL}/api/v1/assignments/{id}/members
+      return mockAddMember(id, request);
+    },
+
+    /** DELETE /assignments/{id}/members/{user_id} */
+    removeMember(id: number, userId: number): Promise<void> {
+      // TODO(server): DELETE {API_BASE_URL}/api/v1/assignments/{id}/members/{user_id}
+      return mockRemoveMember(id, userId);
     },
   },
   users: {

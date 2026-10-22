@@ -100,6 +100,17 @@
       "is_archived": false
     },
     {
+      "id": 123,
+      "tenant_id": 7,
+      "name": "അടുക്കള ശുചിത്വവും ഭക്ഷ്യ സുരക്ഷയും പരിശോധിക്കുന്നതിനുള്ള ദിവസേനയുള്ള പ്രഭാത പട്ടിക",
+      "recurrence": "DAILY",
+      "st_time": "05:30",
+      "deadline_minutes": 120,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false
+    },
+    {
       "id": 122,
       "tenant_id": 7,
       "name": "Old Audit",

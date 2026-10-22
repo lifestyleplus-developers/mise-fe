@@ -20,14 +20,23 @@
  *   Give two businesses the same username to exercise the 409 picker.
  */
 import type {
+  AddMemberRequest,
   AmbiguousUsernameBody,
   AnswerTaskRequest,
   ApiErrorBody,
+  AssignmentMember,
+  Checklist,
+  ChecklistDetail,
+  CreateAssignmentsRequest,
+  CreateChecklistRequest,
+  CreateTaskRequest,
   LoginRequest,
   LoginResponse,
   CreateOutletRequest,
   CreateUserRequest,
   ChecklistListItem,
+  OutletAssignment,
+  ReorderTasksRequest,
   MeResponse,
   Outlet,
   Page,
@@ -35,8 +44,11 @@ import type {
   Run,
   RunDetail,
   RunTask,
+  Task,
+  UpdateChecklistRequest,
   UpdateMeRequest,
   UpdateOutletRequest,
+  UpdateTaskRequest,
   UpdateUserRequest,
   User,
   UsersQuery,
@@ -45,6 +57,7 @@ import type {
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
+import { windowOverlapsNextRun } from '@/shared/lib/schedule';
 import businesses from './fixtures/businesses.json';
 import checklistFixtures from './fixtures/checklists.json';
 import outletFixtures from './fixtures/outlets.json';
@@ -80,6 +93,8 @@ type MockDb = {
   answers: Map<number, AnswerTaskRequest>;
   /** Upload keys per run task, so an answer's `image_url` can resolve. */
   signedUploadKeys: Map<number, string>;
+  /** Authored checklists, tasks and assignments; seeded on first use. */
+  checklistState?: ChecklistState;
 };
 
 /**
@@ -1172,45 +1187,295 @@ export async function mockGetRun(id: number): Promise<RunDetail> {
   };
 }
 
+/** Rows below carry `tenant_id` as the platform's tables do; responses drop it. */
+type DbChecklist = Checklist & { tenant_id: number };
+type DbTask = Task & {
+  tenant_id: number;
+  checklist_id: number;
+  is_archived: boolean;
+};
+type DbAssignment = OutletAssignment & {
+  tenant_id: number;
+  /** Latest finished period's score, 0–100; null before one has closed. */
+  score: number | null;
+};
+
+/**
+ * Authored content, mutable for the length of a session. Who is on an
+ * assignment is not stored here: it lives in each user's `memberships`, the
+ * same place `/auth/me` and Home read it from, so the two cannot disagree.
+ */
+type ChecklistState = {
+  checklists: DbChecklist[];
+  assignments: DbAssignment[];
+  tasks: DbTask[];
+  nextTaskId: number;
+};
+
+/**
+ * Seeded on first use, not at import: the task fixtures below are declared
+ * after the `db` they would otherwise seed.
+ */
+function seedChecklistState(): ChecklistState {
+  const checklists = checklistFixtures.checklists.map((checklist) => ({
+    ...checklist,
+  })) as DbChecklist[];
+  const assignments: DbAssignment[] = checklistFixtures.assignments.map(
+    (assignment) => ({
+      id: assignment.id,
+      tenant_id: assignment.tenant_id,
+      checklist_id: assignment.checklist_id,
+      outlet_id:
+        db.outlets.find(
+          (outlet) =>
+            outlet.tenant_id === assignment.tenant_id &&
+            outlet.name === assignment.outlet_name,
+        )?.id ?? 0,
+      outlet_name: assignment.outlet_name,
+      score: assignment.score,
+      is_active: true,
+    }),
+  );
+
+  const tasks: DbTask[] = [];
+  let nextTaskId = 1;
+  const addTasks = (
+    checklist: { id: number; tenant_id: number },
+    templates: TaskTemplate[],
+  ) => {
+    templates.forEach((template, index) => {
+      tasks.push({
+        id: nextTaskId++,
+        tenant_id: checklist.tenant_id,
+        checklist_id: checklist.id,
+        position: index + 1,
+        answer_type: template.type,
+        text: template.text,
+        unit: template.unit ?? null,
+        min_value: template.min ?? null,
+        max_value: template.max ?? null,
+        requires_comment_on_fail: template.type !== 'IMAGE',
+        weight: 5,
+        is_archived: false,
+      });
+    });
+  };
+
+  // The run fixtures already author tasks per assignment; a checklist takes
+  // its tasks from the first of its assignments that has some.
+  const seeded = new Set<number>();
+  for (const [assignmentId, templates] of Object.entries(TASK_TEMPLATES)) {
+    const assignment = assignments.find((a) => a.id === Number(assignmentId));
+    if (!assignment || seeded.has(assignment.checklist_id)) continue;
+    seeded.add(assignment.checklist_id);
+    addTasks(
+      { id: assignment.checklist_id, tenant_id: assignment.tenant_id },
+      templates,
+    );
+  }
+
+  // The longest list a person might write (CHK-09 "30 tasks").
+  const longest = checklists.find((checklist) => checklist.id === 105);
+  if (longest) {
+    addTasks(
+      longest,
+      Array.from({ length: 30 }, (_, index) => ({
+        type: 'BINARY' as const,
+        text: `Delivery item ${index + 1} is in good condition`,
+      })),
+    );
+  }
+
+  return { checklists, assignments, tasks, nextTaskId };
+}
+
+function checklistState(): ChecklistState {
+  return (db.checklistState ??= seedChecklistState());
+}
+
+function findChecklist(tenantId: number, id: number): DbChecklist {
+  const checklist = checklistState().checklists.find(
+    (candidate) => candidate.id === id && candidate.tenant_id === tenantId,
+  );
+  if (!checklist) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return checklist;
+}
+
+/** Whether the caller is on any assignment of this checklist. */
+function isOnChecklist(me: MeResponse, checklistId: number): boolean {
+  const mine = new Set([
+    ...me.memberships.cl_admin_assignments,
+    ...me.memberships.cl_imp_assignments,
+  ]);
+  return checklistState().assignments.some(
+    (assignment) =>
+      assignment.checklist_id === checklistId && mine.has(assignment.id),
+  );
+}
+
+/** A checklist the caller may read: ADMIN/OWNER any, anyone else their own. */
+function findReadableChecklist(me: MeResponse, id: number): DbChecklist {
+  const checklist = findChecklist(me.business.id, id);
+  if (!canAdminister(me.user.role) && !isOnChecklist(me, id)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return checklist;
+}
+
+/** A checklist an admin may change; an archived one is read-only. */
+function findEditableChecklist(me: MeResponse, id: number): DbChecklist {
+  const checklist = findChecklist(me.business.id, id);
+  if (checklist.is_archived) {
+    throw apiError(409, 'archived', "Can't be edited while archived.");
+  }
+  return checklist;
+}
+
+function toChecklist({ tenant_id: _tenant, ...checklist }: DbChecklist) {
+  return checklist;
+}
+
+function toTask({
+  tenant_id: _tenant,
+  checklist_id: _checklist,
+  is_archived: _archived,
+  ...task
+}: DbTask): Task {
+  return task;
+}
+
+function liveTasks(checklistId: number): DbTask[] {
+  return checklistState()
+    .tasks.filter(
+      (task) => task.checklist_id === checklistId && !task.is_archived,
+    )
+    .sort((a, b) => a.position - b.position);
+}
+
+function toOutletAssignment({
+  tenant_id: _tenant,
+  score: _score,
+  ...assignment
+}: DbAssignment): OutletAssignment {
+  return assignment;
+}
+
+function activeAssignments(checklistId: number): DbAssignment[] {
+  return checklistState().assignments.filter(
+    (assignment) =>
+      assignment.checklist_id === checklistId && assignment.is_active,
+  );
+}
+
+type ScheduleFields = Pick<
+  Checklist,
+  | 'name'
+  | 'recurrence'
+  | 'st_time'
+  | 'deadline_minutes'
+  | 'weekdays'
+  | 'day_of_month'
+>;
+
+/** §5: the shape of a schedule, then the window against the next run. */
+function assertValidSchedule(schedule: ScheduleFields) {
+  const invalid = (message: string, field: string) =>
+    apiError(400, API_ERROR_CODE.VALIDATION_ERROR, message, field);
+
+  if (!schedule.name.trim()) throw invalid('Name is required.', 'name');
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(schedule.st_time)) {
+    throw invalid('Use a time like 06:30.', 'st_time');
+  }
+  if (
+    !Number.isInteger(schedule.deadline_minutes) ||
+    schedule.deadline_minutes <= 0
+  ) {
+    throw invalid('The window must be longer than zero.', 'deadline_minutes');
+  }
+
+  const weekdays = schedule.weekdays ?? [];
+  if (schedule.recurrence === 'WEEKLY') {
+    if (
+      weekdays.length === 0 ||
+      weekdays.some((day) => !Number.isInteger(day) || day < 1 || day > 7)
+    ) {
+      throw invalid('Choose at least one day.', 'weekdays');
+    }
+  } else if (weekdays.length > 0) {
+    throw invalid('Days apply to weekly checklists only.', 'weekdays');
+  }
+
+  if (schedule.recurrence === 'MONTHLY') {
+    const day = schedule.day_of_month;
+    if (day === null || !Number.isInteger(day) || day < 1 || day > 31) {
+      throw invalid('Choose a day of the month.', 'day_of_month');
+    }
+  } else if (schedule.day_of_month !== null) {
+    throw invalid(
+      'A day of the month applies to monthly checklists only.',
+      'day_of_month',
+    );
+  }
+
+  if (
+    windowOverlapsNextRun(
+      schedule.recurrence,
+      schedule.weekdays,
+      schedule.deadline_minutes,
+    )
+  ) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.WINDOW_OVERLAPS_NEXT_PERIOD,
+      'The window must be shorter than the gap between runs.',
+      'deadline_minutes',
+    );
+  }
+}
+
 /**
  * GET /checklists — scoped to what the caller can see (§5): ADMIN/OWNER get
  * every checklist, anyone else only those where they are CL_ADMIN or CL_IMP.
- * Archived ones are left out.
+ * Archived ones are left out unless an admin asks for them (CHK-10).
  */
 export async function mockListChecklists(
   page: number,
   pageSize: number,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
 ): Promise<Page<ChecklistListItem>> {
   await delay();
   const me = resolveMe();
   const admin = new Set(me.memberships.cl_admin_assignments);
   const implementer = new Set(me.memberships.cl_imp_assignments);
+  const state = checklistState();
+  const mayAdminister = canAdminister(me.user.role);
 
   const all: ChecklistListItem[] = [];
-  for (const { tenant_id, ...checklist } of checklistFixtures.checklists) {
-    if (tenant_id !== me.business.id || checklist.is_archived) continue;
-    const assignments = checklistFixtures.assignments
-      .filter(
-        (a) =>
-          a.tenant_id === me.business.id && a.checklist_id === checklist.id,
-      )
-      .map((a) => ({
-        id: a.id,
-        outlet_name: a.outlet_name,
-        score: a.score,
-        my_role: admin.has(a.id)
-          ? ('CL_ADMIN' as const)
-          : implementer.has(a.id)
-            ? ('CL_IMP' as const)
-            : null,
-      }));
-    if (canAdminister(me.user.role)) {
-      all.push({ ...checklist, assignments } as ChecklistListItem);
+  for (const checklist of state.checklists) {
+    if (checklist.tenant_id !== me.business.id) continue;
+    if (checklist.is_archived && !(includeArchived && mayAdminister)) continue;
+    const assignments = activeAssignments(checklist.id).map((a) => ({
+      id: a.id,
+      outlet_name: a.outlet_name,
+      score: a.score,
+      my_role: admin.has(a.id)
+        ? ('CL_ADMIN' as const)
+        : implementer.has(a.id)
+          ? ('CL_IMP' as const)
+          : null,
+    }));
+    if (mayAdminister) {
+      all.push({
+        ...toChecklist(checklist),
+        assignments,
+        task_count: liveTasks(checklist.id).length,
+        outlet_count: assignments.length,
+      });
     } else if (assignments.some((a) => a.my_role)) {
       all.push({
-        ...checklist,
+        ...toChecklist(checklist),
         assignments: assignments.filter((a) => a.my_role),
-      } as ChecklistListItem);
+      });
     }
   }
 
@@ -1221,6 +1486,473 @@ export async function mockListChecklists(
     previous: page > 1 ? page - 1 : null,
     results: all.slice(start, start + pageSize),
   };
+}
+
+/** GET /checklists/{id} — detail with its tasks, in order. */
+export async function mockGetChecklist(id: number): Promise<ChecklistDetail> {
+  await delay();
+  const me = resolveMe();
+  const checklist = findReadableChecklist(me, id);
+  return { ...toChecklist(checklist), tasks: liveTasks(id).map(toTask) };
+}
+
+/** POST /checklists. A name of "offline" stands in for the network dying. */
+export async function mockCreateChecklist(
+  request: CreateChecklistRequest,
+): Promise<Checklist> {
+  await delay();
+  const me = requireAdmin();
+  const schedule: ScheduleFields = {
+    ...request,
+    name: request.name.trim(),
+    weekdays: request.weekdays ?? null,
+    day_of_month: request.day_of_month ?? null,
+  };
+  assertReachable(schedule.name);
+  assertValidSchedule(schedule);
+  const state = checklistState();
+  const checklist: DbChecklist = {
+    ...schedule,
+    id: Math.max(0, ...state.checklists.map((c) => c.id)) + 1,
+    tenant_id: me.business.id,
+    is_archived: false,
+  };
+  state.checklists.push(checklist);
+  return toChecklist(checklist);
+}
+
+/**
+ * PATCH /checklists/{id} — name and schedule. Switching recurrence drops the
+ * days the new one has no use for, so the caller need not send explicit nulls.
+ */
+export async function mockUpdateChecklist(
+  id: number,
+  request: UpdateChecklistRequest,
+): Promise<Checklist> {
+  await delay();
+  const me = requireAdmin();
+  const checklist = findEditableChecklist(me, id);
+  const next: ScheduleFields = { ...checklist, ...request };
+  if (request.name !== undefined) next.name = request.name.trim();
+  if (next.recurrence !== 'WEEKLY' && request.weekdays === undefined) {
+    next.weekdays = null;
+  }
+  if (next.recurrence !== 'MONTHLY' && request.day_of_month === undefined) {
+    next.day_of_month = null;
+  }
+  assertReachable(next.name);
+  assertValidSchedule(next);
+  Object.assign(checklist, next);
+  return toChecklist(checklist);
+}
+
+/**
+ * POST /checklists/{id}/archive. No further runs anywhere; history stays, and
+ * so do its people, should it ever come back.
+ */
+export async function mockArchiveChecklist(id: number): Promise<Checklist> {
+  await delay();
+  const me = requireAdmin();
+  const checklist = findChecklist(me.business.id, id);
+  checklist.is_archived = true;
+  for (const assignment of activeAssignments(id)) assignment.is_active = false;
+  return toChecklist(checklist);
+}
+
+/**
+ * POST /checklists/{id}/restore. Not in the contract: it has archive and no
+ * way back (plan §4, question 8). Assumed so CHK-06's Restore can be built;
+ * outlets stay stopped until someone ticks them again.
+ */
+export async function mockRestoreChecklist(id: number): Promise<Checklist> {
+  await delay();
+  const me = requireAdmin();
+  const checklist = findChecklist(me.business.id, id);
+  checklist.is_archived = false;
+  return toChecklist(checklist);
+}
+
+/** Per-field rules for a task (§5); NUMBER-only fields are 400 on any other. */
+function assertValidTask(task: {
+  answer_type: Task['answer_type'];
+  text: string;
+  unit: string | null;
+  min_value: number | null;
+  max_value: number | null;
+  weight: number;
+}) {
+  const invalid = (message: string, field: string) =>
+    apiError(400, API_ERROR_CODE.VALIDATION_ERROR, message, field);
+
+  if (!task.text.trim()) throw invalid('Task text is required.', 'text');
+  // Stands in for the platform refusing a text the client thought was fine.
+  if (task.text.trim().toLowerCase() === 'rejected') {
+    throw invalid("This text can't be saved.", 'text');
+  }
+  if (!Number.isInteger(task.weight) || task.weight < 1 || task.weight > 10) {
+    throw invalid('Weight is 1 to 10.', 'weight');
+  }
+  if (task.answer_type !== 'NUMBER') {
+    if (task.unit !== null) throw invalid('Only a reading has a unit.', 'unit');
+    if (task.min_value !== null || task.max_value !== null) {
+      throw invalid('Only a reading has limits.', 'min_value');
+    }
+    return;
+  }
+  if (
+    task.min_value !== null &&
+    task.max_value !== null &&
+    task.min_value > task.max_value
+  ) {
+    throw invalid('The lowest must not be above the highest.', 'min_value');
+  }
+}
+
+function findTask(tenantId: number, id: number): DbTask {
+  const task = checklistState().tasks.find(
+    (candidate) =>
+      candidate.id === id &&
+      candidate.tenant_id === tenantId &&
+      !candidate.is_archived,
+  );
+  if (!task) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return task;
+}
+
+/** GET /checklists/{id}/tasks — ordered. */
+export async function mockListTasks(checklistId: number): Promise<Task[]> {
+  await delay();
+  const me = resolveMe();
+  findReadableChecklist(me, checklistId);
+  return liveTasks(checklistId).map(toTask);
+}
+
+/** POST /checklists/{id}/tasks — added at the end. */
+export async function mockCreateTask(
+  checklistId: number,
+  request: CreateTaskRequest,
+): Promise<Task> {
+  await delay();
+  const me = requireAdmin();
+  const checklist = findEditableChecklist(me, checklistId);
+  const fields = {
+    answer_type: request.answer_type,
+    text: request.text.trim(),
+    unit: request.unit ?? null,
+    min_value: request.min_value ?? null,
+    max_value: request.max_value ?? null,
+    weight: request.weight ?? 5,
+  };
+  assertReachable(fields.text);
+  assertValidTask(fields);
+  const state = checklistState();
+  const task: DbTask = {
+    ...fields,
+    id: state.nextTaskId++,
+    tenant_id: me.business.id,
+    checklist_id: checklist.id,
+    position: liveTasks(checklist.id).length + 1,
+    requires_comment_on_fail:
+      request.requires_comment_on_fail ?? request.answer_type !== 'IMAGE',
+    is_archived: false,
+  };
+  state.tasks.push(task);
+  return toTask(task);
+}
+
+/** PATCH /tasks/{id}. The answer type is not editable. */
+export async function mockUpdateTask(
+  id: number,
+  request: UpdateTaskRequest,
+): Promise<Task> {
+  await delay();
+  const me = requireAdmin();
+  const task = findTask(me.business.id, id);
+  findEditableChecklist(me, task.checklist_id);
+  const next = {
+    answer_type: task.answer_type,
+    text: request.text === undefined ? task.text : request.text.trim(),
+    unit: request.unit === undefined ? task.unit : request.unit,
+    min_value:
+      request.min_value === undefined ? task.min_value : request.min_value,
+    max_value:
+      request.max_value === undefined ? task.max_value : request.max_value,
+    weight: request.weight ?? task.weight,
+  };
+  assertReachable(next.text);
+  assertValidTask(next);
+  Object.assign(task, next);
+  if (request.requires_comment_on_fail !== undefined) {
+    task.requires_comment_on_fail = request.requires_comment_on_fail;
+  }
+  return toTask(task);
+}
+
+/** POST /tasks/{id}/archive. A task named "offline" fails as the network would. */
+export async function mockArchiveTask(id: number): Promise<void> {
+  await delay();
+  const me = requireAdmin();
+  const task = findTask(me.business.id, id);
+  assertReachable(task.text);
+  findEditableChecklist(me, task.checklist_id);
+  task.is_archived = true;
+  liveTasks(task.checklist_id).forEach((live, index) => {
+    live.position = index + 1;
+  });
+}
+
+/**
+ * POST /checklists/{id}/tasks/reorder — every live task, once. A list holding
+ * a task named "offline" fails as the network would.
+ */
+export async function mockReorderTasks(
+  checklistId: number,
+  request: ReorderTasksRequest,
+): Promise<Task[]> {
+  await delay();
+  const me = requireAdmin();
+  findEditableChecklist(me, checklistId);
+  const live = liveTasks(checklistId);
+  live.forEach((task) => assertReachable(task.text));
+  const ids = request.task_ids;
+  const same =
+    ids.length === live.length &&
+    new Set(ids).size === ids.length &&
+    live.every((task) => ids.includes(task.id));
+  if (!same) {
+    throw apiError(
+      400,
+      API_ERROR_CODE.VALIDATION_ERROR,
+      'List every task exactly once.',
+      'task_ids',
+    );
+  }
+  ids.forEach((taskId, index) => {
+    live.find((task) => task.id === taskId)!.position = index + 1;
+  });
+  return liveTasks(checklistId).map(toTask);
+}
+
+/**
+ * GET /checklists/{id}/assignments — every outlet it runs or ran at. Inactive
+ * rows come back too, flagged, so a re-tick can find the people it had.
+ */
+export async function mockListAssignments(
+  checklistId: number,
+): Promise<OutletAssignment[]> {
+  await delay();
+  const me = resolveMe();
+  findReadableChecklist(me, checklistId);
+  return checklistState()
+    .assignments.filter((a) => a.checklist_id === checklistId)
+    .map(toOutletAssignment);
+}
+
+/**
+ * POST /checklists/{id}/assignments — bulk. An outlet already running is left
+ * alone; one that was stopped starts again with the people it had.
+ */
+export async function mockCreateAssignments(
+  checklistId: number,
+  request: CreateAssignmentsRequest,
+): Promise<OutletAssignment[]> {
+  await delay();
+  const me = requireAdmin();
+  const checklist = findEditableChecklist(me, checklistId);
+  const state = checklistState();
+  const outlets = request.outlet_ids.map((outletId) => {
+    const outlet = findOutlet(me.business.id, outletId);
+    if (outlet.is_archived) {
+      throw apiError(409, 'archived', "Can't be edited while archived.");
+    }
+    return outlet;
+  });
+
+  return outlets.map((outlet) => {
+    const existing = state.assignments.find(
+      (a) => a.checklist_id === checklist.id && a.outlet_id === outlet.id,
+    );
+    if (existing) {
+      existing.is_active = true;
+      return toOutletAssignment(existing);
+    }
+    const assignment: DbAssignment = {
+      id: Math.max(0, ...state.assignments.map((a) => a.id)) + 1,
+      tenant_id: me.business.id,
+      checklist_id: checklist.id,
+      outlet_id: outlet.id,
+      outlet_name: outlet.name,
+      score: null,
+      is_active: true,
+    };
+    state.assignments.push(assignment);
+    return toOutletAssignment(assignment);
+  });
+}
+
+function findAssignment(tenantId: number, id: number): DbAssignment {
+  const assignment = checklistState().assignments.find(
+    (candidate) => candidate.id === id && candidate.tenant_id === tenantId,
+  );
+  if (!assignment) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return assignment;
+}
+
+/** DELETE /assignments/{id} — deactivates: history survives, no further runs. */
+export async function mockDeactivateAssignment(id: number): Promise<void> {
+  await delay();
+  const me = requireAdmin();
+  findAssignment(me.business.id, id).is_active = false;
+}
+
+/** The part the caller plays on one assignment; null for an admin on neither. */
+function callerRole(
+  me: MeResponse,
+  assignmentId: number,
+): 'CL_ADMIN' | 'CL_IMP' | null {
+  if (me.memberships.cl_admin_assignments.includes(assignmentId)) {
+    return 'CL_ADMIN';
+  }
+  if (me.memberships.cl_imp_assignments.includes(assignmentId)) {
+    return 'CL_IMP';
+  }
+  return null;
+}
+
+const MEMBERSHIP_KEY = {
+  CL_ADMIN: 'cl_admin_assignments',
+  CL_IMP: 'cl_imp_assignments',
+} as const;
+
+/** The assignment, for someone allowed to see its people. */
+function findAssignmentForTeam(me: MeResponse, id: number): DbAssignment {
+  const assignment = findAssignment(me.business.id, id);
+  if (!canAdminister(me.user.role) && !callerRole(me, id)) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
+      'Not your assignment.',
+    );
+  }
+  return assignment;
+}
+
+/**
+ * Whether the caller may change someone in this role: ADMIN/OWNER either, a
+ * CL_ADMIN implementers only, and only on assignments they supervise (§6).
+ */
+function assertMayChangeTeam(
+  me: MeResponse,
+  assignmentId: number,
+  role: 'CL_ADMIN' | 'CL_IMP',
+) {
+  if (canAdminister(me.user.role)) return;
+  if (callerRole(me, assignmentId) === 'CL_ADMIN' && role === 'CL_IMP') return;
+  throw apiError(
+    403,
+    API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
+    'Not permitted to change this team.',
+  );
+}
+
+function membersOf(tenantId: number, assignmentId: number): AssignmentMember[] {
+  const members: AssignmentMember[] = [];
+  for (const user of db.users) {
+    if (user.tenant_id !== tenantId) continue;
+    for (const role of ['CL_ADMIN', 'CL_IMP'] as const) {
+      if (user.memberships[MEMBERSHIP_KEY[role]].includes(assignmentId)) {
+        members.push({
+          user_id: user.id,
+          full_name: user.full_name,
+          role,
+          is_active: user.is_active,
+        });
+      }
+    }
+  }
+  return members.sort(
+    (a, b) =>
+      a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name),
+  );
+}
+
+/** GET /assignments/{id}/members — both buckets, supervisors first. */
+export async function mockListMembers(
+  assignmentId: number,
+): Promise<AssignmentMember[]> {
+  await delay();
+  const me = resolveMe();
+  findAssignmentForTeam(me, assignmentId);
+  return membersOf(me.business.id, assignmentId);
+}
+
+/**
+ * POST /assignments/{id}/members. 409 `role_conflict` when the person is
+ * already on it in either role: one row per person per assignment (Schema).
+ */
+export async function mockAddMember(
+  assignmentId: number,
+  request: AddMemberRequest,
+): Promise<AssignmentMember> {
+  await delay();
+  const me = resolveMe();
+  const assignment = findAssignmentForTeam(me, assignmentId);
+  assertMayChangeTeam(me, assignmentId, request.role);
+  findEditableChecklist(me, assignment.checklist_id);
+
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === request.user_id &&
+      candidate.tenant_id === me.business.id,
+  );
+  if (!user || !user.is_active) {
+    throw apiError(
+      400,
+      API_ERROR_CODE.VALIDATION_ERROR,
+      'Choose someone from the list.',
+      'user_id',
+    );
+  }
+  const already = membersOf(me.business.id, assignmentId).some(
+    (member) => member.user_id === user.id,
+  );
+  if (already) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.ROLE_CONFLICT,
+      'Already on this checklist here.',
+      'user_id',
+    );
+  }
+  user.memberships[MEMBERSHIP_KEY[request.role]].push(assignmentId);
+  return {
+    user_id: user.id,
+    full_name: user.full_name,
+    role: request.role,
+    is_active: user.is_active,
+  };
+}
+
+/** DELETE /assignments/{id}/members/{user_id}. */
+export async function mockRemoveMember(
+  assignmentId: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const me = resolveMe();
+  const assignment = findAssignmentForTeam(me, assignmentId);
+  const member = membersOf(me.business.id, assignmentId).find(
+    (candidate) => candidate.user_id === userId,
+  );
+  if (!member) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  assertMayChangeTeam(me, assignmentId, member.role);
+  findEditableChecklist(me, assignment.checklist_id);
+
+  const user = db.users.find((candidate) => candidate.id === userId)!;
+  const key = MEMBERSHIP_KEY[member.role];
+  user.memberships[key] = user.memberships[key].filter(
+    (id) => id !== assignmentId,
+  );
 }
 
 /**
