@@ -269,6 +269,11 @@ export const en = {
   'sort.moved': 'Moved to position {n} of {total}',
   'checklists.archived-done': '{name} archived. Its history stays.',
   'checklists.restored': '{name} restored.',
+
+  'more.checklists': 'Checklists',
+  'editor.new-title': 'New checklist',
+  'editor.tasks-title': 'Tasks',
+  'editor.outlets-title': 'Outlets',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

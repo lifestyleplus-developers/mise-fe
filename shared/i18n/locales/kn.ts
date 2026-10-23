@@ -248,4 +248,9 @@ export const kn = {
   'sort.moved': '{total} ರಲ್ಲಿ {n}ನೇ ಸ್ಥಾನಕ್ಕೆ ಸರಿಸಲಾಗಿದೆ',
   'checklists.archived-done': '{name} ಆರ್ಕೈವ್ ಮಾಡಲಾಗಿದೆ. ಇತಿಹಾಸ ಉಳಿಯುತ್ತದೆ.',
   'checklists.restored': '{name} ಮರುಸ್ಥಾಪಿಸಲಾಗಿದೆ.',
+
+  'more.checklists': 'ಚೆಕ್‌ಲಿಸ್ಟ್‌ಗಳು',
+  'editor.new-title': 'ಹೊಸ ಚೆಕ್‌ಲಿಸ್ಟ್',
+  'editor.tasks-title': 'ಕಾರ್ಯಗಳು',
+  'editor.outlets-title': 'ಔಟ್‌ಲೆಟ್‌ಗಳು',
 } satisfies Partial<Catalogue>;

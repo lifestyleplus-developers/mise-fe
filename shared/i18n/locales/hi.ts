@@ -246,4 +246,9 @@ export const hi = {
   'sort.moved': '{total} में से स्थान {n} पर ले जाया गया',
   'checklists.archived-done': '{name} आर्काइव किया गया। इतिहास बना रहेगा।',
   'checklists.restored': '{name} बहाल किया गया।',
+
+  'more.checklists': 'चेकलिस्ट',
+  'editor.new-title': 'नई चेकलिस्ट',
+  'editor.tasks-title': 'कार्य',
+  'editor.outlets-title': 'आउटलेट',
 } satisfies Partial<Catalogue>;

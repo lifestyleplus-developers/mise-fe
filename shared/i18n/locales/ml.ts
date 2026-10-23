@@ -248,4 +248,9 @@ export const ml = {
   'sort.moved': '{total}-ൽ {n}-ാം സ്ഥാനത്തേക്ക് നീക്കി',
   'checklists.archived-done': '{name} ആർക്കൈവ് ചെയ്തു. ചരിത്രം നിലനിൽക്കും.',
   'checklists.restored': '{name} പുനഃസ്ഥാപിച്ചു.',
+
+  'more.checklists': 'ചെക്ക്‌ലിസ്റ്റുകൾ',
+  'editor.new-title': 'പുതിയ ചെക്ക്‌ലിസ്റ്റ്',
+  'editor.tasks-title': 'ടാസ്‌ക്കുകൾ',
+  'editor.outlets-title': 'ഔട്ട്‌ലെറ്റുകൾ',
 } satisfies Partial<Catalogue>;
