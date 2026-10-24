@@ -47,16 +47,15 @@
 
 ## What the states pin down
 
-- **A row** is its number, the text, then an icon and a line: type, unit, range ("4 or below", "−18 to 4", "no range: only logged") and the weight when it is not the standard 5.
+- **A row** is the text, then an icon and a line: type, unit, range ("4 or below", "−18 to 4", "no range: only logged") and the weight when it is not the standard 5.
 - **Order.** Drag the grip, or open the row's menu for Move up and Move down. A drag does not scroll the page, so long moves use the menu. A failed save puts the list back and offers Try again.
 - **Add and Start running.** A running checklist, or a business with several outlets, has Add task pinned at the bottom. A one-outlet business that is not running has Start running pinned instead, with Add task under the list. Start running needs at least one task.
-- **The sheet.** Type first (Yes / No, Reading, Photo), then its text, then what that type needs. A reading takes a unit and either limit, or none: then it is only logged and can only be missed. Weight sits behind a row, 1 to 10, standard 5.
+- **The sheet.** Type first (Yes / No, Reading, Photo), then its text, then what that type needs. Where a task can fail there is a switch, **Ask for a comment when this fails**, off unless the author turns it on; a row that has it on says "asks why". It can be changed later. A photo task, or a reading with no limit, has no switch. A reading takes either limit, or none: then it is only logged and can only be missed. A new reading is in °C and the author is not asked for a unit; an existing reading keeps its own. Weight sits behind a row, 1 to 10, standard 5.
 - **The type is fixed** once a task exists. To change it, add a new task and remove this one.
 - **Out-of-range readings are valid answers.** The limits say what fails; the sheet states it in a sentence as the limits are typed.
 - **Edits apply to new runs**, said on the screen and in the remove confirm when the checklist runs somewhere. Past runs keep a removed task.
-- **Authored text** (task text, units) is shown as typed; everything else is in all four languages.
+- **Authored text** (task text) is shown as typed; everything else is in all four languages.
 
 ## Not built, and why
 
-- **A "comment required when it fails" switch.** The mockup has none (plan §4, question 2). The mock keeps its current rule, that Yes/No and Reading tasks require one.
 - **Auto-scroll while dragging.** Moving a row off the screen needs the menu.

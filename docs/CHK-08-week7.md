@@ -26,8 +26,8 @@
 14. **inactive** — an inactive person stays on the list, marked "Inactive". **R** — Kitchen Closing: Anil.
 15. **singleOutlet** — one-outlet business: the checklist's name alone, no outlet line. **R** — kabir, after Start running on CHK-09.
 16. **stopRunning** — "Stop {name}?" then "{name} stopped." **R** — kabir.
-17. **reticked** — an outlet ticked again shows its old manager marked "From before: check they're still right." **—** the screen is not told which people came back (plan §4, question 5). CHK-07 marks them in its own row.
-18. **pastMembers** — a list of people removed, with when and by whom. **—** the API keeps no record of removals (plan §4, question 4), so the link is left out.
+17. **reticked** — people who came back with a restarted outlet are marked "From before: check they're still right." **R** — on CHK-07 stop ZamZam on Kitchen Opening, Apply, tick it again, Apply, then tap Team. The note lasts for that visit.
+18. **pastMembers** — a list of people taken off, with when and by whom. **R** — remove someone, then tap Past members.
 19. **saveFailed** — "Couldn't save. Can't reach mise." in the picker; the same tap retries. **—** only on a real network failure.
 20. **conflict** — "{name} is already on this team." **—** only when two people add the same person at once.
 21. **notYours** — "You're no longer on {name}." and the lists are hidden. **—** only when taken off the checklist while it is open, or arriving by a link.
@@ -50,7 +50,12 @@
 - **When the screen can no longer be used** (taken off, archived, role lost) the lists go and a message says why.
 - **Authored text** (checklist, outlet and people's names) is shown as typed; everything else is in all four languages.
 
+## Past members and removals
+
+- **Nobody is deleted.** Taking someone off records when and by whom. Past members lists them, latest first: "Sana · removed 2 Oct by Raheem".
+- **Coming back.** Adding the same person again reuses their row, in either role.
+- **Who may read a team.** An Administrator, an Owner, or that assignment's own Checklist Manager. An implementer works the checklist and gets "not your assignment".
+
 ## Not built, and why
 
-- **Past members** (state 18) and the **"From before"** note on a team row (state 17). Both need data the API does not return; they stay questions 4 and 5 for Lamax.
 - **A trigger for the failure states** on the mock (19 to 25): they need a race, or a failing network. The classifier is tested and the screen handles each.

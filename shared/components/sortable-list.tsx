@@ -65,6 +65,10 @@ function SortableList<T>({
   const [heights, setHeights] = React.useState<Record<string, number>>({});
   const [drag, setDrag] = React.useState<Drag | null>(null);
   const [menuIndex, setMenuIndex] = React.useState<number | null>(null);
+  /** How far the held row has moved. Only one row is ever held. */
+  const [offset] = React.useState(() => new Animated.Value(0));
+  /** The row held and where the finger was when it took hold. Not for rendering. */
+  const held = React.useRef<{ from: number; startY: number } | null>(null);
 
   const rowHeights = items.map((item) => heights[String(keyOf(item))] ?? 0);
 
@@ -80,8 +84,29 @@ function SortableList<T>({
   }
 
   function endDrag() {
+    held.current = null;
+    offset.setValue(0);
     setDrag(null);
     onDragChange?.(false);
+  }
+
+  /** The row under a touch `y` points down from the top of the list. */
+  function rowAt(y: number): number {
+    let top = 0;
+    for (let index = 0; index < rowHeights.length; index++) {
+      top += rowHeights[index];
+      if (y < top) return index;
+    }
+    return -1;
+  }
+
+  /** How far the finger has moved since it took hold, kept inside the list. */
+  function travel(pageY: number, from: number, startY: number): number {
+    const above = rowHeights.slice(0, from).reduce((a, b) => a + b, 0);
+    const total = rowHeights.reduce((a, b) => a + b, 0);
+    const min = -above;
+    const max = total - above - rowHeights[from];
+    return Math.min(max, Math.max(min, pageY - startY));
   }
 
   const menuItem = menuIndex === null ? undefined : items[menuIndex];
@@ -95,22 +120,18 @@ function SortableList<T>({
       <View className="shadow-card border-border bg-card overflow-hidden rounded-3xl border">
         {items.map((item, index) => {
           const key = String(keyOf(item));
-          const top = rowHeights.slice(0, index).reduce((a, b) => a + b, 0);
-          const total = rowHeights.reduce((a, b) => a + b, 0);
           return (
             <SortableRow
               key={key}
-              index={index}
               label={labelOf(item)}
               first={index === 0}
               dragging={drag?.from === index}
+              offset={offset}
               shift={
                 drag
                   ? shiftFor(index, drag.from, drag.to, rowHeights[drag.from])
                   : 0
               }
-              minDy={-top}
-              maxDy={total - top - rowHeights[index]}
               disabled={disabled}
               onHeight={(height) =>
                 setHeights((previous) =>
@@ -119,22 +140,6 @@ function SortableList<T>({
                     : { ...previous, [key]: height },
                 )
               }
-              onDragStart={() => {
-                setDrag({ from: index, to: index });
-                onDragChange?.(true);
-              }}
-              onDragMove={(dy) => {
-                const to = dropIndex(rowHeights, index, dy);
-                setDrag((current) =>
-                  current && current.to !== to ? { ...current, to } : current,
-                );
-              }}
-              onDragEnd={(dy) => {
-                const to = dropIndex(rowHeights, index, dy);
-                endDrag();
-                move(index, to);
-              }}
-              onDragCancel={endDrag}
               onMove={(delta) => move(index, index + delta)}
               onOpenMenu={() => setMenuIndex(index)}
             >
@@ -142,6 +147,62 @@ function SortableList<T>({
             </SortableRow>
           );
         })}
+        {/*
+          The strip that takes the touch. It sits over the grips and never moves: a
+          touch handled by the row being dragged is handled by something that is moving
+          under the finger, which is what made dragging up give out after a row.
+        */}
+        <View
+          accessible={false}
+          importantForAccessibility="no"
+          pointerEvents={disabled ? 'none' : 'auto'}
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 44,
+          }}
+          onStartShouldSetResponder={() => !disabled}
+          // Once a row is held, a parent scroller must not take the gesture.
+          onResponderTerminationRequest={() => false}
+          onResponderGrant={(event) => {
+            const from = rowAt(event.nativeEvent.locationY);
+            if (from < 0) return false;
+            held.current = { from, startY: event.nativeEvent.pageY };
+            setDrag({ from, to: from });
+            onDragChange?.(true);
+            // Returning true stops a parent scroller taking the touch back.
+            return true;
+          }}
+          onResponderMove={(event) => {
+            const gesture = held.current;
+            if (!gesture) return;
+            const dy = travel(
+              event.nativeEvent.pageY,
+              gesture.from,
+              gesture.startY,
+            );
+            offset.setValue(dy);
+            const to = dropIndex(rowHeights, gesture.from, dy);
+            setDrag((current) =>
+              current && current.to !== to ? { ...current, to } : current,
+            );
+          }}
+          onResponderRelease={(event) => {
+            const gesture = held.current;
+            if (!gesture) return;
+            const dy = travel(
+              event.nativeEvent.pageY,
+              gesture.from,
+              gesture.startY,
+            );
+            const to = dropIndex(rowHeights, gesture.from, dy);
+            endDrag();
+            move(gesture.from, to);
+          }}
+          onResponderTerminate={endDrag}
+        />
       </View>
 
       <BottomSheet
@@ -252,22 +313,16 @@ function MenuRow({
 }
 
 type SortableRowProps = {
-  index: number;
   label: string;
   first: boolean;
   /** This row is the one being dragged. */
   dragging: boolean;
+  /** How far the held row has moved; this row follows it while it is the one held. */
+  offset: Animated.Value;
   /** How far a row that is not being dragged moves to make room. */
   shift: number;
-  /** The furthest the row may be dragged up and down, so it stays in the list. */
-  minDy: number;
-  maxDy: number;
   disabled: boolean;
   onHeight: (height: number) => void;
-  onDragStart: () => void;
-  onDragMove: (dy: number) => void;
-  onDragEnd: (dy: number) => void;
-  onDragCancel: () => void;
   onMove: (delta: -1 | 1) => void;
   onOpenMenu: () => void;
   children: React.ReactNode;
@@ -275,14 +330,7 @@ type SortableRowProps = {
 
 function SortableRow(props: SortableRowProps) {
   const t = useT();
-  const { first, dragging, shift, disabled, label, children } = props;
-  const [offset] = React.useState(() => new Animated.Value(0));
-  /** Where the finger was on the screen when it took hold of the grip. */
-  const startY = React.useRef(0);
-
-  /** How far the finger has moved, kept inside the list. */
-  const travel = (pageY: number) =>
-    Math.min(props.maxDy, Math.max(props.minDy, pageY - startY.current));
+  const { first, dragging, shift, offset, disabled, label, children } = props;
 
   return (
     <Animated.View
@@ -298,28 +346,9 @@ function SortableRow(props: SortableRowProps) {
         dragging ? 'bg-accent' : 'bg-card',
       )}
     >
+      {/* The grip is only for show and for a screen reader; the touch is taken by the
+          strip over the list. */}
       <View
-        onStartShouldSetResponder={() => !disabled}
-        // Once a row is held, a parent scroller must not take the gesture.
-        onResponderTerminationRequest={() => false}
-        onResponderGrant={(event) => {
-          startY.current = event.nativeEvent.pageY;
-          props.onDragStart();
-        }}
-        onResponderMove={(event) => {
-          const dy = travel(event.nativeEvent.pageY);
-          offset.setValue(dy);
-          props.onDragMove(dy);
-        }}
-        onResponderRelease={(event) => {
-          const dy = travel(event.nativeEvent.pageY);
-          offset.setValue(0);
-          props.onDragEnd(dy);
-        }}
-        onResponderTerminate={() => {
-          offset.setValue(0);
-          props.onDragCancel();
-        }}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={format(t('sort.reorder'), { name: label })}

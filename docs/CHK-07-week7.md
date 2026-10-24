@@ -41,7 +41,7 @@
 - **Ticking a running outlet** marks it to stop; ticking one that is not running marks it to start. Tapping again takes the change back. Nothing happens until Apply.
 - **Apply** says what it will do: "Apply to 1 outlet", "Apply to {n} outlets", "Apply changes" when starts and stops are mixed, "Apply" for stops alone. It is disabled with nothing staged, and while the checklist has no tasks.
 - **Stopping always asks first.** History stays; no further runs are created there.
-- **Stopped is not gone.** A stopped outlet keeps its people. Starting it again brings them back, marked "from before" so they can be checked.
+- **Stopped is not gone.** A stopped outlet keeps its people. Starting it again brings them back, and the platform says who they are, so the row reads "Running · Kiran · from before" and the team screen marks them. The note lasts for that visit.
 - **Outlets that start get no manager automatically.** A running outlet with none shows **Name a manager**; one with a manager shows **Team**, which opens CHK-08.
 - **Part of Apply can fail.** What went through is applied; what did not stays ticked and reads "Not applied".
 - **"Runs start within a day."** sits under the list: new runs are created on the platform's six-hourly pass.

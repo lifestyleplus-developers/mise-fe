@@ -16,12 +16,28 @@ const SCHEDULE_KEY = {
 export function useScheduleText() {
   const t = useT();
   const formatClock = useFormatClock();
-  return (checklist: Checklist) =>
-    format(t(SCHEDULE_KEY[checklist.recurrence]), {
+  return (checklist: Checklist) => {
+    // An hourly checklist says how often and until when, not just when it starts.
+    if (checklist.recurrence === 'HOURLY' && checklist.last_run_time) {
+      return format(
+        t(
+          (checklist.interval_hours ?? 1) === 1
+            ? 'chk-list.hourly-one'
+            : 'chk-list.hourly-n',
+        ),
+        {
+          first: formatClock(checklist.st_time),
+          last: formatClock(checklist.last_run_time),
+          e: String(checklist.interval_hours ?? 1),
+        },
+      );
+    }
+    return format(t(SCHEDULE_KEY[checklist.recurrence]), {
       time: formatClock(checklist.st_time),
       day: String(checklist.day_of_month ?? ''),
       days: (checklist.weekdays ?? [])
         .map((day) => t(`wd.${day}` as MessageKey))
         .join(', '),
     });
+  };
 }

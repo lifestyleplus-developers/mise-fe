@@ -261,17 +261,27 @@ export const api = {
       return mockDeactivateAssignment(id);
     },
 
-    /** GET /assignments/{id}/members — both buckets. */
-    members(id: number): Promise<AssignmentMember[]> {
-      // TODO(server): GET {API_BASE_URL}/api/v1/assignments/{id}/members
-      return mockListMembers(id);
+    /**
+     * GET /assignments/{id}/members — flat, supervisors first. Only for an
+     * admin or this assignment's own supervisor (403 `not_your_assignment`
+     * otherwise). `includeRemoved` adds the people taken off, latest first.
+     */
+    members(
+      id: number,
+      options?: { includeRemoved?: boolean },
+    ): Promise<AssignmentMember[]> {
+      // TODO(server): GET {API_BASE_URL}/api/v1/assignments/{id}/members?include_removed=
+      return mockListMembers(id, options);
     },
 
-    /** POST /assignments/{id}/members — 409 `role_conflict` if already on it. */
+    /**
+     * POST /assignments/{id}/members — 409 `role_conflict` if already on it in
+     * the other role. Answers with the team as GET gives it.
+     */
     addMember(
       id: number,
       request: AddMemberRequest,
-    ): Promise<AssignmentMember> {
+    ): Promise<AssignmentMember[]> {
       // TODO(server): POST {API_BASE_URL}/api/v1/assignments/{id}/members
       return mockAddMember(id, request);
     },

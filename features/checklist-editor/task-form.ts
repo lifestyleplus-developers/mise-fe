@@ -14,17 +14,24 @@ export type TaskForm = {
   min: string;
   max: string;
   weight: number;
+  /** Ask for a comment when this fails. Off unless the author turns it on. */
+  askWhy: boolean;
 };
 
 export const DEFAULT_WEIGHT = 5;
 
+/** A new reading is in degrees Celsius. The author is not asked: it is not theirs to choose. */
+export const DEFAULT_UNIT = '°C';
+
 export const EMPTY_TASK_FORM: TaskForm = {
   type: null,
   text: '',
-  unit: '',
-  min: '',
-  max: '',
+  unit: DEFAULT_UNIT,
+  // A new reading starts with a range of 1 to 5; clear both to only log it.
+  min: '1',
+  max: '5',
   weight: DEFAULT_WEIGHT,
+  askWhy: false,
 };
 
 export function formFromTask(task: Task): TaskForm {
@@ -35,6 +42,7 @@ export function formFromTask(task: Task): TaskForm {
     min: task.min_value === null ? '' : String(task.min_value),
     max: task.max_value === null ? '' : String(task.max_value),
     weight: task.weight,
+    askWhy: task.requires_comment_on_fail,
   };
 }
 
@@ -94,11 +102,18 @@ function readingFields(form: TaskForm) {
   };
 }
 
+/**
+ * Whether the switch is sent on. It only means something where a task can fail, so a
+ * photo, or a reading with no limit, is always sent off however the form was left.
+ */
+const asksWhy = (form: TaskForm) => form.askWhy && canFail(form);
+
 export function toCreateRequest(form: TaskForm): CreateTaskRequest {
   return {
     answer_type: form.type ?? 'BINARY',
     text: form.text.trim(),
     weight: form.weight,
+    requires_comment_on_fail: asksWhy(form),
     ...readingFields(form),
   };
 }
@@ -107,6 +122,7 @@ export function toUpdateRequest(form: TaskForm): UpdateTaskRequest {
   return {
     text: form.text.trim(),
     weight: form.weight,
+    requires_comment_on_fail: asksWhy(form),
     ...readingFields(form),
   };
 }

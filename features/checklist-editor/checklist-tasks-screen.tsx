@@ -111,6 +111,7 @@ export function ChecklistTasksScreen() {
     if (task.weight !== 5) {
       parts.push(format(t('task.weight-n'), { n: String(task.weight) }));
     }
+    if (task.requires_comment_on_fail) parts.push(t('task.asks-why'));
     return parts.join(' · ');
   }
 
@@ -245,7 +246,7 @@ export function ChecklistTasksScreen() {
                 onPress: () => setRemoveId(task.id),
               },
             ]}
-            renderItem={(task, index) => {
+            renderItem={(task) => {
               const TypeIcon = TYPE_ICON[task.answer_type];
               return (
                 <Pressable
@@ -257,9 +258,6 @@ export function ChecklistTasksScreen() {
                   onPress={() => openSheet({ mode: 'edit', task })}
                   className="flex-row items-start gap-2.5 pr-1"
                 >
-                  <Text className="font-sans-semibold text-muted-foreground w-5 pt-px text-right text-[14px]">
-                    {index + 1}
-                  </Text>
                   <View className="min-w-0 flex-1">
                     <Text className="font-sans-medium text-[15px] leading-snug">
                       {task.text}

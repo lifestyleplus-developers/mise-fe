@@ -172,6 +172,10 @@ export type Checklist = {
   weekdays: number[] | null;
   /** MONTHLY only. */
   day_of_month: number | null;
+  /** HOURLY only: a run every this many hours (1–3), from `st_time` to `last_run_time`. */
+  interval_hours: number | null;
+  /** HOURLY only: HH:MM, the last run of each day. */
+  last_run_time: string | null;
   is_archived: boolean;
 };
 
@@ -225,7 +229,12 @@ export type CreateChecklistRequest = Pick<
   Checklist,
   'name' | 'recurrence' | 'st_time' | 'deadline_minutes'
 > &
-  Partial<Pick<Checklist, 'weekdays' | 'day_of_month'>>;
+  Partial<
+    Pick<
+      Checklist,
+      'weekdays' | 'day_of_month' | 'interval_hours' | 'last_run_time'
+    >
+  >;
 
 /** PATCH /checklists/{id} — name and schedule. */
 export type UpdateChecklistRequest = Partial<CreateChecklistRequest>;
@@ -245,17 +254,27 @@ export type UpdateTaskRequest = Partial<Omit<CreateTaskRequest, 'answer_type'>>;
 /** POST /checklists/{id}/tasks/reorder. */
 export type ReorderTasksRequest = { task_ids: number[] };
 
+/** Someone who was still on an assignment when it was switched back on. */
+export type ReturningMember = {
+  user_id: number;
+  full_name: string;
+  role: 'CL_ADMIN' | 'CL_IMP';
+};
+
 /**
  * GET /checklists/{id}/assignments — one outlet a checklist runs, or ran, at.
  * An inactive row is history: no further runs, and its people are kept.
- * Whether inactive rows come back is assumed until Lamax confirms (§6).
  */
 export type OutletAssignment = {
   id: number;
   checklist_id: number;
-  outlet_id: number;
-  outlet_name: string;
+  outlet: { id: number; name: string };
   is_active: boolean;
+  /**
+   * Only on the answer to POST /checklists/{id}/assignments, and only on a row that
+   * call switched back on: the people who came back with it. Empty otherwise.
+   */
+  returning_members?: ReturningMember[];
 };
 
 /** POST /checklists/{id}/assignments — bulk. */
@@ -264,15 +283,20 @@ export type CreateAssignmentsRequest = { outlet_ids: number[] };
 export type AssignmentRole = 'CL_ADMIN' | 'CL_IMP';
 
 /**
- * GET /assignments/{id}/members. The contract says "both buckets" without a
- * shape; a flat list with the role on each row is assumed.
+ * GET /assignments/{id}/members — one flat row per person, supervisors first. Someone
+ * taken off is not deleted: `removed_at` and `removed_by` say when and by whom, and they
+ * appear only with `?include_removed=true`.
  */
 export type AssignmentMember = {
   user_id: number;
+  username: string;
   full_name: string;
   role: AssignmentRole;
   /** False for a deactivated account that is still on the assignment. */
   is_active: boolean;
+  added_at: string;
+  removed_at: string | null;
+  removed_by: { id: number; full_name: string } | null;
 };
 
 /** POST /assignments/{id}/members. */

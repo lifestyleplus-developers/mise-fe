@@ -8,7 +8,10 @@ import { Redirect, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 type PushedScreenProps = {
   title: string;
@@ -59,6 +62,7 @@ export function PushedScreen({
   const router = useRouter();
   const t = useT();
   const theme = useAppliedTheme();
+  const insets = useSafeAreaInsets();
 
   if (!me) {
     if (isError && isSessionExpired(error)) return <Redirect href="/" />;
@@ -81,7 +85,10 @@ export function PushedScreen({
         experimental_backgroundImage: WASH[theme].backgroundImage,
       }}
     >
-      <SafeAreaView edges={['top', 'bottom']} className="flex-1">
+      <SafeAreaView
+        edges={footer ? ['top'] : ['top', 'bottom']}
+        className="flex-1"
+      >
         <View className="px-2 pt-2 pb-3">
           <View className="flex-row items-center justify-between gap-2 pr-2">
             <Pressable
@@ -137,7 +144,11 @@ export function PushedScreen({
           {children}
         </ScrollView>
         {footer ? (
-          <View className="border-border bg-card border-t px-4 pt-3 pb-4">
+          <View
+            className="border-border bg-card border-t px-4 pt-3"
+            // Runs to the bottom edge; the gesture bar's room is its own padding.
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
             {footer}
           </View>
         ) : null}

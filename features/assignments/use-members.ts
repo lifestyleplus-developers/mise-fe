@@ -31,7 +31,8 @@ function inOrder(members: AssignmentMember[]): AssignmentMember[] {
 
 /**
  * Who is on an assignment decides what Home shows and what the caller may
- * do, so the identity and the runs are refetched along with the list.
+ * do, so the identity and the runs are refetched along with the list. The
+ * people taken off are refetched too, since a removal adds to them.
  */
 function useMembersCache(assignmentId: number) {
   const queryClient = useQueryClient();
@@ -42,6 +43,9 @@ function useMembersCache(assignmentId: number) {
         (members) => members && inOrder(update(members)),
       ),
     refreshAround: () => {
+      void queryClient.invalidateQueries({
+        queryKey: checklistKeys.pastMembers(assignmentId),
+      });
       void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       void queryClient.invalidateQueries({ queryKey: ['runs'] });
     },
@@ -58,8 +62,9 @@ export function useAddMember(assignmentId: number) {
         role: request.role,
       }),
     networkMode: 'always',
-    onSuccess: (member) => {
-      cache.write((members) => [...members, member]);
+    // The platform answers with the team as it now stands.
+    onSuccess: (team) => {
+      cache.write(() => team);
       cache.refreshAround();
     },
   });
@@ -75,6 +80,24 @@ export function useRemoveMember(assignmentId: number) {
       cache.write((members) => members.filter((m) => m.user_id !== userId));
       cache.refreshAround();
     },
+  });
+}
+
+/**
+ * The people taken off an assignment, latest first, with when and by whom.
+ * Only fetched while asked for (`enabled`): it is a sheet, not the screen.
+ */
+export function usePastMembers(
+  assignmentId: number,
+  { enabled }: { enabled: boolean },
+) {
+  return useQuery({
+    queryKey: checklistKeys.pastMembers(assignmentId),
+    queryFn: async () =>
+      (
+        await api.assignments.members(assignmentId, { includeRemoved: true })
+      ).filter((member) => member.removed_at !== null),
+    enabled,
   });
 }
 

@@ -13,7 +13,7 @@
 1. **new** — empty form, Daily, nothing chosen. **R** — CHK-10 → New.
 2. **newFilled** — a filled Daily form. **R**.
 3. **required** — Save tapped with nothing filled: "Required" under name, opening time and window. **R**.
-4. **zeroWindow** — window of 0 h 0 min: "The window must be longer than 0." **R** — pick 0 and 0.
+4. **zeroWindow** — a window under the platform's 5-minute minimum, 0 included: "The window must be at least 5 minutes." **R** — pick 0 and 0.
 5. **default** — edit, assigned (Kitchen Opening). **R** — raheem.
 6. **changed** — edit with a change: Save enabled. **R**.
 7. **saving** — spinner on Save, fields locked. **R**.
@@ -28,14 +28,14 @@
 16. **conflict** — the platform's 409 overlap. Handled, same message. **—** the device check catches every case first, so the mock never sends one.
 17. **monthly** — Monthly Deep Clean, runs nowhere. **R**.
 18. **monthly31** — day 31, with "In shorter months it runs on the last day." **R**.
-19. **hourly** — Hourly. **R** — Oil Quality Check. Without "every N hours" and "last run" (see below).
-20. **hourly2** — every 2 hours. **—** blocked on plan §4 question 1.
-21. **hourlyCleared** — "Every" changed, "Last run" cleared. **—** same.
-22. **hourlyLate** — first run 11:00 PM, no later run. **—** same.
+19. **hourly** — Hourly, every hour, with its first and last run and "{n} runs a day". **R** — switch any checklist to Hourly.
+20. **hourly2** — every 2 hours. **R** — Oil Quality Check (every 2 hours, 11:00 to 21:00).
+21. **hourlyCleared** — "Every" changed so the last run is no longer a run: it is cleared and chosen again. **R** — Oil Quality Check, change Every to 3 hours.
+22. **hourlyLate** — a first run so late that none fits after it: "No later run today" and "Choose an earlier first run." **R** — set the first run to 11:00 PM.
 23. **timePicker** — opening-time picker. **R**.
 24. **timePicker24** — the same on a 24-hour phone. **R**.
 25. **durationPicker** — "Open for" picker. **R**.
-26. **lastRunPicker** — **—** blocked on question 1.
+26. **lastRunPicker** — the times it can end on, every interval after the first run. **R**.
 27. **dayPicker** — day of the month, 1 to 31. **R**.
 28. **archiveConfirm** — "Are you sure you want to archive {name}?" **R**.
 29. **archiveConfirmNowhere** — a checklist that runs at no outlet. **R** — Monthly Deep Clean.
@@ -63,11 +63,16 @@
 - **Below the card**: one line saying what the schedule means, once it is complete and sound.
 - **"Edits apply to new runs. Runs already scheduled (up to 24 hours ahead) stay as they are."** shows on an edit that runs somewhere. This is the mockup's wording of the plan's "Edits apply from tomorrow".
 - **Rows to the rest of the checklist**: Tasks (CHK-09), Outlets (CHK-07, hidden in a single-outlet business), Team (CHK-08, single-outlet and running only).
-- **Archive** is a red outline button at the bottom. It asks first, says how many outlets stop, and returns to CHK-10 with a notice. An archived checklist is read-only with Restore pinned at the bottom.
+- **Archive** is a red outline button at the bottom. It asks first, says how many outlets stop running, and returns to CHK-10 with a notice. Its outlets and their people are not touched, so **Restore** puts it back exactly as it was. An archived checklist is read-only with Restore pinned at the bottom.
 - **Leaving with changes asks "Discard changes?"** by any route: Back, the Android key, the swipe. Switching frequency and back is not a change.
 - **Authored text** (the name) is shown as typed; everything else is in all four languages.
 
+## Hourly checklists
+
+- **Every** 1, 2 or 3 hours, from the **First run** to the **Last run**, each day. The last run is one of the runs: a whole number of intervals after the first. Changing the first run or the interval clears a last run that no longer fits.
+- A window may be as long as the gap to the next run and no longer: every 2 hours allows up to 2 hours. A window must also be at least 5 minutes.
+- The checklist list says "Every 2 hours · 11:00 AM to 9:00 PM".
+
 ## Not built, and why
 
-- **"Every N hours" and "Last run"** (states 20–22, 26). The Schema has `HOURLY` and an opening time only. Hourly here means every hour from the opening time, and the window is how long each run stays open. Plan §4, question 1 is open with Lamax; adding the fields is a change to the form, the request and the mock.
 - **Focus moving to the first invalid field** after Save. Errors show, but focus does not jump.

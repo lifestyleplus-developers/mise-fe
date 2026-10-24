@@ -15,6 +15,7 @@ import {
   hasProblems,
   normalizeForm,
   toRequest,
+  withValidLastRun,
   type ScheduleForm,
 } from '@/features/checklist-editor/schedule-form';
 import {
@@ -148,7 +149,13 @@ function EditorForm({ checklist }: { checklist: ChecklistDetail | null }) {
   const disabled = archivedView || locked || saving;
 
   function edit(patch: Partial<ScheduleForm>) {
-    setForm((current) => ({ ...current, ...patch }));
+    setForm((current) => {
+      const next = { ...current, ...patch };
+      // A new first run, interval or frequency can leave the last run off the grid.
+      return 'start' in patch || 'interval' in patch || 'recurrence' in patch
+        ? withValidLastRun(next)
+        : next;
+    });
     setSavedNotice(null);
     setFailure(null);
     setConflict(false);
@@ -283,7 +290,7 @@ function EditorForm({ checklist }: { checklist: ChecklistDetail | null }) {
             params: {
               id: teamAssignment.id,
               checklist: checklist.name,
-              outlet: teamAssignment.outlet_name,
+              outlet: teamAssignment.outlet.name,
             },
           }),
       });

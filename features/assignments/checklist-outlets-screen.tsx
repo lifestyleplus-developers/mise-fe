@@ -58,8 +58,10 @@ export function ChecklistOutletsScreen() {
   const [banner, setBanner] = React.useState<Message>(null);
   const [forbidden, setForbidden] = React.useState(false);
   const [picking, setPicking] = React.useState<number | null>(null);
-  /** Outlets started again with the people they had. */
-  const [fromBefore, setFromBefore] = React.useState<number[]>([]);
+  /** Outlet → the people who came back when it was started again, as the platform said. */
+  const [fromBefore, setFromBefore] = React.useState<Record<number, number[]>>(
+    {},
+  );
 
   const guard = useUnsavedChanges({
     initial: {} as Staged,
@@ -82,7 +84,7 @@ export function ChecklistOutletsScreen() {
     (checklist.isPending || assignments.isPending || outlets.isPending);
 
   const rowOf = (outletId: number) =>
-    rows.find((row) => row.outlet_id === outletId);
+    rows.find((row) => row.outlet.id === outletId);
   /** Archived outlets drop out of the list unless they still carry the checklist. */
   const shown = (outlets.data ?? []).filter(
     (outlet) => !outlet.is_archived || rowOf(outlet.id) !== undefined,
@@ -117,7 +119,7 @@ export function ChecklistOutletsScreen() {
       const base = format(t('out.running'), {
         who: who.length > 0 ? who.join(', ') : t('out.no-manager'),
       });
-      return fromBefore.includes(outletId)
+      return (fromBefore[outletId]?.length ?? 0) > 0
         ? `${base} · ${t('out.from-before')}`
         : base;
     }
@@ -137,7 +139,7 @@ export function ChecklistOutletsScreen() {
 
     const startResult = starts.length
       ? await assign.mutateAsync(starts).then(
-          () => ({ ok: true as const }),
+          (assignments) => ({ ok: true as const, assignments }),
           (error: unknown) => ({ ok: false as const, error }),
         )
       : null;
@@ -176,13 +178,20 @@ export function ChecklistOutletsScreen() {
       return next;
     });
     setFailedOutlets(failed);
-    setFromBefore((current) => [
-      ...current,
-      ...startsDone.filter((id) => {
-        const row = rowOf(id);
-        return row && (teams.byAssignment[row.id]?.length ?? 0) > 0;
-      }),
-    ]);
+    if (startResult?.ok) {
+      const returning = startResult.assignments.filter(
+        (assignment) => (assignment.returning_members?.length ?? 0) > 0,
+      );
+      setFromBefore((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          returning.map((assignment) => [
+            assignment.outlet.id,
+            (assignment.returning_members ?? []).map((m) => m.user_id),
+          ]),
+        ),
+      }));
+    }
 
     if (errors.some((error) => classifyEditorError(error) === 'forbidden')) {
       setForbidden(true);
@@ -339,6 +348,13 @@ export function ChecklistOutletsScreen() {
                                     id: row.id,
                                     checklist: name,
                                     outlet: outlet.name,
+                                    // Option A: the note lives for this visit only.
+                                    ...(fromBefore[outlet.id]
+                                      ? {
+                                          returning:
+                                            fromBefore[outlet.id].join(','),
+                                        }
+                                      : {}),
                                   },
                                 })
                               : setPicking(outlet.id),

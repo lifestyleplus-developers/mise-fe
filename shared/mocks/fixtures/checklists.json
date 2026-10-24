@@ -9,7 +9,9 @@
       "deadline_minutes": 240,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 102,
@@ -20,7 +22,9 @@
       "deadline_minutes": 240,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 103,
@@ -31,7 +35,9 @@
       "deadline_minutes": 240,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 104,
@@ -42,7 +48,9 @@
       "deadline_minutes": 300,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 105,
@@ -53,7 +61,9 @@
       "deadline_minutes": 240,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 106,
@@ -64,7 +74,9 @@
       "deadline_minutes": 150,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 107,
@@ -75,7 +87,9 @@
       "deadline_minutes": 480,
       "weekdays": null,
       "day_of_month": 1,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 120,
@@ -86,7 +100,9 @@
       "deadline_minutes": 30,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": 2,
+      "last_run_time": "21:00"
     },
     {
       "id": 121,
@@ -97,7 +113,9 @@
       "deadline_minutes": 240,
       "weekdays": [1, 4],
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 123,
@@ -108,7 +126,9 @@
       "deadline_minutes": 120,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 122,
@@ -119,7 +139,9 @@
       "deadline_minutes": 60,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": true
+      "is_archived": true,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 201,
@@ -130,7 +152,9 @@
       "deadline_minutes": 180,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 203,
@@ -141,7 +165,9 @@
       "deadline_minutes": 45,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": 1,
+      "last_run_time": "23:00"
     },
     {
       "id": 206,
@@ -152,7 +178,9 @@
       "deadline_minutes": 480,
       "weekdays": null,
       "day_of_month": 1,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 202,
@@ -163,7 +191,9 @@
       "deadline_minutes": 300,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 205,
@@ -174,7 +204,9 @@
       "deadline_minutes": 240,
       "weekdays": [1, 4],
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 207,
@@ -185,7 +217,9 @@
       "deadline_minutes": 240,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 208,
@@ -196,7 +230,9 @@
       "deadline_minutes": 180,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 204,
@@ -207,7 +243,9 @@
       "deadline_minutes": 120,
       "weekdays": null,
       "day_of_month": null,
-      "is_archived": false
+      "is_archived": false,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 301,
@@ -218,7 +256,9 @@
       "recurrence": "DAILY",
       "st_time": "06:00",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 302,
@@ -229,7 +269,9 @@
       "recurrence": "DAILY",
       "st_time": "07:15",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 303,
@@ -240,7 +282,9 @@
       "recurrence": "DAILY",
       "st_time": "08:30",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 304,
@@ -251,7 +295,9 @@
       "recurrence": "HOURLY",
       "st_time": "09:45",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": 1,
+      "last_run_time": "23:45"
     },
     {
       "id": 305,
@@ -262,7 +308,9 @@
       "recurrence": "WEEKLY",
       "st_time": "10:00",
       "weekdays": [1, 4],
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 306,
@@ -273,7 +321,9 @@
       "recurrence": "MONTHLY",
       "st_time": "11:15",
       "weekdays": null,
-      "day_of_month": 1
+      "day_of_month": 1,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 307,
@@ -284,7 +334,9 @@
       "recurrence": "DAILY",
       "st_time": "12:30",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 308,
@@ -295,7 +347,9 @@
       "recurrence": "DAILY",
       "st_time": "13:45",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 309,
@@ -306,7 +360,9 @@
       "recurrence": "DAILY",
       "st_time": "14:00",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 310,
@@ -317,7 +373,9 @@
       "recurrence": "HOURLY",
       "st_time": "15:15",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": 1,
+      "last_run_time": "23:15"
     },
     {
       "id": 311,
@@ -328,7 +386,9 @@
       "recurrence": "WEEKLY",
       "st_time": "16:30",
       "weekdays": [1, 4],
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 312,
@@ -339,7 +399,9 @@
       "recurrence": "MONTHLY",
       "st_time": "17:45",
       "weekdays": null,
-      "day_of_month": 1
+      "day_of_month": 1,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 313,
@@ -350,7 +412,9 @@
       "recurrence": "DAILY",
       "st_time": "18:00",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 314,
@@ -361,7 +425,9 @@
       "recurrence": "DAILY",
       "st_time": "19:15",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 315,
@@ -372,7 +438,9 @@
       "recurrence": "DAILY",
       "st_time": "20:30",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 316,
@@ -383,7 +451,9 @@
       "recurrence": "HOURLY",
       "st_time": "06:45",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": 1,
+      "last_run_time": "23:45"
     },
     {
       "id": 317,
@@ -394,7 +464,9 @@
       "recurrence": "WEEKLY",
       "st_time": "07:00",
       "weekdays": [1, 4],
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 318,
@@ -405,7 +477,9 @@
       "recurrence": "MONTHLY",
       "st_time": "08:15",
       "weekdays": null,
-      "day_of_month": 1
+      "day_of_month": 1,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 319,
@@ -416,7 +490,9 @@
       "recurrence": "DAILY",
       "st_time": "09:30",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 320,
@@ -427,7 +503,9 @@
       "recurrence": "DAILY",
       "st_time": "10:45",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 321,
@@ -438,7 +516,9 @@
       "recurrence": "DAILY",
       "st_time": "11:00",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 322,
@@ -449,7 +529,9 @@
       "recurrence": "HOURLY",
       "st_time": "12:15",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": 1,
+      "last_run_time": "23:15"
     },
     {
       "id": 323,
@@ -460,7 +542,9 @@
       "recurrence": "WEEKLY",
       "st_time": "13:30",
       "weekdays": [1, 4],
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 324,
@@ -471,7 +555,9 @@
       "recurrence": "MONTHLY",
       "st_time": "14:45",
       "weekdays": null,
-      "day_of_month": 1
+      "day_of_month": 1,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 325,
@@ -482,7 +568,9 @@
       "recurrence": "DAILY",
       "st_time": "15:00",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 326,
@@ -493,7 +581,9 @@
       "recurrence": "DAILY",
       "st_time": "16:15",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 327,
@@ -504,7 +594,9 @@
       "recurrence": "DAILY",
       "st_time": "17:30",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null
     },
     {
       "id": 328,
@@ -515,7 +607,9 @@
       "recurrence": "HOURLY",
       "st_time": "18:45",
       "weekdays": null,
-      "day_of_month": null
+      "day_of_month": null,
+      "interval_hours": 1,
+      "last_run_time": "23:45"
     }
   ],
   "assignments": [

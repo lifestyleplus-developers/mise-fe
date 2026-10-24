@@ -10,4 +10,7 @@ export const checklistKeys = {
   assignments: (id: number) => ['checklist', id, 'assignments'] as const,
   members: (assignmentId: number) =>
     ['assignment', assignmentId, 'members'] as const,
+  /** The people taken off an assignment: kept apart from the team as it stands. */
+  pastMembers: (assignmentId: number) =>
+    ['assignment', assignmentId, 'members', 'past'] as const,
 };

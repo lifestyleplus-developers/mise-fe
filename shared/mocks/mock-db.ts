@@ -57,7 +57,12 @@ import type {
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
-import { windowOverlapsNextRun } from '@/shared/lib/schedule';
+import {
+  HOURLY_INTERVALS,
+  MIN_WINDOW_MINUTES,
+  isRunTime,
+  windowOverlapsNextRun,
+} from '@/shared/lib/schedule';
 import businesses from './fixtures/businesses.json';
 import checklistFixtures from './fixtures/checklists.json';
 import outletFixtures from './fixtures/outlets.json';
@@ -764,6 +769,8 @@ type TaskTemplate = {
   unit?: string;
   min?: number;
   max?: number;
+  /** Whether a failed answer must come with a comment. On for Yes/No and readings unless set. */
+  askWhy?: boolean;
   /** What the answer is, for the first `answered` tasks of the run. */
   answer?: { n?: number; b?: boolean; comment?: string; by: string };
 };
@@ -808,6 +815,8 @@ const TASK_TEMPLATES: Record<number, TaskTemplate[]> = {
     {
       type: 'BINARY',
       text: 'Exhaust hood is running',
+      // The author did not ask for a comment here: a No is recorded as it is.
+      askWhy: false,
       answer: { b: true, by: 'suresh' },
     },
     {
@@ -1137,7 +1146,7 @@ function buildTasks(
       min_value: task.min ?? null,
       max_value: task.max ?? null,
       weight: 5,
-      requires_comment_on_fail: task.type !== 'IMAGE',
+      requires_comment_on_fail: task.askWhy ?? task.type !== 'IMAGE',
       answer_number: answer?.n ?? null,
       answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
       image_key:
@@ -1194,8 +1203,13 @@ type DbTask = Task & {
   checklist_id: number;
   is_archived: boolean;
 };
-type DbAssignment = OutletAssignment & {
+type DbAssignment = {
+  id: number;
   tenant_id: number;
+  checklist_id: number;
+  outlet_id: number;
+  outlet_name: string;
+  is_active: boolean;
   /** Latest finished period's score, 0–100; null before one has closed. */
   score: number | null;
 };
@@ -1205,11 +1219,27 @@ type DbAssignment = OutletAssignment & {
  * assignment is not stored here: it lives in each user's `memberships`, the
  * same place `/auth/me` and Home read it from, so the two cannot disagree.
  */
+/** One person on one assignment, kept after they are taken off. */
+type MemberLogEntry = {
+  tenant_id: number;
+  assignment_id: number;
+  user_id: number;
+  role: 'CL_ADMIN' | 'CL_IMP';
+  added_at: string;
+  removed_at: string | null;
+  removed_by: number | null;
+};
+
 type ChecklistState = {
   checklists: DbChecklist[];
   assignments: DbAssignment[];
   tasks: DbTask[];
   nextTaskId: number;
+  /**
+   * Who is on each team, and who was. A user's `memberships` stay the source for
+   * what they can see today (Home, /auth/me); this adds when and by whom.
+   */
+  memberLog: MemberLogEntry[];
 };
 
 /**
@@ -1254,7 +1284,7 @@ function seedChecklistState(): ChecklistState {
         unit: template.unit ?? null,
         min_value: template.min ?? null,
         max_value: template.max ?? null,
-        requires_comment_on_fail: template.type !== 'IMAGE',
+        requires_comment_on_fail: template.askWhy ?? template.type !== 'IMAGE',
         weight: 5,
         is_archived: false,
       });
@@ -1286,7 +1316,28 @@ function seedChecklistState(): ChecklistState {
     );
   }
 
-  return { checklists, assignments, tasks, nextTaskId };
+  // Everyone already on a team was put there before this session began.
+  const memberLog: MemberLogEntry[] = [];
+  for (const user of db.users) {
+    for (const [role, key] of [
+      ['CL_ADMIN', 'cl_admin_assignments'],
+      ['CL_IMP', 'cl_imp_assignments'],
+    ] as const) {
+      for (const assignmentId of user.memberships[key]) {
+        memberLog.push({
+          tenant_id: user.tenant_id,
+          assignment_id: assignmentId,
+          user_id: user.id,
+          role,
+          added_at: '2026-09-01T09:00:00.000Z',
+          removed_at: null,
+          removed_by: null,
+        });
+      }
+    }
+  }
+
+  return { checklists, assignments, tasks, nextTaskId, memberLog };
 }
 
 function checklistState(): ChecklistState {
@@ -1352,12 +1403,13 @@ function liveTasks(checklistId: number): DbTask[] {
     .sort((a, b) => a.position - b.position);
 }
 
-function toOutletAssignment({
-  tenant_id: _tenant,
-  score: _score,
-  ...assignment
-}: DbAssignment): OutletAssignment {
-  return assignment;
+function toOutletAssignment(assignment: DbAssignment): OutletAssignment {
+  return {
+    id: assignment.id,
+    checklist_id: assignment.checklist_id,
+    outlet: { id: assignment.outlet_id, name: assignment.outlet_name },
+    is_active: assignment.is_active,
+  };
 }
 
 function activeAssignments(checklistId: number): DbAssignment[] {
@@ -1375,6 +1427,8 @@ type ScheduleFields = Pick<
   | 'deadline_minutes'
   | 'weekdays'
   | 'day_of_month'
+  | 'interval_hours'
+  | 'last_run_time'
 >;
 
 /** §5: the shape of a schedule, then the window against the next run. */
@@ -1388,9 +1442,12 @@ function assertValidSchedule(schedule: ScheduleFields) {
   }
   if (
     !Number.isInteger(schedule.deadline_minutes) ||
-    schedule.deadline_minutes <= 0
+    schedule.deadline_minutes < MIN_WINDOW_MINUTES
   ) {
-    throw invalid('The window must be longer than zero.', 'deadline_minutes');
+    throw invalid(
+      `The window must be at least ${MIN_WINDOW_MINUTES} minutes.`,
+      'deadline_minutes',
+    );
   }
 
   const weekdays = schedule.weekdays ?? [];
@@ -1417,17 +1474,49 @@ function assertValidSchedule(schedule: ScheduleFields) {
     );
   }
 
+  if (schedule.recurrence === 'HOURLY') {
+    const { interval_hours: every, last_run_time: last } = schedule;
+    if (
+      every === null ||
+      !(HOURLY_INTERVALS as readonly number[]).includes(every)
+    ) {
+      throw invalid('Choose every 1, 2 or 3 hours.', 'interval_hours');
+    }
+    if (last === null) {
+      throw invalid('Required for an hourly checklist.', 'last_run_time');
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(last)) {
+      throw invalid('Use a time like 21:00.', 'last_run_time');
+    }
+    const minutes = (hhmm: string) =>
+      Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
+    if (!isRunTime(minutes(schedule.st_time), minutes(last), every)) {
+      throw invalid(
+        'The last run must be a run: a whole number of intervals after the first.',
+        'last_run_time',
+      );
+    }
+  } else {
+    if (schedule.interval_hours !== null) {
+      throw invalid('Only for an hourly checklist.', 'interval_hours');
+    }
+    if (schedule.last_run_time !== null) {
+      throw invalid('Only for an hourly checklist.', 'last_run_time');
+    }
+  }
+
   if (
     windowOverlapsNextRun(
       schedule.recurrence,
       schedule.weekdays,
       schedule.deadline_minutes,
+      schedule.interval_hours,
     )
   ) {
     throw apiError(
       409,
       API_ERROR_CODE.WINDOW_OVERLAPS_NEXT_PERIOD,
-      'The window must be shorter than the gap between runs.',
+      'The window can be at most as long as the gap between runs.',
       'deadline_minutes',
     );
   }
@@ -1515,6 +1604,8 @@ export async function mockCreateChecklist(
     name: request.name.trim(),
     weekdays: request.weekdays ?? null,
     day_of_month: request.day_of_month ?? null,
+    interval_hours: request.interval_hours ?? null,
+    last_run_time: request.last_run_time ?? null,
   };
   assertReachable(schedule.name);
   assertValidSchedule(schedule);
@@ -1548,6 +1639,10 @@ export async function mockUpdateChecklist(
   if (next.recurrence !== 'MONTHLY' && request.day_of_month === undefined) {
     next.day_of_month = null;
   }
+  if (next.recurrence !== 'HOURLY') {
+    if (request.interval_hours === undefined) next.interval_hours = null;
+    if (request.last_run_time === undefined) next.last_run_time = null;
+  }
   assertReachable(next.name);
   assertValidSchedule(next);
   Object.assign(checklist, next);
@@ -1555,22 +1650,20 @@ export async function mockUpdateChecklist(
 }
 
 /**
- * POST /checklists/{id}/archive. No further runs anywhere; history stays, and
- * so do its people, should it ever come back.
+ * POST /checklists/{id}/archive. No further runs anywhere; history stays. Its
+ * outlets and their people are not touched, so restoring puts it back as it was.
  */
 export async function mockArchiveChecklist(id: number): Promise<Checklist> {
   await delay();
   const me = requireAdmin();
   const checklist = findChecklist(me.business.id, id);
   checklist.is_archived = true;
-  for (const assignment of activeAssignments(id)) assignment.is_active = false;
   return toChecklist(checklist);
 }
 
 /**
- * POST /checklists/{id}/restore. Not in the contract: it has archive and no
- * way back (plan §4, question 8). Assumed so CHK-06's Restore can be built;
- * outlets stay stopped until someone ticks them again.
+ * POST /checklists/{id}/restore. Undoes archive exactly: its tasks, outlets and
+ * their people were never touched, so it runs again from the next generation.
  */
 export async function mockRestoreChecklist(id: number): Promise<Checklist> {
   await delay();
@@ -1588,10 +1681,17 @@ function assertValidTask(task: {
   min_value: number | null;
   max_value: number | null;
   weight: number;
+  requires_comment_on_fail: boolean;
 }) {
   const invalid = (message: string, field: string) =>
     apiError(400, API_ERROR_CODE.VALIDATION_ERROR, message, field);
 
+  if (task.requires_comment_on_fail && task.answer_type === 'IMAGE') {
+    throw invalid(
+      'Only for a Yes/No or a reading.',
+      'requires_comment_on_fail',
+    );
+  }
   if (!task.text.trim()) throw invalid('Task text is required.', 'text');
   // Stands in for the platform refusing a text the client thought was fine.
   if (task.text.trim().toLowerCase() === 'rejected') {
@@ -1650,6 +1750,8 @@ export async function mockCreateTask(
     min_value: request.min_value ?? null,
     max_value: request.max_value ?? null,
     weight: request.weight ?? 5,
+    // Off unless the author turns it on.
+    requires_comment_on_fail: request.requires_comment_on_fail ?? false,
   };
   assertReachable(fields.text);
   assertValidTask(fields);
@@ -1660,8 +1762,6 @@ export async function mockCreateTask(
     tenant_id: me.business.id,
     checklist_id: checklist.id,
     position: liveTasks(checklist.id).length + 1,
-    requires_comment_on_fail:
-      request.requires_comment_on_fail ?? request.answer_type !== 'IMAGE',
     is_archived: false,
   };
   state.tasks.push(task);
@@ -1686,13 +1786,12 @@ export async function mockUpdateTask(
     max_value:
       request.max_value === undefined ? task.max_value : request.max_value,
     weight: request.weight ?? task.weight,
+    requires_comment_on_fail:
+      request.requires_comment_on_fail ?? task.requires_comment_on_fail,
   };
   assertReachable(next.text);
   assertValidTask(next);
   Object.assign(task, next);
-  if (request.requires_comment_on_fail !== undefined) {
-    task.requires_comment_on_fail = request.requires_comment_on_fail;
-  }
   return toTask(task);
 }
 
@@ -1751,14 +1850,21 @@ export async function mockListAssignments(
   await delay();
   const me = resolveMe();
   findReadableChecklist(me, checklistId);
+  return assignmentsOf(checklistId).map(toOutletAssignment);
+}
+
+/** Every assignment of a checklist, by outlet name, as the platform lists them. */
+function assignmentsOf(checklistId: number): DbAssignment[] {
   return checklistState()
     .assignments.filter((a) => a.checklist_id === checklistId)
-    .map(toOutletAssignment);
+    .sort((a, b) => a.outlet_name.localeCompare(b.outlet_name) || a.id - b.id);
 }
 
 /**
  * POST /checklists/{id}/assignments — bulk. An outlet already running is left
- * alone; one that was stopped starts again with the people it had.
+ * alone; one that was stopped starts again with the people it had. The answer is
+ * every assignment of the checklist; a row this call switched back on lists, as
+ * `returning_members`, the people who were still on it.
  */
 export async function mockCreateAssignments(
   checklistId: number,
@@ -1776,15 +1882,19 @@ export async function mockCreateAssignments(
     return outlet;
   });
 
-  return outlets.map((outlet) => {
+  const switchedOn = new Set<number>();
+  for (const outlet of outlets) {
     const existing = state.assignments.find(
       (a) => a.checklist_id === checklist.id && a.outlet_id === outlet.id,
     );
     if (existing) {
-      existing.is_active = true;
-      return toOutletAssignment(existing);
+      if (!existing.is_active) {
+        existing.is_active = true;
+        switchedOn.add(existing.id);
+      }
+      continue;
     }
-    const assignment: DbAssignment = {
+    state.assignments.push({
       id: Math.max(0, ...state.assignments.map((a) => a.id)) + 1,
       tenant_id: me.business.id,
       checklist_id: checklist.id,
@@ -1792,10 +1902,19 @@ export async function mockCreateAssignments(
       outlet_name: outlet.name,
       score: null,
       is_active: true,
-    };
-    state.assignments.push(assignment);
-    return toOutletAssignment(assignment);
-  });
+    });
+  }
+
+  return assignmentsOf(checklist.id).map((assignment) => ({
+    ...toOutletAssignment(assignment),
+    returning_members: switchedOn.has(assignment.id)
+      ? membersOf(me.business.id, assignment.id).map((m) => ({
+          user_id: m.user_id,
+          full_name: m.full_name,
+          role: m.role,
+        }))
+      : [],
+  }));
 }
 
 function findAssignment(tenantId: number, id: number): DbAssignment {
@@ -1832,14 +1951,26 @@ const MEMBERSHIP_KEY = {
   CL_IMP: 'cl_imp_assignments',
 } as const;
 
-/** The assignment, for someone allowed to see its people. */
+/** An assignment the caller can see at all; anyone else gets a 404. */
 function findAssignmentForTeam(me: MeResponse, id: number): DbAssignment {
   const assignment = findAssignment(me.business.id, id);
   if (!canAdminister(me.user.role) && !callerRole(me, id)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return assignment;
+}
+
+/**
+ * Reading who is on it: an ADMIN or OWNER, or this assignment's own Checklist
+ * Manager. An implementer works the checklist and is not shown the team.
+ */
+function findAssignmentForTeamRead(me: MeResponse, id: number): DbAssignment {
+  const assignment = findAssignmentForTeam(me, id);
+  if (!canAdminister(me.user.role) && callerRole(me, id) !== 'CL_ADMIN') {
     throw apiError(
       403,
       API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
-      'Not your assignment.',
+      "Only an admin or this checklist's supervisor sees its team.",
     );
   }
   return assignment;
@@ -1863,45 +1994,71 @@ function assertMayChangeTeam(
   );
 }
 
-function membersOf(tenantId: number, assignmentId: number): AssignmentMember[] {
-  const members: AssignmentMember[] = [];
-  for (const user of db.users) {
-    if (user.tenant_id !== tenantId) continue;
-    for (const role of ['CL_ADMIN', 'CL_IMP'] as const) {
-      if (user.memberships[MEMBERSHIP_KEY[role]].includes(assignmentId)) {
-        members.push({
-          user_id: user.id,
-          full_name: user.full_name,
-          role,
-          is_active: user.is_active,
-        });
-      }
-    }
-  }
-  return members.sort(
-    (a, b) =>
-      a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name),
+/**
+ * The people on an assignment, one flat row each: supervisors first, then by
+ * username. With `includeRemoved`, those taken off follow, the latest first.
+ */
+function membersOf(
+  tenantId: number,
+  assignmentId: number,
+  includeRemoved = false,
+): AssignmentMember[] {
+  const toMember = (entry: MemberLogEntry): AssignmentMember => {
+    const user = db.users.find((u) => u.id === entry.user_id)!;
+    const by = entry.removed_by
+      ? db.users.find((u) => u.id === entry.removed_by)
+      : undefined;
+    return {
+      user_id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+      role: entry.role,
+      is_active: user.is_active,
+      added_at: entry.added_at,
+      removed_at: entry.removed_at,
+      removed_by: by ? { id: by.id, full_name: by.full_name } : null,
+    };
+  };
+  const log = checklistState().memberLog.filter(
+    (entry) =>
+      entry.tenant_id === tenantId && entry.assignment_id === assignmentId,
   );
+  const current = log
+    .filter((entry) => entry.removed_at === null)
+    .map(toMember)
+    .sort(
+      (a, b) =>
+        a.role.localeCompare(b.role) || a.username.localeCompare(b.username),
+    );
+  if (!includeRemoved) return current;
+  const removed = log
+    .filter((entry) => entry.removed_at !== null)
+    .map(toMember)
+    .sort((a, b) => (b.removed_at ?? '').localeCompare(a.removed_at ?? ''));
+  return [...current, ...removed];
 }
 
-/** GET /assignments/{id}/members — both buckets, supervisors first. */
+/** GET /assignments/{id}/members — flat, supervisors first. */
 export async function mockListMembers(
   assignmentId: number,
+  { includeRemoved = false }: { includeRemoved?: boolean } = {},
 ): Promise<AssignmentMember[]> {
   await delay();
   const me = resolveMe();
-  findAssignmentForTeam(me, assignmentId);
-  return membersOf(me.business.id, assignmentId);
+  findAssignmentForTeamRead(me, assignmentId);
+  return membersOf(me.business.id, assignmentId, includeRemoved);
 }
 
 /**
  * POST /assignments/{id}/members. 409 `role_conflict` when the person is
  * already on it in either role: one row per person per assignment (Schema).
+ * Someone taken off before is added back on the same row. The answer is the
+ * team, as GET gives it.
  */
 export async function mockAddMember(
   assignmentId: number,
   request: AddMemberRequest,
-): Promise<AssignmentMember> {
+): Promise<AssignmentMember[]> {
   await delay();
   const me = resolveMe();
   const assignment = findAssignmentForTeam(me, assignmentId);
@@ -1921,10 +2078,12 @@ export async function mockAddMember(
       'user_id',
     );
   }
-  const already = membersOf(me.business.id, assignmentId).some(
-    (member) => member.user_id === user.id,
+  const log = checklistState().memberLog;
+  const row = log.find(
+    (entry) =>
+      entry.assignment_id === assignmentId && entry.user_id === user.id,
   );
-  if (already) {
+  if (row && row.removed_at === null) {
     throw apiError(
       409,
       API_ERROR_CODE.ROLE_CONFLICT,
@@ -1932,16 +2091,31 @@ export async function mockAddMember(
       'user_id',
     );
   }
+  const now = new Date().toISOString();
+  if (row) {
+    row.role = request.role;
+    row.added_at = now;
+    row.removed_at = null;
+    row.removed_by = null;
+  } else {
+    log.push({
+      tenant_id: me.business.id,
+      assignment_id: assignmentId,
+      user_id: user.id,
+      role: request.role,
+      added_at: now,
+      removed_at: null,
+      removed_by: null,
+    });
+  }
   user.memberships[MEMBERSHIP_KEY[request.role]].push(assignmentId);
-  return {
-    user_id: user.id,
-    full_name: user.full_name,
-    role: request.role,
-    is_active: user.is_active,
-  };
+  return membersOf(me.business.id, assignmentId);
 }
 
-/** DELETE /assignments/{id}/members/{user_id}. */
+/**
+ * DELETE /assignments/{id}/members/{user_id}. Nobody is deleted: the row keeps
+ * when and by whom, and the person loses what the team gave them.
+ */
 export async function mockRemoveMember(
   assignmentId: number,
   userId: number,
@@ -1949,15 +2123,20 @@ export async function mockRemoveMember(
   await delay();
   const me = resolveMe();
   const assignment = findAssignmentForTeam(me, assignmentId);
-  const member = membersOf(me.business.id, assignmentId).find(
-    (candidate) => candidate.user_id === userId,
+  const row = checklistState().memberLog.find(
+    (entry) =>
+      entry.assignment_id === assignmentId &&
+      entry.user_id === userId &&
+      entry.removed_at === null,
   );
-  if (!member) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  assertMayChangeTeam(me, assignmentId, member.role);
+  if (!row) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  assertMayChangeTeam(me, assignmentId, row.role);
   findEditableChecklist(me, assignment.checklist_id);
 
+  row.removed_at = new Date().toISOString();
+  row.removed_by = me.user.id;
   const user = db.users.find((candidate) => candidate.id === userId)!;
-  const key = MEMBERSHIP_KEY[member.role];
+  const key = MEMBERSHIP_KEY[row.role];
   user.memberships[key] = user.memberships[key].filter(
     (id) => id !== assignmentId,
   );
@@ -2007,7 +2186,7 @@ export async function mockAnswerTask(
         next.answer_number !== undefined &&
         ((task.min !== undefined && next.answer_number < task.min) ||
           (task.max !== undefined && next.answer_number > task.max)));
-    if (fails && !next.comment) {
+    if (fails && (task.askWhy ?? true) && !next.comment) {
       throw apiError(
         400,
         API_ERROR_CODE.COMMENT_REQUIRED_ON_FAILURE,

@@ -220,7 +220,6 @@ export const ml = {
   'picker.hours': 'മണിക്കൂർ',
   'picker.minutes': 'മിനിറ്റ്',
   'picker.day-n': 'ദിവസം {n}',
-  'duration.hours-minutes': '{h} മണിക്കൂർ {m} മിനിറ്റ്',
   'duration.hours-only': '{h} മണിക്കൂർ',
   'duration.minutes-only': '{m} മിനിറ്റ്',
   'wd-full.1': 'തിങ്കളാഴ്ച',
@@ -291,7 +290,6 @@ export const ml = {
   'sched.closes-next': '{time}-ന് അടയ്ക്കും (അടുത്ത ദിവസം)',
   'sched.closes-later-one': '1 ദിവസം കഴിഞ്ഞ് {time}-ന് അടയ്ക്കും',
   'sched.closes-later-n': '{n} ദിവസം കഴിഞ്ഞ് {time}-ന് അടയ്ക്കും',
-  'sched.zero': 'സമയപരിധി 0-ൽ കൂടുതലായിരിക്കണം.',
   'sched.overlap':
     'അടുത്ത റൺ തുറക്കുന്നതിന് മുമ്പ് സമയപരിധി അവസാനിക്കണം ({gap}).',
   'sched.gap.hour': 'മണിക്കൂറിൽ ഒരിക്കൽ',
@@ -301,8 +299,6 @@ export const ml = {
   'sched.gap.week-n':
     'തിരഞ്ഞെടുത്ത ഏറ്റവും അടുത്ത ദിവസങ്ങൾ തമ്മിൽ {n} ദിവസത്തെ അകലം',
   'sched.gap.month': 'ഫെബ്രുവരിയിൽ 28 ദിവസത്തെ അകലം',
-  'sched.sum.hourly':
-    '{open} മുതൽ മണിക്കൂറിൽ നടക്കുന്നു, ഓരോ തവണയും {dur} തുറന്നിരിക്കും.',
   'sched.sum.daily': 'എല്ലാ ദിവസവും നടക്കുന്നു, {open} – {close}.',
   'sched.sum.weekly': 'എല്ലാ {days}-ഉം നടക്കുന്നു, {open} – {close}.',
   'sched.sum.monthly':
@@ -374,8 +370,6 @@ export const ml = {
     'അതെ എന്നാൽ എല്ലാം ശരി എന്നർത്ഥം വരുന്ന രീതിയിൽ എഴുതുക.',
   'task.prompt': 'എന്താണ് വായിക്കേണ്ടത്',
   'task.prompt-placeholder': 'ഉദാ. വാക്ക്-ഇൻ കൂളർ താപനില',
-  'task.unit': 'യൂണിറ്റ് (ഓപ്ഷണൽ)',
-  'task.unit-placeholder': 'ഉദാ. °C',
   'task.lowest': 'ഏറ്റവും കുറഞ്ഞത്',
   'task.highest': 'ഏറ്റവും കൂടിയത്',
   'task.sign': '{field} നെഗറ്റീവോ പോസിറ്റീവോ ആക്കുക',
@@ -389,7 +383,6 @@ export const ml = {
   'task.photo-text': 'ഫോട്ടോയിൽ എന്താണ് കാണിക്കേണ്ടത്',
   'task.photo-placeholder':
     'ഉദാ. പ്രെപ്പ് കൗണ്ടർ വൃത്തിയാക്കി തുടച്ചിരിക്കുന്നു',
-  'task.ask-why': 'ഇത് പരാജയപ്പെട്ടാൽ സ്റ്റാഫിനോട് കാരണം ചോദിക്കും.',
   'task.weight': 'ഭാരം',
   'task.weight-std': 'ഭാരം: {n} (സാധാരണ)',
   'task.weight-val': 'ഭാരം: {n}',
@@ -473,4 +466,34 @@ export const ml = {
   'team.stop-body': 'ചരിത്രം നിലനിൽക്കും, പക്ഷേ ഇനി പുതിയ റണ്ണുകൾ ഉണ്ടാകില്ല.',
   'team.stopped': '{name} നിർത്തി.',
   'team.at': '{outlet}-ൽ {name}',
+
+  'sched.every': 'ഓരോ',
+  'sched.every-one': '1 മണിക്കൂർ',
+  'sched.every-n': '{n} മണിക്കൂർ',
+  'sched.first-run': 'ആദ്യ റൺ',
+  'sched.last-run': 'അവസാന റൺ',
+  'sched.no-later': 'ഇന്ന് ഇനി റൺ ഇല്ല',
+  'sched.earlier': 'നേരത്തെയുള്ള ആദ്യ റൺ തിരഞ്ഞെടുക്കുക.',
+  'sched.first-closes': 'ആദ്യ റൺ {time}-ന് അടയ്ക്കും',
+  'sched.first-closes-next': 'ആദ്യ റൺ {time}-ന് അടയ്ക്കും (അടുത്ത ദിവസം)',
+  'sched.gap.hours': 'ഓരോ {n} മണിക്കൂറിലും',
+  'sched.sum.hourly-one':
+    'ഓരോ മണിക്കൂറിലും നടക്കുന്നു, ആദ്യം {first}, അവസാനം {last} (ദിവസം {n} റൺ), ഓരോന്നും {dur} തുറന്നിരിക്കും.',
+  'sched.sum.hourly-n':
+    'ഓരോ {e} മണിക്കൂറിലും നടക്കുന്നു, ആദ്യം {first}, അവസാനം {last} (ദിവസം {n} റൺ), ഓരോന്നും {dur} തുറന്നിരിക്കും.',
+  'sched.short': 'സമയപരിധി കുറഞ്ഞത് 5 മിനിറ്റ് ആയിരിക്കണം.',
+  'chk-list.hourly-one': 'മണിക്കൂറിൽ · {first} മുതൽ {last} വരെ',
+  'chk-list.hourly-n': 'ഓരോ {e} മണിക്കൂറിലും · {first} മുതൽ {last} വരെ',
+
+  'task.comment-switch': 'പരാജയപ്പെട്ടാൽ അഭിപ്രായം ചോദിക്കുക',
+  'task.comment-hint':
+    'പരാജയപ്പെട്ട ഉത്തരം സേവ് ചെയ്യുന്നതിന് മുമ്പ് സ്റ്റാഫ് കാരണം പറയണം.',
+  'task.asks-why': 'കാരണം ചോദിക്കും',
+
+  'team.past': 'മുൻ അംഗങ്ങൾ',
+  'team.past-row': '{name} · {when} {by} നീക്കം ചെയ്തു',
+  'team.past-none': 'ഈ ടീമിൽ നിന്ന് ആരെയും നീക്കം ചെയ്തിട്ടില്ല.',
+  'team.close': 'അടയ്ക്കുക',
+  'team.from-before': 'മുമ്പത്തേത്: ഇപ്പോഴും ശരിയാണോ എന്ന് പരിശോധിക്കുക.',
+  'team.today': 'ഇന്ന്',
 } satisfies Partial<Catalogue>;

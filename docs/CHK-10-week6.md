@@ -11,7 +11,7 @@
 Exactly 17, in mockup order. "Reach it with" names the sign-in that shows the state on the mock backend.
 
 1. **default** — the business's active checklists, by time of day. _raheem / priya (ZamZam)._
-2. **schedules** — hourly, daily, weekly and monthly wording on one list. _raheem: Oil Quality Check, Pest Control Walk, Monthly Deep Clean._ The mockup's "every 2 hours" and "first to last" wording needs fields the API does not have (plan §4, question 1); hourly reads "Hourly · from {time}".
+2. **schedules** — hourly, daily, weekly and monthly wording on one list. _raheem: Oil Quality Check ("Every 2 hours · 11:00 AM to 9:00 PM"), Pest Control Walk, Monthly Deep Clean._
 3. **archived** — the Archived filter. _raheem: Old Audit._
 4. **archivedEmpty** — Archived filter with none. _anita (Porch Inn)._
 5. **afterArchive** — back from CHK-06 with "{name} archived. Its history stays." Needs CHK-06; the notice store is in place.

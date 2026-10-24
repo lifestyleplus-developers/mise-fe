@@ -8,6 +8,7 @@ import { TeamPicker } from '@/features/assignments/team-picker';
 import { useStopRunning } from '@/features/assignments/use-assignments';
 import {
   useMembers,
+  usePastMembers,
   useRemoveMember,
 } from '@/features/assignments/use-members';
 import { useOutlets } from '@/features/outlets/use-outlets';
@@ -15,6 +16,7 @@ import { PushedScreen } from '@/features/shell/pushed-screen';
 import type { AssignmentMember, AssignmentRole } from '@/shared/api/types';
 import { Avatar } from '@/shared/components/avatar';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SkeletonRows } from '@/shared/components/skeleton';
 import { Banner } from '@/shared/components/ui/banner';
@@ -26,7 +28,7 @@ import { cn } from '@/shared/lib/utils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Plus, Store, UserX, Users } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
 /**
  * CHK-08: who is on one checklist at one outlet. An ADMIN or OWNER changes both
@@ -40,11 +42,17 @@ export function AssignmentMembersScreen() {
     id: string;
     checklist?: string;
     outlet?: string;
+    /** User ids (comma-separated) who came back when this outlet was started again. */
+    returning?: string;
   }>();
   const assignmentId = Number(params.id);
   // Both are authored content, shown exactly as typed.
   const checklistName = params.checklist ?? '';
   const outletName = params.outlet ?? '';
+  // Told once, by the screen that started the outlet; gone when this screen is left.
+  const returning = new Set(
+    (params.returning ?? '').split(',').filter(Boolean).map(Number),
+  );
 
   const { data: me } = useMe();
   const outlets = useOutlets();
@@ -62,6 +70,8 @@ export function AssignmentMembersScreen() {
   const [failure, setFailure] = React.useState<TeamFailure | null>(null);
   const [confirmStop, setConfirmStop] = React.useState(false);
   const [stopped, setStopped] = React.useState(false);
+  const [pastOpen, setPastOpen] = React.useState(false);
+  const past = usePastMembers(assignmentId, { enabled: pastOpen });
 
   // Someone reached this by a link while on neither bucket.
   const notOnIt = me !== undefined && !viewerIsAdmin && !supervises;
@@ -187,6 +197,11 @@ export function AssignmentMembersScreen() {
                 spinning={
                   remove.isPending && remove.variables === member.user_id
                 }
+                note={
+                  returning.has(member.user_id)
+                    ? t('team.from-before')
+                    : undefined
+                }
                 onRemove={canRemove ? () => setRemoving(member) : undefined}
               />
             ))}
@@ -286,6 +301,17 @@ export function AssignmentMembersScreen() {
             t('team.members-empty'),
             true,
           )}
+          <View className="mx-4 -mt-3 mb-4">
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setPastOpen(true)}
+              className="active:bg-accent min-h-11 justify-center self-start rounded-full px-1"
+            >
+              <Text className="font-sans-semibold text-[14px] underline">
+                {t('team.past')}
+              </Text>
+            </Pressable>
+          </View>
           {singleOutlet ? (
             <View className="mx-4 mt-3">
               <Button
@@ -302,6 +328,52 @@ export function AssignmentMembersScreen() {
           ) : null}
         </>
       )}
+
+      <BottomSheet
+        visible={pastOpen}
+        title={t('team.past')}
+        onDismiss={() => setPastOpen(false)}
+        footer={
+          <Button className="w-full" onPress={() => setPastOpen(false)}>
+            <Text>{t('team.close')}</Text>
+          </Button>
+        }
+      >
+        {past.isPending && !past.isError ? (
+          <SkeletonRows count={3} />
+        ) : past.isError ? (
+          <View className="-mx-4">
+            <RetryBanner
+              message={t('common.offline')}
+              retryLabel={t('common.retry')}
+              onRetry={() => void past.refetch()}
+              retrying={past.isRefetching}
+            />
+          </View>
+        ) : (past.data?.length ?? 0) === 0 ? (
+          <Text className="px-1 text-[15px] leading-snug">
+            {t('team.past-none')}
+          </Text>
+        ) : (
+          <View className="border-border overflow-hidden rounded-2xl border">
+            {past.data!.map((member, index) => (
+              <Text
+                key={`${member.user_id}-${member.removed_at}`}
+                className={cn(
+                  'px-4 py-3 text-[15px] leading-snug',
+                  index > 0 && 'border-border border-t',
+                )}
+              >
+                {format(t('team.past-row'), {
+                  name: member.full_name,
+                  when: whenText(member.removed_at, t('team.today')),
+                  by: member.removed_by?.full_name ?? '',
+                })}
+              </Text>
+            ))}
+          </View>
+        )}
+      </BottomSheet>
 
       {picker ? (
         <TeamPicker
@@ -359,15 +431,27 @@ export function AssignmentMembersScreen() {
   );
 }
 
+/** "today", or the day and month: when someone was taken off. */
+function whenText(iso: string | null, today: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  return date.toDateString() === new Date().toDateString()
+    ? today
+    : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
 function MemberRow({
   member,
   first,
   spinning,
+  note,
   onRemove,
 }: {
   member: AssignmentMember;
   first: boolean;
   spinning: boolean;
+  /** A line under the name, e.g. that they came back with a restarted outlet. */
+  note?: string;
   onRemove?: () => void;
 }) {
   const t = useT();
@@ -391,6 +475,9 @@ function MemberRow({
             </Text>
           </View>
         )}
+        {note ? (
+          <Text className="mt-0.5 text-[13px] leading-snug">{note}</Text>
+        ) : null}
       </View>
       {spinning ? <ActivityIndicator size="small" /> : null}
       {onRemove ? (

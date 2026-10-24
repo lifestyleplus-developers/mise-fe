@@ -11,6 +11,7 @@ import {
 } from '@/features/checklist-editor/task-form';
 import { DiscardChangesDialog } from '@/shared/components/discard-changes-dialog';
 import { SegmentedControl } from '@/shared/components/segmented-control';
+import { SwitchRow } from '@/shared/components/switch-row';
 import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
 import { Banner } from '@/shared/components/ui/banner';
 import { Button } from '@/shared/components/ui/button';
@@ -247,13 +248,6 @@ function TaskSheet({
 
             {form.type === 'NUMBER' ? (
               <>
-                <TextField
-                  label={t('task.unit')}
-                  placeholder={t('task.unit-placeholder')}
-                  value={form.unit}
-                  editable={!saving}
-                  onChangeText={(next) => change({ unit: next })}
-                />
                 <View className="gap-1">
                   <View className="flex-row gap-3">
                     <LimitField
@@ -299,7 +293,17 @@ function TaskSheet({
               </>
             ) : null}
 
-            {canFail(form) ? <InfoLine text={t('task.ask-why')} /> : null}
+            {canFail(form) ? (
+              <View className="border-input-edge rounded-2xl border">
+                <SwitchRow
+                  label={t('task.comment-switch')}
+                  hint={t('task.comment-hint')}
+                  checked={form.askWhy}
+                  disabled={saving}
+                  onChange={(askWhy) => change({ askWhy })}
+                />
+              </View>
+            ) : null}
 
             <View className="border-input-edge rounded-2xl border">
               <Pressable
