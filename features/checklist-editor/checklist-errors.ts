@@ -17,3 +17,13 @@ export function classifyEditorError(error: unknown): EditorFailure {
   }
   return 'failed';
 }
+
+/** The platform refused a task's text, which the sheet reports under the field. */
+export function isTextRejected(error: unknown): boolean {
+  return (
+    error instanceof MockApiError &&
+    error.status === 400 &&
+    error.body.error.code === API_ERROR_CODE.VALIDATION_ERROR &&
+    error.body.error.field === 'text'
+  );
+}

@@ -40,6 +40,9 @@ import {
   UserX,
   WifiOff,
   X,
+  Gauge,
+  Minus,
+  Trash,
 } from 'lucide-react-native';
 
 /**
@@ -88,6 +91,9 @@ const ICONS = [
   UserX,
   WifiOff,
   X,
+  Gauge,
+  Minus,
+  Trash,
 ];
 
 for (const Icon of ICONS) {

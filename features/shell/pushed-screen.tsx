@@ -33,6 +33,10 @@ type PushedScreenProps = {
   onEndReached?: () => void;
   /** Pinned under the scrolling content, e.g. a Save button. */
   footer?: React.ReactNode;
+  /** A small line above the title, e.g. the section the title belongs to. */
+  eyebrow?: string;
+  /** False while something on the screen is being dragged. */
+  scrollEnabled?: boolean;
   children: React.ReactNode;
 };
 
@@ -47,6 +51,8 @@ export function PushedScreen({
   scrollRef,
   onEndReached,
   footer,
+  eyebrow,
+  scrollEnabled = true,
   children,
 }: PushedScreenProps) {
   const { data: me, isError, error } = useMe();
@@ -90,6 +96,11 @@ export function PushedScreen({
             </Pressable>
             {action}
           </View>
+          {eyebrow ? (
+            <Text className="text-muted-foreground mt-1 px-3 text-[13px]">
+              {eyebrow}
+            </Text>
+          ) : null}
           <Text
             variant="h1"
             className="mt-1 px-3 text-left text-[26px] leading-tight"
@@ -99,6 +110,7 @@ export function PushedScreen({
         </View>
         <ScrollView
           ref={scrollRef}
+          scrollEnabled={scrollEnabled}
           contentContainerClassName="pt-2 pb-8"
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={100}

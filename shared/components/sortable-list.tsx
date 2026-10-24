@@ -18,6 +18,10 @@ type SortableAction = {
   label: string;
   /** Drawn in red, for something that cannot be taken back. */
   destructive?: boolean;
+  /** Greyed out and not tappable; `hint` should say why. */
+  disabled?: boolean;
+  /** A line under the menu, e.g. why an action is disabled. */
+  hint?: string;
   onPress: () => void;
 };
 
@@ -181,6 +185,7 @@ function SortableList<T>({
               key={action.key}
               label={action.label}
               destructive={action.destructive}
+              disabled={action.disabled}
               divider
               onPress={() => {
                 setMenuIndex(null);
@@ -189,6 +194,16 @@ function SortableList<T>({
             />
           ))}
         </View>
+        {menuActions
+          .filter((action) => action.hint)
+          .map((action) => (
+            <Text
+              key={action.key}
+              className="mt-2 px-1 text-[13px] leading-snug"
+            >
+              {action.hint}
+            </Text>
+          ))}
       </BottomSheet>
     </>
   );
