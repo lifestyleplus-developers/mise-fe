@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import { checklistKeys } from '@/features/checklists/checklist-keys';
 import { api } from '@/shared/api/client';
@@ -70,5 +75,26 @@ export function useRemoveMember(assignmentId: number) {
       cache.write((members) => members.filter((m) => m.user_id !== userId));
       cache.refreshAround();
     },
+  });
+}
+
+/**
+ * The people on several assignments at once, by assignment id. An assignment
+ * whose list has not arrived yet is absent from the map.
+ */
+export function useTeams(assignmentIds: readonly number[]) {
+  return useQueries({
+    queries: assignmentIds.map((id) => ({
+      queryKey: checklistKeys.members(id),
+      queryFn: () => api.assignments.members(id),
+    })),
+    combine: (results) => ({
+      byAssignment: Object.fromEntries(
+        assignmentIds.flatMap((id, index) =>
+          results[index]?.data ? [[id, results[index].data]] : [],
+        ),
+      ) as Record<number, AssignmentMember[]>,
+      isPending: results.some((result) => result.isPending),
+    }),
   });
 }

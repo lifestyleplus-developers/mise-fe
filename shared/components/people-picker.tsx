@@ -39,6 +39,8 @@ type PeoplePickerProps = {
   pendingId?: number | null;
   /** Overrides the wording when a search finds no one. */
   noResultMessage?: (query: string) => string;
+  /** A failure to show above the list, e.g. the last pick did not save. */
+  error?: string;
 };
 
 /** A searchable list of people to choose one from, in a bottom sheet. */
@@ -53,6 +55,7 @@ function PeoplePicker({
   onClose,
   pendingId = null,
   noResultMessage,
+  error,
 }: PeoplePickerProps) {
   const t = useT();
   const theme = useAppliedTheme();
@@ -97,6 +100,15 @@ function PeoplePicker({
           clearLabel={t('people.clear')}
         />
       </View>
+
+      {error ? (
+        <Text
+          accessibilityRole="alert"
+          className="text-destructive-soft-foreground mb-3 px-1 text-[14px] font-medium"
+        >
+          {error}
+        </Text>
+      ) : null}
 
       {failed ? (
         <View className="-mx-4">
