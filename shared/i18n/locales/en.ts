@@ -200,9 +200,6 @@ export const en = {
   'users.no-longer-access':
     'You no longer have access. Your role may have changed.',
 
-  'placeholder.label': 'Placeholder',
-  'placeholder.week': 'Specced and built in week {n}',
-
   'language.title': 'Language',
   'language.waiting': 'Waiting to save to your account',
   'settings.profile': 'Profile',
@@ -504,6 +501,18 @@ export const en = {
   'team.close': 'Close',
   'team.from-before': "From before: check they're still right.",
   'team.today': 'today',
+
+  'placeholder.coming-soon': 'Coming soon',
+
+  'home.see-all': 'See all ({n})',
+  'home.see-less': 'See less',
+  'home.show-tasks': 'Show tasks',
+  'home.hide-tasks': 'Hide tasks',
+  'home.tasks-failed': "Couldn't load the tasks.",
+  'home.task-answered': '{task}: {answer}',
+  'home.task-open': '{task}: not answered yet',
+  'run.not-open-yet':
+    'Opens at {time}. You can read the tasks now, and answer once it opens.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

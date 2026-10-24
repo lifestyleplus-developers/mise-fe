@@ -496,4 +496,16 @@ export const ml = {
   'team.close': 'അടയ്ക്കുക',
   'team.from-before': 'മുമ്പത്തേത്: ഇപ്പോഴും ശരിയാണോ എന്ന് പരിശോധിക്കുക.',
   'team.today': 'ഇന്ന്',
+
+  'placeholder.coming-soon': 'ഉടൻ വരുന്നു',
+
+  'home.see-all': 'എല്ലാം കാണുക ({n})',
+  'home.see-less': 'കുറച്ച് കാണുക',
+  'home.show-tasks': 'ടാസ്‌ക്കുകൾ കാണിക്കുക',
+  'home.hide-tasks': 'ടാസ്‌ക്കുകൾ മറയ്ക്കുക',
+  'home.tasks-failed': 'ടാസ്‌ക്കുകൾ ലോഡ് ചെയ്യാനായില്ല.',
+  'home.task-answered': '{task}: {answer}',
+  'home.task-open': '{task}: ഇതുവരെ ഉത്തരം നൽകിയിട്ടില്ല',
+  'run.not-open-yet':
+    '{time}-ന് തുറക്കും. ഇപ്പോൾ ടാസ്‌ക്കുകൾ വായിക്കാം, തുറന്നാൽ ഉത്തരം നൽകാം.',
 } satisfies Partial<Catalogue>;

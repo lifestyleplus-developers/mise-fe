@@ -1,23 +1,26 @@
 /**
  * The mock backend: JSON fixtures matching the API Contract's shapes.
  *
- * Who sees what on Home and the tab bar (ZamZam business):
- *   priya (OWNER), raheem (ADMIN) — no assignments → empty Home, Issues, Modules
- *   suresh — implementer + inventory manager → Modules (Inventory)
+ * Everything here is ZamZam's: one business, four outlets that run the two owner's
+ * cash checklists (Opening cash balance, Closing cash balance), and its people.
+ *
+ * Who sees what on Home and the tab bar:
+ *   priya  (OWNER)  — counts the cash: answers all eight runs → Home has Open now and Upcoming
+ *   nadia  (MEMBER) — Checklist Manager of all eight         → Home has Overseeing and Upcoming
+ *   raheem (ADMIN), zoya — no assignments → empty Home; they author and assign
+ *   suresh — inventory manager               → Modules (Inventory)
  *   meera  — attendance manager              → Modules (Attendance)
- *   nadia  — checklist manager               → Issues tab
+ *   kiran, sana, ananthu, sreelakshmi.un — on no checklist → "your manager will add you"
+ *   anil   — deactivated, still on a team    → shows as Inactive
  *
  * Credentials:
- *   priya, raheem, suresh, meera, nadia — password "demo"
+ *   every ZamZam person (priya, raheem, nadia, …) — password "1234"
  *   any persona + password "wrong"      — invalid_credentials
  *   busy / anything                     — rate_limited
  *   offline / anything                  — unreachable (no response)
  *   network-error / anything            — 500
- *   test-1 / 1234 (Porch Inn)           — OWNER
- *   test-2 / 1234 (Kebapci)             — MEMBER
- *   anita (Porch Inn)                   — ADMIN, "demo"
- *   kabir (Kebapci)                     — OWNER, "demo"
- *   Give two businesses the same username to exercise the 409 picker.
+ *   The sign-in business picker needs the same username in two businesses; with one
+ *   business the mock can no longer show it.
  */
 import type {
   AddMemberRequest,
@@ -600,108 +603,42 @@ type RunTemplate = {
   answered: number;
 };
 
-/** Daily checklists at ZamZam; assignment ids match the fixture memberships. */
-const RUN_TEMPLATES: RunTemplate[] = [
+/** The four ZamZam outlets that run the two cash checklists, with their assignment ids. */
+const CASH_OUTLETS = [
+  { name: 'ZamZam', opening: 11, closing: 21 },
+  { name: 'Elegance', opening: 12, closing: 22 },
+  { name: 'Icefruits', opening: 13, closing: 23 },
+  { name: 'ZamZam Grande', opening: 14, closing: 24 },
+] as const;
+
+/**
+ * Opening cash balance is open when the app is demoed (so Home has something to do
+ * now); closing cash balance opens a few hours later (so Home has something coming).
+ * How far through each outlet's opening count is differs, to show every progress.
+ */
+const OPENING_PROGRESS = [2, 0, 4, 1];
+const RUN_TEMPLATES: RunTemplate[] = CASH_OUTLETS.flatMap((outlet, index) => [
   {
-    assignmentId: 11,
-    checklist: 'Kitchen Opening',
-    outlet: 'ZamZam',
-    open: 360,
-    close: 600,
-    todayFromNow: { open: -90, close: 150 },
-    total: 12,
-    answered: 7,
-  },
-  {
-    assignmentId: 13,
-    checklist: 'Fridge Temperatures',
-    outlet: 'ZamZam',
-    open: 390,
-    close: 630,
-    todayFromNow: { open: -60, close: 120 },
-    total: 6,
-    answered: 4,
-  },
-  {
-    assignmentId: 16,
-    checklist: 'Store Opening',
-    outlet: 'ZamZam',
-    open: 420,
-    close: 720,
-    todayFromNow: { open: -30, close: 180 },
-    total: 8,
-    answered: 3,
-  },
-  {
-    assignmentId: 12,
-    checklist: 'Kitchen Closing',
-    outlet: 'ZamZam',
-    open: 1320,
-    close: 1470,
-    total: 10,
-    answered: 0,
-  },
-  // Porch Inn — assignment ids match the fixture memberships.
-  {
-    assignmentId: 701,
-    checklist: 'Front Desk Shift Handover',
-    outlet: 'Porch Inn Main',
-    open: 420,
-    close: 600,
-    todayFromNow: { open: -45, close: 135 },
-    total: 6,
-    answered: 2,
-  },
-  {
-    assignmentId: 702,
-    checklist: 'Front Desk Shift Handover',
-    outlet: 'Porch Inn Annex',
-    open: 420,
-    close: 600,
-    todayFromNow: { open: -75, close: 105 },
-    total: 6,
-    answered: 6,
-  },
-  {
-    assignmentId: 705,
-    checklist: 'Public Area Walk',
-    outlet: 'Porch Inn Main',
+    assignmentId: outlet.opening,
+    checklist: 'Opening cash balance',
+    outlet: outlet.name,
     open: 480,
-    close: 525,
-    todayFromNow: { open: -10, close: 35 },
+    close: 660,
+    todayFromNow: { open: -60 + index * 10, close: 120 + index * 20 },
+    total: 4,
+    answered: OPENING_PROGRESS[index],
+  },
+  {
+    assignmentId: outlet.closing,
+    checklist: 'Closing cash balance',
+    outlet: outlet.name,
+    open: 1320,
+    close: 1440,
+    todayFromNow: { open: 180 + index * 10, close: 300 + index * 10 },
     total: 5,
     answered: 0,
   },
-  {
-    assignmentId: 703,
-    checklist: 'Room Turnover Check',
-    outlet: 'Porch Inn Main',
-    open: 540,
-    close: 840,
-    todayFromNow: { open: -60, close: 200 },
-    total: 7,
-    answered: 4,
-  },
-  {
-    assignmentId: 704,
-    checklist: 'Room Turnover Check',
-    outlet: 'Porch Inn Annex',
-    open: 540,
-    close: 840,
-    todayFromNow: { open: -20, close: 240 },
-    total: 7,
-    answered: 7,
-  },
-  {
-    assignmentId: 707,
-    checklist: 'Night Audit',
-    outlet: 'Porch Inn Main',
-    open: 1380,
-    close: 1500,
-    total: 5,
-    answered: 0,
-  },
-];
+]);
 
 /** Today's and tomorrow's runs for the caller's assignments. */
 function buildRuns(
@@ -776,312 +713,47 @@ type TaskTemplate = {
 };
 
 /** Authored task content, shown exactly as typed — never translated (Model §15). */
-const TASK_TEMPLATES: Record<number, TaskTemplate[]> = {
-  // Kitchen Opening
-  11: [
-    {
-      type: 'NUMBER',
-      text: 'Walk-in cooler temperature',
-      unit: '°C',
-      max: 4,
-      answer: { n: 3.8, by: 'kiran' },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Walk-in freezer temperature',
-      unit: '°C',
-      max: -18,
-      answer: {
-        n: -15,
-        comment: 'Door was left open during the delivery',
-        by: 'suresh',
-      },
-    },
-    {
-      type: 'BINARY',
-      text: 'Sanitation stations are stocked',
-      answer: { b: true, by: 'suresh' },
-    },
-    {
-      type: 'BINARY',
-      text: 'No expired items in open containers',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Gas valves are checked and burners light',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Exhaust hood is running',
-      // The author did not ask for a comment here: a No is recorded as it is.
-      askWhy: false,
-      answer: { b: true, by: 'suresh' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Chopping boards and knives are sanitised',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Staff are in clean uniform and caps',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Sanitiser solution strength',
-      unit: 'ppm',
-      min: 50,
-      max: 200,
-      answer: { n: 100, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Handwash sink has soap and towels',
-      answer: {
-        b: false,
-        comment: 'Soap dispenser empty, refill requested',
-        by: 'kiran',
-      },
-    },
-    {
-      type: 'IMAGE',
-      text: 'Photograph the prep counter',
-      answer: { by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Waste bins are lined and covered',
-      answer: { b: true, by: 'kiran' },
-    },
-  ],
-  // Fridge Temperatures
-  13: [
-    {
-      type: 'NUMBER',
-      text: 'Walk-in cooler temperature',
-      unit: '°C',
-      max: 4,
-      answer: { n: 3.5, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Freezer door seals are intact',
-      answer: {
-        b: false,
-        comment: 'Seal damaged, engineer called',
-        by: 'suresh',
-      },
-    },
-    {
-      type: 'BINARY',
-      text: 'Thermometers are in place',
-      answer: { b: true, by: 'suresh' },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Walk-in freezer temperature',
-      unit: '°C',
-      max: -18,
-      answer: { n: -19, by: 'kiran' },
-    },
-    { type: 'NUMBER', text: 'Display chiller temperature', unit: '°C', max: 5 },
-    { type: 'IMAGE', text: 'Photograph the walk-in cooler thermometer' },
-  ],
-  // Store Opening
-  16: [
-    {
-      type: 'BINARY',
-      text: 'Entrance and waiting area are clean',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'ഹാൻഡ് വാഷ് ലിക്വിഡ് എല്ലാ വാഷ് ബേസിനുകളിലും നിറച്ചിട്ടുണ്ടെന്നും ടിഷ്യൂ പേപ്പർ ആവശ്യത്തിന് ഉണ്ടെന്നും ഉറപ്പാക്കുക',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Lights and fans are working',
-      answer: { b: true, by: 'kiran' },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Dining room temperature',
-      unit: '°C',
-      min: 22,
-      max: 26,
-    },
-    { type: 'BINARY', text: 'Tables and chairs are set' },
-    { type: 'BINARY', text: 'Drinking water is filled' },
-    { type: 'BINARY', text: 'Floor is clean and dry' },
-    { type: 'IMAGE', text: 'Photograph the dining room' },
-  ],
-  // Front Desk Shift Handover
-  701: [
-    {
-      type: 'NUMBER',
-      text: 'Cash drawer count',
-      unit: '₹',
-      min: 9500,
-      max: 10500,
-      answer: { n: 10120, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'VIP arrivals are noted for the next shift',
-      answer: { b: true, by: 'test-1' },
-    },
-    { type: 'BINARY', text: 'Pending guest complaints are handed over' },
-    { type: 'BINARY', text: 'Room status matches the system' },
-    { type: 'BINARY', text: 'Key cards are counted and stored' },
-    { type: 'IMAGE', text: 'Photograph the signed handover sheet' },
-  ],
-  // Front Desk Shift Handover, Annex: every task answered
-  702: [
-    {
-      type: 'NUMBER',
-      text: 'Cash drawer count',
-      unit: '₹',
-      min: 9500,
-      max: 10500,
-      answer: { n: 10240, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'VIP arrivals are noted for the next shift',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Pending guest complaints are handed over',
-      answer: {
-        b: false,
-        comment: 'Room 12 AC complaint still open',
-        by: 'test-1',
-      },
-    },
-    {
-      type: 'BINARY',
-      text: 'Room status matches the system',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Key cards are counted and stored',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'IMAGE',
-      text: 'Photograph the signed handover sheet',
-      answer: { by: 'test-1' },
-    },
-  ],
-  // Public Area Walk
-  705: [
-    { type: 'BINARY', text: 'Lobby floor is clean and dry' },
-    { type: 'BINARY', text: 'Lift is clean and working' },
-    { type: 'BINARY', text: 'Corridor lights are all on' },
-    { type: 'BINARY', text: 'Restrooms are stocked and clean' },
-    { type: 'IMAGE', text: 'Photograph the lobby' },
-  ],
-  // Room Turnover Check
-  703: [
-    {
-      type: 'BINARY',
-      text: 'Bed linen is changed',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Bathroom is sanitised',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Minibar is restocked',
-      answer: {
-        b: false,
-        comment: 'Two soft drinks missing from stores',
-        by: 'test-1',
-      },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Room temperature',
-      unit: '°C',
-      min: 22,
-      max: 26,
-      answer: { n: 28, comment: 'AC filter being cleaned', by: 'test-1' },
-    },
-    { type: 'BINARY', text: 'Amenities are replenished' },
-    { type: 'BINARY', text: 'Do-not-disturb sign is removed' },
-    { type: 'IMAGE', text: 'Photograph the finished room' },
-  ],
-  704: [
-    {
-      type: 'BINARY',
-      text: 'Bed linen is changed',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Bathroom is sanitised',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Minibar is restocked',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'NUMBER',
-      text: 'Room temperature',
-      unit: '°C',
-      min: 22,
-      max: 26,
-      answer: { n: 24, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Amenities are replenished',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'BINARY',
-      text: 'Do-not-disturb sign is removed',
-      answer: { b: true, by: 'test-1' },
-    },
-    {
-      type: 'IMAGE',
-      text: 'Photograph the finished room',
-      answer: { by: 'test-1' },
-    },
-  ],
-  // Night Audit
-  707: [
-    { type: 'BINARY', text: 'Revenue is reconciled' },
-    { type: 'BINARY', text: 'No-shows are processed' },
-    { type: 'BINARY', text: 'System backup has run' },
-    { type: 'BINARY', text: "Tomorrow's arrival list is printed" },
-    { type: 'IMAGE', text: 'Photograph the signed audit summary' },
-  ],
-  // Kitchen Closing
-  12: [
-    { type: 'BINARY', text: 'Burners and gas valves are off' },
-    { type: 'NUMBER', text: 'Walk-in cooler temperature', unit: '°C', max: 4 },
-    { type: 'BINARY', text: 'Perishables are covered and labelled' },
-    { type: 'BINARY', text: 'Chopping boards and knives are washed' },
-    { type: 'BINARY', text: 'Floors are mopped and drains are clear' },
-    { type: 'BINARY', text: 'Exhaust hood is switched off' },
-    { type: 'IMAGE', text: 'Photograph the cleaned prep counter' },
-    { type: 'BINARY', text: 'Waste is out and bins are relined' },
-    { type: 'BINARY', text: 'Back door is locked' },
-    { type: 'BINARY', text: 'Alarm is set' },
-  ],
-};
+const OPENING_CASH_TASKS: TaskTemplate[] = [
+  {
+    type: 'NUMBER',
+    text: 'Cash in the drawer',
+    unit: '₹',
+    askWhy: false,
+    answer: { n: 12500, by: 'priya' },
+  },
+  {
+    type: 'NUMBER',
+    text: 'Cash in the safe',
+    unit: '₹',
+    askWhy: false,
+    answer: { n: 48000, by: 'priya' },
+  },
+  {
+    type: 'BINARY',
+    text: "The opening balance matches yesterday's closing balance",
+    answer: { b: true, by: 'priya' },
+  },
+  { type: 'IMAGE', text: 'Photograph the counted cash' },
+];
+
+const CLOSING_CASH_TASKS: TaskTemplate[] = [
+  { type: 'NUMBER', text: 'Cash in the drawer', unit: '₹', askWhy: false },
+  { type: 'NUMBER', text: 'Cash taken to the safe', unit: '₹', askWhy: false },
+  {
+    type: 'BINARY',
+    text: "The closing balance matches the day's sales report",
+  },
+  { type: 'BINARY', text: 'The cash is locked in the safe' },
+  { type: 'IMAGE', text: 'Photograph the closing cash count' },
+];
+
+/** Both cash checklists have the same tasks at every outlet. */
+const TASK_TEMPLATES: Record<number, TaskTemplate[]> = Object.fromEntries(
+  CASH_OUTLETS.flatMap((outlet) => [
+    [outlet.opening, OPENING_CASH_TASKS],
+    [outlet.closing, CLOSING_CASH_TASKS],
+  ]),
+);
 
 function outcomeFor(
   task: TaskTemplate,
@@ -1301,18 +973,6 @@ function seedChecklistState(): ChecklistState {
     addTasks(
       { id: assignment.checklist_id, tenant_id: assignment.tenant_id },
       templates,
-    );
-  }
-
-  // The longest list a person might write (CHK-09 "30 tasks").
-  const longest = checklists.find((checklist) => checklist.id === 105);
-  if (longest) {
-    addTasks(
-      longest,
-      Array.from({ length: 30 }, (_, index) => ({
-        type: 'BINARY' as const,
-        text: `Delivery item ${index + 1} is in good condition`,
-      })),
     );
   }
 
@@ -2167,8 +1827,11 @@ export async function mockAnswerTask(
       'A Checklist Manager cannot answer.',
     );
   }
-  if (new Date(run.window_close).getTime() <= Date.now()) {
-    throw apiError(409, 'window_closed', 'This checklist closed.');
+  if (
+    new Date(run.window_open).getTime() > Date.now() ||
+    new Date(run.window_close).getTime() <= Date.now()
+  ) {
+    throw apiError(409, 'window_closed', 'This checklist is not open.');
   }
 
   const templates = TASK_TEMPLATES[assignmentId] ?? [];

@@ -1,4 +1,5 @@
 import { useMe } from '@/features/auth/use-me';
+import { ProfileCard } from '@/features/more/profile-card';
 import { TabScreen } from '@/features/shell/tab-screen';
 import { ListGroup } from '@/shared/components/list-group';
 import { canAdminister } from '@/shared/constants/roles';
@@ -16,6 +17,11 @@ export function MoreScreen() {
 
   return (
     <TabScreen title={t('tab.more')}>
+      <ProfileCard
+        fullName={me.user.full_name}
+        username={me.user.username}
+        role={me.user.role}
+      />
       <ListGroup
         rows={[
           {

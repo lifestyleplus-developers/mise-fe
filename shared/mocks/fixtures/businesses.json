@@ -6,21 +6,5 @@
       "checklists": true,
       "inventory": true
     }
-  },
-  {
-    "id": 11,
-    "name": "Porch Inn",
-    "modules": {
-      "checklists": true,
-      "inventory": false
-    }
-  },
-  {
-    "id": 12,
-    "name": "Kebapci",
-    "modules": {
-      "checklists": true,
-      "inventory": false
-    }
   }
 ]

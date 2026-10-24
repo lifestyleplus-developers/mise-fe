@@ -484,4 +484,16 @@ export const kn = {
   'team.close': 'ಮುಚ್ಚಿ',
   'team.from-before': 'ಮೊದಲಿನದು: ಈಗಲೂ ಸರಿಯಾಗಿದೆಯೇ ಎಂದು ಪರಿಶೀಲಿಸಿ.',
   'team.today': 'ಇಂದು',
+
+  'placeholder.coming-soon': 'ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ',
+
+  'home.see-all': 'ಎಲ್ಲವನ್ನೂ ನೋಡಿ ({n})',
+  'home.see-less': 'ಕಡಿಮೆ ನೋಡಿ',
+  'home.show-tasks': 'ಕಾರ್ಯಗಳನ್ನು ತೋರಿಸಿ',
+  'home.hide-tasks': 'ಕಾರ್ಯಗಳನ್ನು ಮರೆಮಾಡಿ',
+  'home.tasks-failed': 'ಕಾರ್ಯಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗಲಿಲ್ಲ.',
+  'home.task-answered': '{task}: {answer}',
+  'home.task-open': '{task}: ಇನ್ನೂ ಉತ್ತರಿಸಿಲ್ಲ',
+  'run.not-open-yet':
+    '{time} ಕ್ಕೆ ತೆರೆಯುತ್ತದೆ. ಈಗ ಕಾರ್ಯಗಳನ್ನು ಓದಬಹುದು, ತೆರೆದ ಮೇಲೆ ಉತ್ತರಿಸಬಹುದು.',
 } satisfies Partial<Catalogue>;

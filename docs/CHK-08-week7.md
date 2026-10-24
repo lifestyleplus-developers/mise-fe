@@ -10,9 +10,9 @@
 
 28, in mockup order. **R** = reachable on the mock backend (how). **—** = not reachable, and why.
 
-1. **default** — a Checklist Manager sees the managers list read-only and can change Team Members. **R** — nadia, Team on Kitchen Opening.
+1. **default** — a Checklist Manager sees the managers list read-only and can change Team Members. **R** — nadia, Team on Opening cash balance.
 2. **admin** — an Administrator changes both lists. **R** — raheem or priya, from CHK-07 or CHK-06.
-3. **noManager** — "No Checklist Manager yet. Issues here will have no manager." **R** — raheem, Kitchen Closing at ZamZam.
+3. **noManager** — "No Checklist Manager yet. Issues here will have no manager." **R** — raheem: create a checklist, start it at an outlet, and open Team before naming a manager.
 4. **emptyTeam** — both lists empty. **R** — start a checklist at Central Kitchen on CHK-07, then open Team.
 5. **picker** — Add Team Member: the people list. **R**.
 6. **pickerSearch** — the list narrowed by what is typed. **R**.
@@ -21,12 +21,12 @@
 9. **adding** — the chosen person's row spins while the others wait. **R**.
 10. **added** — "{name} added." **R**.
 11. **removeConfirm** — "Remove {name} from {where}?" **R**.
-12. **removeLast** — removing the last Team Member warns that runs will be missed. **R** — Kitchen Closing: Suresh is the only active one.
-13. **removeLastManager** — warns that issues will have no manager. **R** — raheem, Kitchen Opening at ZamZam: Nadia.
-14. **inactive** — an inactive person stays on the list, marked "Inactive". **R** — Kitchen Closing: Anil.
-15. **singleOutlet** — one-outlet business: the checklist's name alone, no outlet line. **R** — kabir, after Start running on CHK-09.
-16. **stopRunning** — "Stop {name}?" then "{name} stopped." **R** — kabir.
-17. **reticked** — people who came back with a restarted outlet are marked "From before: check they're still right." **R** — on CHK-07 stop ZamZam on Kitchen Opening, Apply, tick it again, Apply, then tap Team. The note lasts for that visit.
+12. **removeLast** — removing the last Team Member warns that runs will be missed. **R** — Opening cash balance at ZamZam: Priya is the only Team Member.
+13. **removeLastManager** — warns that issues will have no manager. **R** — raheem, Opening cash balance at ZamZam: Nadia.
+14. **inactive** — an inactive person stays on the list, marked "Inactive". **R** — Closing cash balance at ZamZam: Anil.
+15. **singleOutlet** — one-outlet business: the checklist's name alone, no outlet line. **—** the mock now has one business with several outlets, so the one-outlet case cannot be seen.
+16. **stopRunning** — "Stop {name}?" then "{name} stopped." **—** same.
+17. **reticked** — people who came back with a restarted outlet are marked "From before: check they're still right." **R** — on CHK-07 stop ZamZam on Opening cash balance, Apply, tick it again, Apply, then tap Team. The note lasts for that visit.
 18. **pastMembers** — a list of people taken off, with when and by whom. **R** — remove someone, then tap Past members.
 19. **saveFailed** — "Couldn't save. Can't reach mise." in the picker; the same tap retries. **—** only on a real network failure.
 20. **conflict** — "{name} is already on this team." **—** only when two people add the same person at once.

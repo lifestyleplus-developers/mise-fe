@@ -59,6 +59,9 @@ export function RunScreen() {
   const closeIso = run?.window_close ?? listed?.window_close;
   const countdown = useCountdown(closeIso);
   const closed = closeIso ? now >= new Date(closeIso).getTime() : false;
+  // A run that has not opened yet can be read, not answered.
+  const openIso = run?.window_open ?? listed?.window_open;
+  const notOpenYet = openIso ? now < new Date(openIso).getTime() : false;
 
   const [drafts, setDrafts] = React.useState<Record<number, string>>({});
   const [rowErrors, setRowErrors] = React.useState<Record<number, RowError>>(
@@ -292,7 +295,7 @@ export function RunScreen() {
         });
 
   const showCard = Boolean(closeIso) && !(query.isError && !run);
-  const isAnswering = !isSupervisor && !closed;
+  const isAnswering = !isSupervisor && !closed && !notOpenYet;
 
   return (
     <PushedScreen title={title} backHref="/home" scrollRef={scrollRef}>
@@ -309,6 +312,17 @@ export function RunScreen() {
           onRetry={() => void query.refetch()}
           retrying={query.isRefetching}
         />
+      ) : null}
+
+      {notOpenYet && openIso ? (
+        <View className="mx-4 mb-3">
+          <Banner
+            tone="notice"
+            message={format(t('run.not-open-yet'), {
+              time: clockTime(openIso),
+            })}
+          />
+        </View>
       ) : null}
 
       {showCard && closeIso ? (

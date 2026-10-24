@@ -11,19 +11,19 @@
 Exactly 17, in mockup order. "Reach it with" names the sign-in that shows the state on the mock backend.
 
 1. **default** — the business's active checklists, by time of day. _raheem / priya (ZamZam)._
-2. **schedules** — hourly, daily, weekly and monthly wording on one list. _raheem: Oil Quality Check ("Every 2 hours · 11:00 AM to 9:00 PM"), Pest Control Walk, Monthly Deep Clean._
-3. **archived** — the Archived filter. _raheem: Old Audit._
-4. **archivedEmpty** — Archived filter with none. _anita (Porch Inn)._
+2. **schedules** — hourly, daily, weekly and monthly wording on one list. _create a weekly, a monthly and an hourly checklist; an hourly one every 2 hours reads "Every 2 hours · 11:00 AM to 9:00 PM"._
+3. **archived** — the Archived filter. _archive a checklist first, then switch to Archived._
+4. **archivedEmpty** — Archived filter with none. _raheem, before anything has been archived._
 5. **afterArchive** — back from CHK-06 with "{name} archived. Its history stays." Needs CHK-06; the notice store is in place.
 6. **afterRestore** — back from CHK-06 Restore with "{name} restored." Same.
 7. **noCounts** — no task or outlet counts in the list: the note line is left off. Shown when the API sends neither count.
-8. **singleOutlet** — one outlet in the business: task count only. _kabir (Kebapci)._
+8. **singleOutlet** — one outlet in the business: task count only. _Not reachable: the mock now has one business with several outlets._
 9. **empty** — no checklists yet: "No checklists yet" and a pointer. New is still in the header.
 10. **noArchivedFilter** — fallback for an API with no way to list archived checklists. **Not reachable**: nothing tells the app the API lacks it, and the mock supports it. The filter is always shown.
 11. **loading** — four skeleton cards; the filter and New stay.
 12. **errorCached** — refresh failed: banner with Retry above the cached list.
 13. **errorNoCache** — failed with nothing cached: banner with Retry, no filter, no empty state.
-14. **many** — 30 checklists: first 25, then more load as the list scrolls. _kabir: 28._
+14. **many** — 30 checklists: first 25, then more load as the list scrolls. _Not reachable: the mock has two checklists; create 26 or more to see it._
 15. **clock24** — times follow the phone's 12 or 24-hour clock.
 16. **longName** — a long Malayalam name wraps, nothing is cut off. _raheem._
 17. **forbidden** — 403 (stale link): "You don't have access to this." and nothing else.

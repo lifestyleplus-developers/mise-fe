@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { ArchivedBadge } from '@/features/outlets/archived-badge';
 import {
   classifySaveError,
@@ -41,6 +42,7 @@ export function OutletEditScreen() {
     refetch,
     isRefetching,
   } = useOutlet(Number(rawId));
+  const pull = usePullToRefresh(refetch);
 
   const forbidden = isError && isForbidden(error);
 
@@ -49,8 +51,8 @@ export function OutletEditScreen() {
       title={outlet?.name ?? t('more.outlets')}
       adminOnly
       backHref="/outlets"
-      onRefresh={() => void refetch()}
-      refreshing={isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
     >
       {forbidden ? (
         <View className="mx-4">

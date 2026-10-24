@@ -482,4 +482,16 @@ export const hi = {
   'team.close': 'बंद करें',
   'team.from-before': 'पहले से: देख लें कि वे अब भी सही हैं।',
   'team.today': 'आज',
+
+  'placeholder.coming-soon': 'जल्द आ रहा है',
+
+  'home.see-all': 'सभी देखें ({n})',
+  'home.see-less': 'कम देखें',
+  'home.show-tasks': 'कार्य दिखाएँ',
+  'home.hide-tasks': 'कार्य छिपाएँ',
+  'home.tasks-failed': 'कार्य लोड नहीं हो सके।',
+  'home.task-answered': '{task}: {answer}',
+  'home.task-open': '{task}: अभी जवाब नहीं दिया',
+  'run.not-open-yet':
+    '{time} बजे खुलेगा। अभी आप कार्य पढ़ सकते हैं, खुलने पर जवाब दे सकेंगे।',
 } satisfies Partial<Catalogue>;

@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useMe } from '@/features/auth/use-me';
 import { InactiveBadge } from '@/features/users/inactive-badge';
 import {
@@ -38,6 +39,7 @@ export function UserEditScreen() {
     refetch,
     isRefetching,
   } = useUser(Number(rawId));
+  const pull = usePullToRefresh(refetch);
 
   const forbidden = isError && isForbidden(error);
 
@@ -46,8 +48,8 @@ export function UserEditScreen() {
       title={user?.full_name ?? t('more.users')}
       adminOnly
       backHref="/users"
-      onRefresh={() => void refetch()}
-      refreshing={isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
     >
       {forbidden ? (
         <View className="mx-4">

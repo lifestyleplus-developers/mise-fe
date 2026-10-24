@@ -3,6 +3,7 @@ import { FilterChip } from '@/features/home/filter-chip';
 import { useHomeNotice } from '@/features/home/home-notice';
 import { clockTime, dayKey } from '@/features/home/run-time';
 import { RunRow, type RunRowVariant } from '@/features/home/run-row';
+import { FoldList } from '@/features/home/fold-list';
 import { RunSection, RunSectionSkeleton } from '@/features/home/run-section';
 import { useRuns } from '@/features/home/use-runs';
 import { TAB } from '@/features/shell/tabs';
@@ -100,6 +101,7 @@ export function HomeScreen() {
     return (
       <RunRow
         key={run.id}
+        runId={run.id}
         first={index === 0}
         variant={variant}
         name={run.checklist_name}
@@ -209,17 +211,26 @@ export function HomeScreen() {
         ) : null}
         {openNow.length > 0 ? (
           <RunSection icon={CirclePlay} title={t('home.open-now')}>
-            {openNow.map((run, i) => renderRow(run, i, 'open'))}
+            <FoldList
+              items={openNow}
+              renderItem={(run, i) => renderRow(run, i, 'open')}
+            />
           </RunSection>
         ) : null}
         {overseeing.length > 0 ? (
           <RunSection icon={Eye} title={t('home.overseeing')}>
-            {overseeing.map((run, i) => renderRow(run, i, 'overseeing'))}
+            <FoldList
+              items={overseeing}
+              renderItem={(run, i) => renderRow(run, i, 'overseeing')}
+            />
           </RunSection>
         ) : null}
         {upcoming.length > 0 ? (
           <RunSection icon={Clock} title={t('home.upcoming')} muted>
-            {upcoming.map((run, i) => renderRow(run, i, 'upcoming'))}
+            <FoldList
+              items={upcoming}
+              renderItem={(run, i) => renderRow(run, i, 'upcoming')}
+            />
           </RunSection>
         ) : null}
       </>

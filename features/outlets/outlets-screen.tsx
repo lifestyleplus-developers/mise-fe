@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { AddOutletSheet } from '@/features/outlets/add-outlet-sheet';
 import { ArchivedBadge } from '@/features/outlets/archived-badge';
 import { isForbidden } from '@/features/outlets/outlet-errors';
@@ -28,6 +29,7 @@ export function OutletsScreen() {
   const router = useRouter();
   const { data, isPending, isError, error, refetch, isRefetching } =
     useOutlets();
+  const pull = usePullToRefresh(refetch);
   const noticeText = useOutletNoticeText();
   const clearNotice = useOutletNotice((state) => state.clearNotice);
   const [showArchived, setShowArchived] = React.useState(false);
@@ -49,8 +51,8 @@ export function OutletsScreen() {
     <PushedScreen
       title={t('more.outlets')}
       adminOnly
-      onRefresh={() => void refetch()}
-      refreshing={isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
       action={showNew ? <NewButton onPress={openAdd} /> : undefined}
     >
       {forbidden ? (

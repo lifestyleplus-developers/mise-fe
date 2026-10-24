@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useMe } from '@/features/auth/use-me';
 import { InactiveBadge } from '@/features/users/inactive-badge';
 import { isForbidden } from '@/features/users/user-errors';
@@ -47,6 +48,7 @@ export function UsersScreen() {
     isActive: status === 'active',
     search: useDebouncedValue(search.trim()),
   });
+  const pull = usePullToRefresh(query.refetch);
 
   if (!me) return null;
 
@@ -69,8 +71,8 @@ export function UsersScreen() {
     <PushedScreen
       title={t('more.users')}
       adminOnly
-      onRefresh={() => void query.refetch()}
-      refreshing={query.isRefetching && !query.isFetchingNextPage}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
       onEndReached={loadMore}
       action={<NewButton onPress={openAdd} />}
     >

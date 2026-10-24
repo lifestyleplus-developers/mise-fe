@@ -10,8 +10,8 @@
 
 24, in mockup order. **R** = reachable on the mock backend (how). **—** = not reachable, and why.
 
-1. **default** — Kitchen Opening: some outlets running, one not. **R** — raheem. Central Kitchen is the one not running.
-2. **fresh** — runs nowhere yet, with the hint "Tick where this checklist should run." **R** — Monthly Deep Clean, after adding a task.
+1. **default** — Opening cash balance: four outlets running, Central Kitchen not. **R** — raheem.
+2. **fresh** — runs nowhere yet, with the hint "Tick where this checklist should run." **R** — a new checklist, after adding a task.
 3. **staged** — Central Kitchen ticked: "Will start", button "Apply to 1 outlet". **R**.
 4. **bothStaged** — one to start, one to stop: "Apply changes". **R**.
 5. **stopStaged** — an outlet unticked: "Will stop", button "Apply". **R**.
@@ -24,10 +24,10 @@
 12. **managerNamed** — the row now reads "Running · {name}". **R**.
 13. **pickManagerFailed** — "Couldn't save. Can't reach mise." in the picker. **—** only when the network really fails; the mock has no trigger.
 14. **stopped** — an outlet stopped by Apply: "Stopped". **R**.
-15. **reticked** — a stopped outlet ticked and applied again: "Running · {manager} · from before". **R** — stop ZamZam on Kitchen Opening, Apply, tick it again, Apply.
+15. **reticked** — a stopped outlet ticked and applied again: "Running · {manager} · from before". **R** — stop ZamZam on Opening cash balance, Apply, tick it again, Apply.
 16. **archived** — an archived outlet still carrying it: ticked, read-only, "Outlet archived". **R** — archive an outlet that runs a checklist, then open the checklist.
 17. **archivedFallback** — the platform stops a checklist when its outlet is archived: "Stopped · outlet archived". **—** the mock does not stop it. The screen shows it if the platform does.
-18. **noTasks** — no tasks yet: Apply disabled, "Add at least one task first." and Go to Tasks. **R** — Monthly Deep Clean.
+18. **noTasks** — no tasks yet: Apply disabled, "Add at least one task first." and Go to Tasks. **R** — a new checklist, before adding a task.
 19. **applyFailed** — "Couldn't save. Can't reach mise.", ticks kept, rows read "Not applied". **—** only on a real failure.
 20. **partFailed** — "Couldn't apply to {n}. Can't reach mise." **—** only on a real failure; starts go in one request and each stop in its own, so a stop can fail alone.
 21. **forbidden** — "Only head office can change where this checklist runs." **—** only on a real 403; the frame already sends non-admins away.

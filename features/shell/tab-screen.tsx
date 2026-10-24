@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useMe } from '@/features/auth/use-me';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { Text } from '@/shared/components/ui/text';
@@ -28,6 +29,7 @@ export function TabScreen({
   const t = useT();
   const insets = useSafeAreaInsets();
   const { data, isError, isRefetching, refetch } = useMe();
+  const pull = usePullToRefresh(refetch);
 
   const unreachable = isError && data !== undefined;
 
@@ -48,8 +50,8 @@ export function TabScreen({
         }
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => void refetch()}
+            refreshing={pull.refreshing}
+            onRefresh={pull.onRefresh}
           />
         }
         contentContainerStyle={{ paddingBottom: 128 + insets.bottom }}

@@ -14,23 +14,23 @@
 2. **newFilled** — a filled Daily form. **R**.
 3. **required** — Save tapped with nothing filled: "Required" under name, opening time and window. **R**.
 4. **zeroWindow** — a window under the platform's 5-minute minimum, 0 included: "The window must be at least 5 minutes." **R** — pick 0 and 0.
-5. **default** — edit, assigned (Kitchen Opening). **R** — raheem.
+5. **default** — edit, assigned (Opening cash balance). **R** — raheem.
 6. **changed** — edit with a change: Save enabled. **R**.
 7. **saving** — spinner on Save, fields locked. **R**.
 8. **saved** — "Saved." **R**.
 9. **saveFailed** — "Couldn't save. Can't reach mise." Save is the retry. **R** — name the checklist `offline`.
 10. **clock24** — times follow a 24-hour phone. **R** — phone setting.
-11. **midnight** — closes the next day (Kitchen Closing, 22:00 + 2 h 30 min). **R**.
-12. **weekly** — Pest Control Walk. **R**.
+11. **midnight** — closes the next day. **R** — Closing cash balance opens at 22:00 and stays open 2 h, so it closes at midnight; make the window longer for a clearer case.
+12. **weekly** — a weekly checklist. **R** — create one, or switch an existing checklist to Weekly.
 13. **weeklyNoDay** — Weekly with no day chosen: "Pick at least one day." **R**.
 14. **overlap** — Weekly, Monday and Tuesday, 1 d 2 h. **R**.
-15. **overlapSwitch** — Kitchen Opening (4 h) switched to Hourly. **R**.
+15. **overlapSwitch** — Opening cash balance (3 h) switched to Hourly: the window is longer than the gap. **R**.
 16. **conflict** — the platform's 409 overlap. Handled, same message. **—** the device check catches every case first, so the mock never sends one.
-17. **monthly** — Monthly Deep Clean, runs nowhere. **R**.
+17. **monthly** — a monthly checklist that runs nowhere yet. **R** — create one.
 18. **monthly31** — day 31, with "In shorter months it runs on the last day." **R**.
 19. **hourly** — Hourly, every hour, with its first and last run and "{n} runs a day". **R** — switch any checklist to Hourly.
-20. **hourly2** — every 2 hours. **R** — Oil Quality Check (every 2 hours, 11:00 to 21:00).
-21. **hourlyCleared** — "Every" changed so the last run is no longer a run: it is cleared and chosen again. **R** — Oil Quality Check, change Every to 3 hours.
+20. **hourly2** — every 2 hours. **R** — create or switch a checklist to Hourly and set Every to 2 hours.
+21. **hourlyCleared** — "Every" changed so the last run is no longer a run: it is cleared and chosen again. **R** — on an hourly checklist set to every 2 hours from 11:00 to 21:00, change Every to 3 hours.
 22. **hourlyLate** — a first run so late that none fits after it: "No later run today" and "Choose an earlier first run." **R** — set the first run to 11:00 PM.
 23. **timePicker** — opening-time picker. **R**.
 24. **timePicker24** — the same on a 24-hour phone. **R**.
@@ -38,10 +38,10 @@
 26. **lastRunPicker** — the times it can end on, every interval after the first run. **R**.
 27. **dayPicker** — day of the month, 1 to 31. **R**.
 28. **archiveConfirm** — "Are you sure you want to archive {name}?" **R**.
-29. **archiveConfirmNowhere** — a checklist that runs at no outlet. **R** — Monthly Deep Clean.
+29. **archiveConfirmNowhere** — a checklist that runs at no outlet. **R** — create one and archive it before starting it anywhere.
 30. **archiveFailed** — "Couldn't archive. It is still active." **—** only when the network really fails; the mock has no trigger.
 31. **archived** — back on CHK-10 with "{name} archived." **R**.
-32. **archivedView** — read-only, "Archived.", Restore. **R** — Old Audit.
+32. **archivedView** — read-only, "Archived.", Restore. **R** — archive a checklist, then open it from the Archived filter.
 33. **restoreFailed** — "Couldn't restore." **—** as 30.
 34. **restored** — back on CHK-10 with "{name} restored." **R**.
 35. **discard** — Back with unsaved changes: "Discard changes?" **R**.
@@ -49,9 +49,9 @@
 37. **gone** — "This checklist is no longer available." **R** — open an id that does not exist.
 38. **loading** — skeleton card under the name. **R**.
 39. **loadFailed** — "Can't reach mise." with Retry. **R**.
-40. **singleOutlet** — no Outlets row. **R** — kabir (Kebapci).
-41. **teamRow** — single-outlet business, running: a Team row. **R** — kabir.
-42. **teamRowNone** — same, no manager yet. **R**.
+40. **singleOutlet** — no Outlets row. **—** the mock now has one business with several outlets, so the one-outlet case cannot be seen.
+41. **teamRow** — single-outlet business, running: a Team row. **—** same.
+42. **teamRowNone** — same, no manager yet. **—** same.
 43. **longName** — a long Malayalam name wraps in the header and the field. **R** — raheem.
 
 ## What the states pin down

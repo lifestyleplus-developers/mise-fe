@@ -10,10 +10,10 @@
 
 34, in mockup order. **R** = reachable on the mock backend (how). **—** = not reachable, and why.
 
-1. **default** — Kitchen Opening: 12 tasks. **R** — raheem.
-2. **empty** — a new checklist: "No tasks yet." and Add task. **R** — Monthly Deep Clean.
-3. **singleOutlet** — one-outlet business, not running: Start running. **R** — kabir: add a task to any checklist (they all start empty).
-4. **singleOutletEmpty** — same, no tasks: Start running disabled, "Add at least one task first." **R** — kabir, any checklist before a task is added.
+1. **default** — Opening cash balance: 4 tasks. **R** — raheem.
+2. **empty** — a new checklist: "No tasks yet." and Add task. **R** — create a new checklist (CHK-06 → Save and add tasks).
+3. **singleOutlet** — one-outlet business, not running: Start running. **—** the mock now has one business with several outlets, so the one-outlet case cannot be seen.
+4. **singleOutletEmpty** — same, no tasks: Start running disabled, "Add at least one task first." **—** same.
 5. **menu** — a row's menu: Move up, Move down, Remove. **R**.
 6. **dragging** — a row held and moved. **R** — hold the grip.
 7. **lastTask** — the last task of a running checklist: Remove disabled, "A checklist needs at least one task." **R** — a checklist that runs somewhere, with tasks removed until one is left (no fixture has exactly one).
@@ -42,7 +42,7 @@
 30. **loading** — skeleton rows. **R**.
 31. **loadFailed** — "Can't reach mise." with Retry. **R** — offline.
 32. **longText** — long and Malayalam task text wraps. **R** — add a long task.
-33. **many** — 30 tasks. **R** — Delivery Receiving.
+33. **many** — 30 tasks. **—** no checklist has that many now; add them by hand.
 34. **startRunning** — after Start running, on to the team screen. **R** — it opens CHK-08, still a placeholder until step 6.
 
 ## What the states pin down

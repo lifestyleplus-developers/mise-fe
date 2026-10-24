@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import {
   ChecklistCard,
   ChecklistCardSkeleton,
@@ -37,6 +38,7 @@ export function ChecklistsAdminScreen() {
   const scheduleText = useScheduleText();
   const query = useChecklists({ includeArchived: true });
   const outlets = useOutlets();
+  const pull = usePullToRefresh(query.refetch);
   const noticeText = useChecklistNoticeText();
   const clearNotice = useChecklistNotice((state) => state.clearNotice);
   const [show, setShow] = React.useState<Show>('active');
@@ -154,8 +156,8 @@ export function ChecklistsAdminScreen() {
       title={t('more.checklists')}
       adminOnly
       backHref="/more"
-      onRefresh={() => void query.refetch()}
-      refreshing={query.isRefetching}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
       }}
