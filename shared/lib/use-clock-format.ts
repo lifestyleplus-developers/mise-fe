@@ -1,10 +1,5 @@
 import { useT, format } from '@/shared/i18n';
-import {
-  deviceUses12HourClock,
-  parseClock,
-  splitMinutes,
-  to12Hour,
-} from '@/shared/lib/time';
+import { deviceUses12HourClock, parseClock, to12Hour } from '@/shared/lib/time';
 import { useCallback } from 'react';
 
 /**
@@ -27,22 +22,23 @@ export function useFormatClock() {
   );
 }
 
-/** A window length as "2 h 30 min", "2 h" or "45 min". */
+/** A window length as "1 d 2 h 30 min": days once it passes a day, then hours, then minutes. */
 export function useFormatDuration() {
   const t = useT();
   return useCallback(
     (totalMinutes: number) => {
-      const { hours, minutes } = splitMinutes(totalMinutes);
-      if (hours > 0 && minutes > 0) {
-        return format(t('duration.hours-minutes'), {
-          h: String(hours),
-          m: String(minutes),
-        });
-      }
-      if (hours > 0) {
-        return format(t('duration.hours-only'), { h: String(hours) });
-      }
-      return format(t('duration.minutes-only'), { m: String(minutes) });
+      const whole = Math.max(0, Math.round(totalMinutes));
+      const days = Math.floor(whole / 1440);
+      const hours = Math.floor((whole % 1440) / 60);
+      const minutes = whole % 60;
+      const parts = [
+        days > 0 ? format(t('duration.days'), { n: String(days) }) : '',
+        hours > 0 ? format(t('duration.hours-only'), { h: String(hours) }) : '',
+        minutes > 0 || whole === 0
+          ? format(t('duration.minutes-only'), { m: String(minutes) })
+          : '',
+      ];
+      return parts.filter(Boolean).join(' ');
     },
     [t],
   );

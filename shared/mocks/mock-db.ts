@@ -1479,6 +1479,14 @@ export async function mockListChecklists(
     }
   }
 
+  // The admin list is ordered by opening time, so paging does not reshuffle.
+  if (includeArchived && mayAdminister) {
+    all.sort(
+      (a, b) =>
+        a.st_time.localeCompare(b.st_time) || a.name.localeCompare(b.name),
+    );
+  }
+
   const start = (page - 1) * pageSize;
   return {
     count: all.length,

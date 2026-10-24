@@ -8,10 +8,14 @@ import type { OutletAssignment } from '@/shared/api/types';
  * Every outlet the checklist runs or ran at. Stopped ones come back flagged
  * `is_active: false`, so a re-tick can find the people it had.
  */
-export function useAssignments(checklistId: number) {
+export function useAssignments(
+  checklistId: number,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: checklistKeys.assignments(checklistId),
     queryFn: () => api.checklists.assignments(checklistId),
+    enabled,
   });
 }
 

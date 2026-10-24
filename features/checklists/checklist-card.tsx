@@ -1,5 +1,5 @@
 import { Text } from '@/shared/components/ui/text';
-import { ChevronRight, Users } from 'lucide-react-native';
+import { Archive, ChevronRight, Users } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 type ChecklistCardProps = {
@@ -14,6 +14,8 @@ type ChecklistCardProps = {
   /** Absent for implementers: they see the card but not its analytics. */
   onOpen?: () => void;
   openLabel: string;
+  /** Marks the card with an archive icon; the open label should say so too. */
+  archived?: boolean;
   /** Absent unless the caller supervises this checklist somewhere. */
   team?: { label: string; ariaLabel: string; onPress: () => void };
 };
@@ -27,6 +29,7 @@ export function ChecklistCard({
   note,
   onOpen,
   openLabel,
+  archived = false,
   team,
 }: ChecklistCardProps) {
   return (
@@ -41,9 +44,14 @@ export function ChecklistCard({
       ) : null}
       <View pointerEvents="box-none" className="flex-row items-start gap-3 p-4">
         <View pointerEvents="none" className="min-w-0 flex-1">
-          <Text className="font-sans-semibold text-[16px] leading-snug">
-            {name}
-          </Text>
+          <View className="flex-row items-start gap-1.5">
+            {archived ? (
+              <Archive className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+            ) : null}
+            <Text className="font-sans-semibold min-w-0 flex-1 text-[16px] leading-snug">
+              {name}
+            </Text>
+          </View>
           <Text className="text-muted-foreground mt-0.5 text-[13px] leading-snug">
             {schedule}
           </Text>

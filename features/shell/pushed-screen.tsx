@@ -31,6 +31,8 @@ type PushedScreenProps = {
   scrollRef?: React.Ref<ScrollView>;
   /** Called when the scroll nears the bottom, for paged lists. */
   onEndReached?: () => void;
+  /** Pinned under the scrolling content, e.g. a Save button. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -44,6 +46,7 @@ export function PushedScreen({
   refreshing = false,
   scrollRef,
   onEndReached,
+  footer,
   children,
 }: PushedScreenProps) {
   const { data: me, isError, error } = useMe();
@@ -121,6 +124,11 @@ export function PushedScreen({
         >
           {children}
         </ScrollView>
+        {footer ? (
+          <View className="border-border bg-card border-t px-4 pt-3 pb-4">
+            {footer}
+          </View>
+        ) : null}
       </SafeAreaView>
     </View>
   );

@@ -5,10 +5,14 @@ import { api } from '@/shared/api/client';
 import type { AssignmentMember, AssignmentRole } from '@/shared/api/types';
 
 /** Both buckets of one assignment, Checklist Managers first. */
-export function useMembers(assignmentId: number) {
+export function useMembers(
+  assignmentId: number,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: checklistKeys.members(assignmentId),
     queryFn: () => api.assignments.members(assignmentId),
+    enabled,
   });
 }
 
