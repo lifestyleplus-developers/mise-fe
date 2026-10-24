@@ -428,4 +428,35 @@ export const hi = {
   'team.reason-member': 'यहाँ टीम सदस्य हैं',
   'team.no-result':
     '{name} नाम का कोई नहीं मिला। {name} का खाता बनवाने के लिए मुख्य कार्यालय से कहें।',
+
+  'team.managers': 'चेकलिस्ट मैनेजर · {n}',
+  'team.members': 'टीम सदस्य · {n}',
+  'team.remove': 'हटाएँ',
+  'team.remove-aria': '{name} को हटाएँ',
+  'team.add-manager': 'चेकलिस्ट मैनेजर जोड़ें',
+  'team.add-member': 'टीम सदस्य जोड़ें',
+  'team.managers-empty':
+    'अभी कोई चेकलिस्ट मैनेजर नहीं। यहाँ की समस्याओं का कोई मैनेजर नहीं होगा।',
+  'team.members-empty':
+    'अभी कोई टीम सदस्य नहीं। इस चेकलिस्ट को करने वालों को जोड़ें।',
+  'team.reason-already-member': 'पहले से टीम में है',
+  'team.reason-here-manager': 'यहाँ चेकलिस्ट मैनेजर है',
+  'team.added': '{name} जोड़ा गया।',
+  'team.removed': '{name} हटाया गया।',
+  'team.remove-title': '{name} को {where} से हटाएँ?',
+  'team.remove-body': 'पुराने जवाबों में {name} का नाम बना रहेगा।',
+  'team.remove-last-member':
+    '{where} को कोई पूरा नहीं कर पाएगा। बारियाँ छूट जाएँगी।',
+  'team.remove-last-manager': '{where} की समस्याओं का कोई मैनेजर नहीं होगा।',
+  'team.conflict': '{name} पहले से इस टीम में है।',
+  'team.not-yours': 'आप अब {name} पर नहीं हैं।',
+  'team.forbidden-manager':
+    'आप केवल उन चेकलिस्ट के टीम सदस्य बदल सकते हैं जिन्हें आप सँभालते हैं।',
+  'team.role-lost': 'केवल मुख्य कार्यालय इस टीम को बदल सकता है।',
+  'team.server-error': 'इस व्यक्ति को इस चेकलिस्ट में नहीं जोड़ा जा सकता।',
+  'team.stop': 'चलाना बंद करें',
+  'team.stop-title': '{name} रोकें?',
+  'team.stop-body': 'इतिहास बना रहेगा, पर आगे नई बारियाँ नहीं बनेंगी।',
+  'team.stopped': '{name} रोक दी गई।',
+  'team.at': '{outlet} पर {name}',
 } satisfies Partial<Catalogue>;

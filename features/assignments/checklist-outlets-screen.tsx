@@ -1,4 +1,3 @@
-import { ManagerPicker } from '@/features/assignments/manager-picker';
 import { OutletRow } from '@/features/assignments/outlet-row';
 import {
   applyLabel,
@@ -12,6 +11,7 @@ import {
   useAssignments,
   useStopAssignment,
 } from '@/features/assignments/use-assignments';
+import { TeamPicker } from '@/features/assignments/team-picker';
 import { useTeams } from '@/features/assignments/use-members';
 import { classifyEditorError } from '@/features/checklist-editor/checklist-errors';
 import { useChecklist } from '@/features/checklist-editor/use-checklist';
@@ -356,9 +356,11 @@ export function ChecklistOutletsScreen() {
       )}
 
       {pickedOutlet && pickedRow ? (
-        <ManagerPicker
+        <TeamPicker
           assignmentId={pickedRow.id}
-          outletName={pickedOutlet.name}
+          role="CL_ADMIN"
+          title={format(t('out.pick-manager'), { outlet: pickedOutlet.name })}
+          viewerIsAdmin
           onClose={() => setPicking(null)}
         />
       ) : null}

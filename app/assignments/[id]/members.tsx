@@ -1,1 +1,1 @@
-export { AssignmentMembersScreen as default } from '@/features/checklists/assignment-members-screen';
+export { AssignmentMembersScreen as default } from '@/features/assignments/assignment-members-screen';

@@ -213,7 +213,7 @@
     "interface_language": "EN",
     "memberships": {
       "cl_admin_assignments": [],
-      "cl_imp_assignments": [],
+      "cl_imp_assignments": [12],
       "attendance_configs": [],
       "inventory_outlets": [],
       "spot_check_outlets": []

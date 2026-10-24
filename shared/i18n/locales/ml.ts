@@ -442,4 +442,35 @@ export const ml = {
   'team.reason-member': 'ഇവിടെ ടീം അംഗമാണ്',
   'team.no-result':
     '{name} എന്ന പേരിൽ ആരുമില്ല. {name}-ന് ഒരു അക്കൗണ്ട് ഉണ്ടാക്കാൻ ഹെഡ് ഓഫീസിനോട് ആവശ്യപ്പെടുക.',
+
+  'team.managers': 'ചെക്ക്‌ലിസ്റ്റ് മാനേജർമാർ · {n}',
+  'team.members': 'ടീം അംഗങ്ങൾ · {n}',
+  'team.remove': 'നീക്കം ചെയ്യുക',
+  'team.remove-aria': '{name} നീക്കം ചെയ്യുക',
+  'team.add-manager': 'ചെക്ക്‌ലിസ്റ്റ് മാനേജരെ ചേർക്കുക',
+  'team.add-member': 'ടീം അംഗത്തെ ചേർക്കുക',
+  'team.managers-empty':
+    'ചെക്ക്‌ലിസ്റ്റ് മാനേജർ ഇതുവരെ ഇല്ല. ഇവിടത്തെ ഇഷ്യൂകൾക്ക് മാനേജർ ഉണ്ടാകില്ല.',
+  'team.members-empty':
+    'ടീം അംഗങ്ങൾ ഇതുവരെ ഇല്ല. ഈ ചെക്ക്‌ലിസ്റ്റ് ചെയ്യുന്നവരെ ചേർക്കുക.',
+  'team.reason-already-member': 'ഇതിനകം ടീമിലുണ്ട്',
+  'team.reason-here-manager': 'ഇവിടെ ചെക്ക്‌ലിസ്റ്റ് മാനേജരാണ്',
+  'team.added': '{name} ചേർത്തു.',
+  'team.removed': '{name} നീക്കം ചെയ്തു.',
+  'team.remove-title': '{where}-ൽ നിന്ന് {name} നീക്കം ചെയ്യണോ?',
+  'team.remove-body': 'പഴയ ഉത്തരങ്ങളിൽ {name}-ന്റെ പേര് നിലനിൽക്കും.',
+  'team.remove-last-member':
+    '{where} പൂർത്തിയാക്കാൻ ആർക്കും കഴിയില്ല. റണ്ണുകൾ വിട്ടുപോകും.',
+  'team.remove-last-manager': '{where}-ന്റെ ഇഷ്യൂകൾക്ക് മാനേജർ ഉണ്ടാകില്ല.',
+  'team.conflict': '{name} ഇതിനകം ഈ ടീമിലുണ്ട്.',
+  'team.not-yours': 'നിങ്ങൾ ഇനി {name}-ൽ ഇല്ല.',
+  'team.forbidden-manager':
+    'നിങ്ങൾ മാനേജ് ചെയ്യുന്ന ചെക്ക്‌ലിസ്റ്റുകളിലെ ടീം അംഗങ്ങളെ മാത്രമേ മാറ്റാൻ കഴിയൂ.',
+  'team.role-lost': 'ഹെഡ് ഓഫീസിന് മാത്രമേ ഈ ടീം മാറ്റാൻ കഴിയൂ.',
+  'team.server-error': 'ആ വ്യക്തിയെ ഈ ചെക്ക്‌ലിസ്റ്റിൽ ചേർക്കാൻ കഴിയില്ല.',
+  'team.stop': 'പ്രവർത്തനം നിർത്തുക',
+  'team.stop-title': '{name} നിർത്തണോ?',
+  'team.stop-body': 'ചരിത്രം നിലനിൽക്കും, പക്ഷേ ഇനി പുതിയ റണ്ണുകൾ ഉണ്ടാകില്ല.',
+  'team.stopped': '{name} നിർത്തി.',
+  'team.at': '{outlet}-ൽ {name}',
 } satisfies Partial<Catalogue>;

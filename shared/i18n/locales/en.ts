@@ -450,6 +450,37 @@ export const en = {
   'team.reason-member': 'Team Member here',
   'team.no-result':
     'No one called {name}. Ask head office to create an account for {name}.',
+
+  'team.managers': 'Checklist Managers · {n}',
+  'team.members': 'Team Members · {n}',
+  'team.remove': 'Remove',
+  'team.remove-aria': 'Remove {name}',
+  'team.add-manager': 'Add Checklist Manager',
+  'team.add-member': 'Add Team Member',
+  'team.managers-empty':
+    'No Checklist Manager yet. Issues here will have no manager.',
+  'team.members-empty':
+    'No Team Members yet. Add the people who do this checklist.',
+  'team.reason-already-member': 'Already on the team',
+  'team.reason-here-manager': 'Checklist Manager here',
+  'team.added': '{name} added.',
+  'team.removed': '{name} removed.',
+  'team.remove-title': 'Remove {name} from {where}?',
+  'team.remove-body': "Past answers keep {name}'s name.",
+  'team.remove-last-member':
+    'No one will be able to complete {where}. Runs will be missed.',
+  'team.remove-last-manager': 'Issues for {where} will have no manager.',
+  'team.conflict': '{name} is already on this team.',
+  'team.not-yours': "You're no longer on {name}.",
+  'team.forbidden-manager':
+    'You can only change Team Members on checklists you manage.',
+  'team.role-lost': 'Only head office can change this team.',
+  'team.server-error': "That person can't be added to this checklist.",
+  'team.stop': 'Stop running',
+  'team.stop-title': 'Stop {name}?',
+  'team.stop-body': 'Its history stays, but no further runs are created.',
+  'team.stopped': '{name} stopped.',
+  'team.at': '{name} at {outlet}',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

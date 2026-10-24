@@ -66,3 +66,22 @@ export function useStopAssignment(checklistId: number) {
     },
   });
 }
+
+/**
+ * Stops one assignment when only its id is known, as on the team screen: the
+ * checklist it belongs to is not in hand, so every checklist's cache is
+ * refreshed rather than one.
+ */
+export function useStopRunning(assignmentId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.assignments.deactivate(assignmentId),
+    networkMode: 'always',
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['checklist'] });
+      void queryClient.invalidateQueries({ queryKey: checklistKeys.lists });
+      void queryClient.invalidateQueries({ queryKey: ['runs'] });
+      void queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+  });
+}

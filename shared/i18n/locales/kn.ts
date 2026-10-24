@@ -431,4 +431,35 @@ export const kn = {
   'team.reason-member': 'ಇಲ್ಲಿ ತಂಡದ ಸದಸ್ಯ',
   'team.no-result':
     '{name} ಎಂಬ ಹೆಸರಿನವರು ಯಾರೂ ಇಲ್ಲ. {name} ಗಾಗಿ ಖಾತೆ ರಚಿಸಲು ಮುಖ್ಯ ಕಚೇರಿಯನ್ನು ಕೇಳಿ.',
+
+  'team.managers': 'ಚೆಕ್‌ಲಿಸ್ಟ್ ಮ್ಯಾನೇಜರ್‌ಗಳು · {n}',
+  'team.members': 'ತಂಡದ ಸದಸ್ಯರು · {n}',
+  'team.remove': 'ತೆಗೆದುಹಾಕಿ',
+  'team.remove-aria': '{name} ಅವರನ್ನು ತೆಗೆದುಹಾಕಿ',
+  'team.add-manager': 'ಚೆಕ್‌ಲಿಸ್ಟ್ ಮ್ಯಾನೇಜರ್ ಸೇರಿಸಿ',
+  'team.add-member': 'ತಂಡದ ಸದಸ್ಯರನ್ನು ಸೇರಿಸಿ',
+  'team.managers-empty':
+    'ಇನ್ನೂ ಚೆಕ್‌ಲಿಸ್ಟ್ ಮ್ಯಾನೇಜರ್ ಇಲ್ಲ. ಇಲ್ಲಿನ ಸಮಸ್ಯೆಗಳಿಗೆ ಮ್ಯಾನೇಜರ್ ಇರುವುದಿಲ್ಲ.',
+  'team.members-empty':
+    'ಇನ್ನೂ ತಂಡದ ಸದಸ್ಯರಿಲ್ಲ. ಈ ಚೆಕ್‌ಲಿಸ್ಟ್ ಮಾಡುವವರನ್ನು ಸೇರಿಸಿ.',
+  'team.reason-already-member': 'ಈಗಾಗಲೇ ತಂಡದಲ್ಲಿದ್ದಾರೆ',
+  'team.reason-here-manager': 'ಇಲ್ಲಿ ಚೆಕ್‌ಲಿಸ್ಟ್ ಮ್ಯಾನೇಜರ್',
+  'team.added': '{name} ಸೇರಿಸಲಾಗಿದೆ.',
+  'team.removed': '{name} ತೆಗೆದುಹಾಕಲಾಗಿದೆ.',
+  'team.remove-title': '{where} ನಿಂದ {name} ಅವರನ್ನು ತೆಗೆದುಹಾಕಬೇಕೆ?',
+  'team.remove-body': 'ಹಳೆಯ ಉತ್ತರಗಳಲ್ಲಿ {name} ಅವರ ಹೆಸರು ಉಳಿಯುತ್ತದೆ.',
+  'team.remove-last-member':
+    '{where} ಅನ್ನು ಯಾರೂ ಪೂರ್ಣಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ. ರನ್‌ಗಳು ತಪ್ಪಿಹೋಗುತ್ತವೆ.',
+  'team.remove-last-manager': '{where} ಸಮಸ್ಯೆಗಳಿಗೆ ಮ್ಯಾನೇಜರ್ ಇರುವುದಿಲ್ಲ.',
+  'team.conflict': '{name} ಈಗಾಗಲೇ ಈ ತಂಡದಲ್ಲಿದ್ದಾರೆ.',
+  'team.not-yours': 'ನೀವು ಇನ್ನು {name} ನಲ್ಲಿ ಇಲ್ಲ.',
+  'team.forbidden-manager':
+    'ನೀವು ನಿರ್ವಹಿಸುವ ಚೆಕ್‌ಲಿಸ್ಟ್‌ಗಳಲ್ಲಿ ತಂಡದ ಸದಸ್ಯರನ್ನು ಮಾತ್ರ ಬದಲಿಸಬಹುದು.',
+  'team.role-lost': 'ಮುಖ್ಯ ಕಚೇರಿ ಮಾತ್ರ ಈ ತಂಡವನ್ನು ಬದಲಿಸಬಹುದು.',
+  'team.server-error': 'ಆ ವ್ಯಕ್ತಿಯನ್ನು ಈ ಚೆಕ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿಸಲಾಗುವುದಿಲ್ಲ.',
+  'team.stop': 'ನಡೆಸುವುದನ್ನು ನಿಲ್ಲಿಸಿ',
+  'team.stop-title': '{name} ನಿಲ್ಲಿಸಬೇಕೆ?',
+  'team.stop-body': 'ಇತಿಹಾಸ ಉಳಿಯುತ್ತದೆ, ಆದರೆ ಇನ್ನು ರನ್‌ಗಳು ಆಗುವುದಿಲ್ಲ.',
+  'team.stopped': '{name} ನಿಲ್ಲಿಸಲಾಗಿದೆ.',
+  'team.at': '{outlet} ನಲ್ಲಿ {name}',
 } satisfies Partial<Catalogue>;
