@@ -49,13 +49,26 @@ export function useUnsavedChanges<T>({
     });
   }, [navigation, guarding]);
 
+  // The router may dispatch a navigation a tick after `leave` returns, so the question
+  // stays off until the screen is actually gone. If the screen is still here when it
+  // comes back into focus, the navigation did not remove it: ask again from then on.
+  React.useEffect(
+    () =>
+      navigation.addListener('focus', () => {
+        bypass.current = false;
+      }),
+    [navigation],
+  );
+
   /** Runs a navigation without the question; for after a successful save. */
   function leave(navigate: () => void) {
     bypass.current = true;
     try {
       navigate();
-    } finally {
+    } catch (error) {
+      // It never started, so the screen is staying: the question applies again.
       bypass.current = false;
+      throw error;
     }
   }
 
