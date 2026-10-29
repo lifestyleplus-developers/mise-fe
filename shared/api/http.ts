@@ -1,3 +1,4 @@
+import { clearTokens, getTokens, setTokens, type Tokens } from './session';
 import type { ApiErrorBody } from './types';
 
 /**
@@ -30,6 +31,8 @@ type RequestOptions = {
   query?: Record<string, string | number | boolean | null | undefined>;
   /** Sent as JSON. */
   body?: unknown;
+  /** False for login and refresh, which carry no token. Default true. */
+  authenticated?: boolean;
 };
 
 function buildUrl(path: string, query: RequestOptions['query']): string {
@@ -68,11 +71,67 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   return typeof error === 'object' && error !== null && 'code' in error;
 }
 
+async function send(
+  path: string,
+  options: RequestOptions,
+  access: string | null,
+): Promise<{ response: Response; parsed: unknown }> {
+  const { method = 'GET', query, body } = options;
+  const response = await fetch(buildUrl(path, query), {
+    method,
+    headers: {
+      Accept: 'application/json',
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...(access ? { Authorization: `Bearer ${access}` } : {}),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  return { response, parsed: await readBody(response) };
+}
+
+/**
+ * One refresh at a time: when several calls find the token expired together,
+ * they share a single `/auth/refresh`. Refresh rotates the refresh token and
+ * blacklists the old one, so a second refresh with it would sign the person out.
+ */
+let refreshing: Promise<boolean> | null = null;
+
+function refreshTokens(refresh: string): Promise<boolean> {
+  refreshing ??= (async () => {
+    try {
+      const { response, parsed } = await send(
+        '/auth/refresh',
+        { method: 'POST', body: { refresh } },
+        null,
+      );
+      if (!response.ok) {
+        await clearTokens();
+        return false;
+      }
+      await setTokens(parsed as Tokens);
+      return true;
+    } catch {
+      // No answer is not a rejection: keep the tokens and let the call fail as
+      // unreachable, so a dropped signal does not sign the person out.
+      throw new Error('Could not reach the server to refresh the session.');
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
+}
+
 /**
  * One call to the platform (API Contract §1). Resolves with the parsed JSON, or
  * `undefined` for an empty answer such as a 204. Rejects with an `ApiError` for
  * any non-2xx answer; a call that never reached the server rejects with the
  * network error `fetch` raised, which screens read as "unreachable".
+ *
+ * Calls carry the saved access token, read when the call is sent, not when it
+ * was queued. A 401 on one means the token is missing, expired or ended (§15):
+ * the session is refreshed once and the call repeated. If the refresh is
+ * refused the tokens are cleared and the 401 reaches the caller, which returns
+ * to Login.
  */
 export async function request<T>(
   path: string,
@@ -81,17 +140,18 @@ export async function request<T>(
   if (!API_BASE_URL) {
     throw new Error('EXPO_PUBLIC_API_BASE_URL is not set. See .env.');
   }
-  const { method = 'GET', query, body } = options;
-  const response = await fetch(buildUrl(path, query), {
-    method,
-    headers: {
-      Accept: 'application/json',
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  const authenticated = options.authenticated ?? true;
+  const saved = authenticated ? await getTokens() : null;
 
-  const parsed = await readBody(response);
+  let result = await send(path, options, saved?.access ?? null);
+  if (authenticated && result.response.status === 401 && saved) {
+    if (await refreshTokens(saved.refresh)) {
+      const fresh = await getTokens();
+      result = await send(path, options, fresh?.access ?? null);
+    }
+  }
+
+  const { response, parsed } = result;
   if (!response.ok) {
     throw new ApiError(
       response.status,
