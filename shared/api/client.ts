@@ -102,7 +102,7 @@ export const api = {
   outlets: {
     /** GET /outlets?include_archived=true */
     list(): Promise<Outlet[]> {
-      // TODO(server): GET {API_BASE_URL}/api/v1/outlets?include_archived=true (paginated)
+      // TODO(server): requestAll('/outlets', { include_archived: true })
       return mockListOutlets();
     },
 
@@ -214,7 +214,7 @@ export const api = {
 
     /** GET /checklists/{id}/tasks — ordered. */
     tasks(id: number): Promise<Task[]> {
-      // TODO(server): GET {API_BASE_URL}/api/v1/checklists/{id}/tasks
+      // TODO(server): requestAll(`/checklists/${id}/tasks`)
       return mockListTasks(id);
     },
 
@@ -232,7 +232,7 @@ export const api = {
 
     /** GET /checklists/{id}/assignments — the outlets it runs or ran at. */
     assignments(id: number): Promise<OutletAssignment[]> {
-      // TODO(server): GET {API_BASE_URL}/api/v1/checklists/{id}/assignments
+      // TODO(server): requestAll(`/checklists/${id}/assignments`)
       return mockListAssignments(id);
     },
 
