@@ -20,16 +20,13 @@ export type TaskForm = {
 
 export const DEFAULT_WEIGHT = 5;
 
-/** A new reading is in degrees Celsius. The author is not asked: it is not theirs to choose. */
-export const DEFAULT_UNIT = '°C';
-
+/** A new reading has no unit and no limits: it is only logged until the author adds them. */
 export const EMPTY_TASK_FORM: TaskForm = {
   type: null,
   text: '',
-  unit: DEFAULT_UNIT,
-  // A new reading starts with a range of 1 to 5; clear both to only log it.
-  min: '1',
-  max: '5',
+  unit: '',
+  min: '',
+  max: '',
   weight: DEFAULT_WEIGHT,
   askWhy: false,
 };

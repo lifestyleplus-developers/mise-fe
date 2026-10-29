@@ -101,6 +101,11 @@ type MockDb = {
   answers: Map<number, AnswerTaskRequest>;
   /** Upload keys per run task, so an answer's `image_url` can resolve. */
   signedUploadKeys: Map<number, string>;
+  /** Image task id → the stand-in AI verdict and when it becomes visible. */
+  judgements?: Map<
+    number,
+    { readyAt: number; verdict: 'PASS' | 'FAIL'; comment: string }
+  >;
   /** Authored checklists, tasks and assignments; seeded on first use. */
   checklistState?: ChecklistState;
 };
@@ -617,28 +622,40 @@ const CASH_OUTLETS = [
  * How far through each outlet's opening count is differs, to show every progress.
  */
 const OPENING_PROGRESS = [2, 0, 4, 1];
-const RUN_TEMPLATES: RunTemplate[] = CASH_OUTLETS.flatMap((outlet, index) => [
+const RUN_TEMPLATES: RunTemplate[] = [
+  ...CASH_OUTLETS.flatMap((outlet, index) => [
+    {
+      assignmentId: outlet.opening,
+      checklist: 'Opening cash balance',
+      outlet: outlet.name,
+      open: 480,
+      close: 660,
+      todayFromNow: { open: -60 + index * 10, close: 120 + index * 20 },
+      total: 4,
+      answered: OPENING_PROGRESS[index],
+    },
+    {
+      assignmentId: outlet.closing,
+      checklist: 'Closing cash balance',
+      outlet: outlet.name,
+      open: 1320,
+      close: 1440,
+      todayFromNow: { open: 180 + index * 10, close: 300 + index * 10 },
+      total: 5,
+      answered: 0,
+    },
+  ]),
   {
-    assignmentId: outlet.opening,
-    checklist: 'Opening cash balance',
-    outlet: outlet.name,
-    open: 480,
-    close: 660,
-    todayFromNow: { open: -60 + index * 10, close: 120 + index * 20 },
-    total: 4,
-    answered: OPENING_PROGRESS[index],
-  },
-  {
-    assignmentId: outlet.closing,
-    checklist: 'Closing cash balance',
-    outlet: outlet.name,
-    open: 1320,
-    close: 1440,
-    todayFromNow: { open: 180 + index * 10, close: 300 + index * 10 },
-    total: 5,
+    // Open from 12:00 am to 11:55 pm every day, for trying the photo check at any hour.
+    assignmentId: 31,
+    checklist: 'Test Checklist',
+    outlet: 'ZamZam',
+    open: 0,
+    close: 1435,
+    total: 3,
     answered: 0,
   },
-]);
+];
 
 /** Today's and tomorrow's runs for the caller's assignments. */
 function buildRuns(
@@ -747,21 +764,83 @@ const CLOSING_CASH_TASKS: TaskTemplate[] = [
   { type: 'IMAGE', text: 'Photograph the closing cash count' },
 ];
 
+/** Two photo tasks and a Yes/No, for trying the AI photo check. */
+const TEST_CHECKLIST_TASKS: TaskTemplate[] = [
+  { type: 'IMAGE', text: 'Photograph the counter' },
+  { type: 'IMAGE', text: 'Photograph the storage shelf' },
+  { type: 'BINARY', text: 'The area is clean', askWhy: false },
+];
+
 /** Both cash checklists have the same tasks at every outlet. */
-const TASK_TEMPLATES: Record<number, TaskTemplate[]> = Object.fromEntries(
-  CASH_OUTLETS.flatMap((outlet) => [
-    [outlet.opening, OPENING_CASH_TASKS],
-    [outlet.closing, CLOSING_CASH_TASKS],
-  ]),
-);
+const TASK_TEMPLATES: Record<number, TaskTemplate[]> = {
+  ...Object.fromEntries(
+    CASH_OUTLETS.flatMap((outlet) => [
+      [outlet.opening, OPENING_CASH_TASKS],
+      [outlet.closing, CLOSING_CASH_TASKS],
+    ]),
+  ),
+  31: TEST_CHECKLIST_TASKS,
+};
+
+/** The stand-in for the AI evaluation: how long it "looks" at a photo, and the odds of a pass. */
+const JUDGE_MIN_MS = 3_000;
+const JUDGE_MAX_MS = 5_000;
+const JUDGE_PASS_CHANCE = 0.6;
+
+const JUDGE_COMMENTS = {
+  PASS: [
+    'The photo is clear and shows what the task asks for.',
+    'Everything the task asks about is in frame and easy to see.',
+    'The subject is well lit and nothing important is hidden.',
+  ],
+  FAIL: [
+    'The photo is too dark to make out what is shown.',
+    'Part of what the task asks about is cut off at the edge of the frame.',
+    'What is in the photo does not match what the task asks for.',
+  ],
+};
+
+/** A photo was just submitted: pick its verdict now, show it after a short wait. */
+function startJudgement(taskId: number): void {
+  db.judgements ??= new Map();
+  const verdict = Math.random() < JUDGE_PASS_CHANCE ? 'PASS' : 'FAIL';
+  const comments = JUDGE_COMMENTS[verdict];
+  db.judgements.set(taskId, {
+    readyAt:
+      Date.now() + JUDGE_MIN_MS + Math.random() * (JUDGE_MAX_MS - JUDGE_MIN_MS),
+    verdict,
+    comment: comments[Math.floor(Math.random() * comments.length)],
+  });
+}
+
+/** PENDING_JUDGEMENT until the wait is over, then the verdict picked at submit. */
+function judgementOutcome(taskId: number): RunTask['outcome'] {
+  const judgement = db.judgements?.get(taskId);
+  if (!judgement) return 'PENDING_JUDGEMENT';
+  return Date.now() < judgement.readyAt
+    ? 'PENDING_JUDGEMENT'
+    : judgement.verdict;
+}
+
+/** The AI's reason, once its verdict is visible. */
+function judgementComment(taskId: number): string | null {
+  const judgement = db.judgements?.get(taskId);
+  return judgement && Date.now() >= judgement.readyAt
+    ? judgement.comment
+    : null;
+}
 
 function outcomeFor(
   task: TaskTemplate,
   fallback: NonNullable<TaskTemplate['answer']> | undefined,
   written?: AnswerTaskRequest,
+  taskId?: number,
 ): RunTask['outcome'] {
   if (task.type === 'IMAGE') {
-    return written?.image_key !== undefined ? 'PENDING_JUDGEMENT' : 'PASS';
+    if (written?.image_key === undefined) return 'PASS';
+    return taskId === undefined
+      ? 'PENDING_JUDGEMENT'
+      : judgementOutcome(taskId);
   }
   if (task.type === 'BINARY') {
     if (written?.answer_bool !== undefined) {
@@ -829,8 +908,12 @@ function buildTasks(
             : null,
       image_url: writtenImage ? `mock://storage/${writtenImage}` : null,
       comment: answer?.comment ?? null,
+      ai_comment:
+        task.type === 'IMAGE' && written?.image_key !== undefined
+          ? judgementComment(id)
+          : null,
       outcome: written
-        ? outcomeFor(task, templateAnswer, written)
+        ? outcomeFor(task, templateAnswer, written, id)
         : templateAnswer
           ? outcomeFor(task, templateAnswer)
           : null,
@@ -1860,6 +1943,9 @@ export async function mockAnswerTask(
   }
 
   db.answers.set(id, next);
+  if (task.type === 'IMAGE' && request.image_key !== undefined) {
+    startJudgement(id);
+  }
   const built = buildTasks(assignmentId, run.answered_count, run.window_open);
   const answered = built.find((candidate) => candidate.id === id);
   if (!answered) throw apiError(404, 'not_found', 'Not found.');

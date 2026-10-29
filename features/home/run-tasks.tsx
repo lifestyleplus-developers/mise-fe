@@ -4,7 +4,7 @@ import { Skeleton } from '@/shared/components/skeleton';
 import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { format, useT } from '@/shared/i18n';
-import { Check, Circle, Flag } from 'lucide-react-native';
+import { Check, Circle, Clock, Flag } from 'lucide-react-native';
 import { View } from 'react-native';
 
 /** What was answered, in a few words: "Yes", "No", "3.8 °C" or "Photo taken". */
@@ -12,7 +12,11 @@ function useAnswerText() {
   const t = useT();
   return (task: RunTask): string | null => {
     if (task.answered_at === null) return null;
-    if (task.answer_type === 'IMAGE') return t('run.photo-taken');
+    if (task.answer_type === 'IMAGE') {
+      return task.outcome === 'PENDING_JUDGEMENT'
+        ? t('run.ai-checking-short')
+        : t('run.photo-taken');
+    }
     if (task.answer_type === 'BINARY') {
       return task.answer_bool ? t('run.yes') : t('run.no');
     }
@@ -66,6 +70,7 @@ export function RunTasks({ runId }: { runId: number }) {
       {query.data.tasks.map((task) => {
         const answer = answerText(task);
         const failed = task.outcome === 'FAIL';
+        const judging = task.outcome === 'PENDING_JUDGEMENT';
         return (
           <View
             key={task.id}
@@ -78,6 +83,8 @@ export function RunTasks({ runId }: { runId: number }) {
           >
             {answer === null ? (
               <Circle className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+            ) : judging ? (
+              <Clock className="text-pending-soft-foreground mt-0.5 size-4 shrink-0" />
             ) : failed ? (
               <Flag className="text-destructive-soft-foreground mt-0.5 size-4 shrink-0" />
             ) : (

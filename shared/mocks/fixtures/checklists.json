@@ -25,6 +25,19 @@
       "interval_hours": null,
       "last_run_time": null,
       "is_archived": false
+    },
+    {
+      "id": 103,
+      "tenant_id": 7,
+      "name": "Test Checklist",
+      "recurrence": "DAILY",
+      "st_time": "00:00",
+      "deadline_minutes": 1435,
+      "weekdays": null,
+      "day_of_month": null,
+      "interval_hours": null,
+      "last_run_time": null,
+      "is_archived": false
     }
   ],
   "assignments": [
@@ -83,6 +96,13 @@
       "checklist_id": 102,
       "outlet_name": "ZamZam Grande",
       "score": 81
+    },
+    {
+      "id": 31,
+      "tenant_id": 7,
+      "checklist_id": 103,
+      "outlet_name": "ZamZam",
+      "score": 100
     }
   ]
 }

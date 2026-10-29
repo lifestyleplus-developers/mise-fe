@@ -4,6 +4,7 @@ import { clockTime, dayKey } from '@/features/home/run-time';
 import { useRuns } from '@/features/home/use-runs';
 import { AnswerDisplay, type AnswerView } from '@/features/run/answer-display';
 import { CommentSheet } from '@/features/run/comment-sheet';
+import { AiVerdict } from '@/features/run/ai-verdict';
 import { PhotoRow } from '@/features/run/photo-row';
 import { RunProgressCard } from '@/features/run/run-progress';
 import { TaskRow, TaskRowsSkeleton } from '@/features/run/task-row';
@@ -422,6 +423,12 @@ export function RunScreen() {
                   }
                   onLayout={(y) => rowY.current.set(task.id, y)}
                 >
+                  {isImage && !open ? (
+                    <AiVerdict
+                      outcome={task.outcome}
+                      comment={task.ai_comment}
+                    />
+                  ) : null}
                   {isAnswering && !open && !editing ? (
                     <Pressable
                       accessibilityRole="button"

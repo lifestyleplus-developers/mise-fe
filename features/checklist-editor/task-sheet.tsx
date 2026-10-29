@@ -248,6 +248,16 @@ function TaskSheet({
 
             {form.type === 'NUMBER' ? (
               <>
+                <TextField
+                  label={t('task.unit')}
+                  placeholder={t('task.unit-placeholder')}
+                  value={form.unit}
+                  editable={!saving}
+                  autoCapitalize="none"
+                  onChangeText={(unit) =>
+                    change({ unit: unit.replace(/[\r\n]+/g, ' ') })
+                  }
+                />
                 <View className="gap-1">
                   <View className="flex-row gap-3">
                     <LimitField
