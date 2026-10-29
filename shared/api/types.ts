@@ -42,9 +42,12 @@ export type LoginResponse = {
   refresh: string;
 };
 
-/** POST /auth/login → 409 `ambiguous_username` — §2's businesses array. */
-export type AmbiguousUsernameBody = {
-  businesses: BusinessRef[];
+/**
+ * POST /auth/login → 409 `ambiguous_username` — §2: the businesses sit inside
+ * the error, as `error.businesses`.
+ */
+export type AmbiguousUsernameBody = ApiErrorBody & {
+  error: { businesses: BusinessRef[] };
 };
 
 /** A business the username exists in, offered by the 409. */

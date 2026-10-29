@@ -6,7 +6,6 @@ import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 import {
   API_ERROR_CODE,
   type AmbiguousUsernameBody,
-  type ApiErrorBody,
   type BusinessRef,
   type LoginRequest,
   type LoginResponse,
@@ -74,9 +73,7 @@ export function useLogin() {
         error instanceof ApiError &&
         error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
       ) {
-        setCandidates(
-          (error.body as ApiErrorBody & AmbiguousUsernameBody).businesses,
-        );
+        setCandidates((error.body as AmbiguousUsernameBody).error.businesses);
       } else {
         setCandidates(null);
       }
@@ -126,8 +123,7 @@ export function useLogin() {
       ) {
         return {
           kind: 'ambiguous_username',
-          businesses: (error.body as ApiErrorBody & AmbiguousUsernameBody)
-            .businesses,
+          businesses: (error.body as AmbiguousUsernameBody).error.businesses,
           choosingId: null,
         };
       }

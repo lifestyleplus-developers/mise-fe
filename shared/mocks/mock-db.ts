@@ -197,7 +197,7 @@ function delay(): Promise<void> {
 
 type LoginOutcome =
   | { status: 200; body: LoginResponse }
-  | { status: 409; body: ApiErrorBody & AmbiguousUsernameBody }
+  | { status: 409; body: AmbiguousUsernameBody }
   | { status: 401; body: ApiErrorBody }
   | { status: 429; body: ApiErrorBody }
   | { status: 500; body: ApiErrorBody };
@@ -239,11 +239,11 @@ function resolveLogin(request: LoginRequest): LoginOutcome {
           code: API_ERROR_CODE.AMBIGUOUS_USERNAME,
           message: 'Pick a business.',
           field: null,
+          businesses: matches.map((user) => {
+            const business = db.businesses.find((b) => b.id === user.tenant_id);
+            return { id: business?.id ?? 0, name: business?.name ?? '' };
+          }),
         },
-        businesses: matches.map((user) => {
-          const business = db.businesses.find((b) => b.id === user.tenant_id);
-          return { id: business?.id ?? 0, name: business?.name ?? '' };
-        }),
       },
     };
   }
