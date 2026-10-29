@@ -52,7 +52,7 @@ type Drag = { from: number; to: number };
  * as adjust actions on the grip.
  */
 function SortableList<T>({
-  items,
+  items: savedItems,
   keyOf,
   labelOf,
   renderItem,
@@ -65,16 +65,40 @@ function SortableList<T>({
   const [heights, setHeights] = React.useState<Record<string, number>>({});
   const [drag, setDrag] = React.useState<Drag | null>(null);
   const [menuIndex, setMenuIndex] = React.useState<number | null>(null);
+  /**
+   * The order just chosen, shown until the saved list catches up. The save writes its
+   * own order a moment after the drop; without this the row would flash back to where
+   * it was in between.
+   */
+  const [pending, setPending] = React.useState<string[] | null>(null);
   /** How far the held row has moved. Only one row is ever held. */
   const [offset] = React.useState(() => new Animated.Value(0));
   /** The row held and where the finger was when it took hold. Not for rendering. */
   const held = React.useRef<{ from: number; startY: number } | null>(null);
 
+  const savedOrder = savedItems.map((item) => String(keyOf(item)));
+  // Once the saved list has a new order (the move landed, or failed and was undone),
+  // it is the one to show.
+  const savedOrderKey = savedOrder.join('|');
+  const [seenOrderKey, setSeenOrderKey] = React.useState(savedOrderKey);
+  if (savedOrderKey !== seenOrderKey) {
+    setSeenOrderKey(savedOrderKey);
+    setPending(null);
+  }
+
+  const items = pending
+    ? pending.flatMap((key) =>
+        savedItems.filter((item) => String(keyOf(item)) === key),
+      )
+    : savedItems;
+
   const rowHeights = items.map((item) => heights[String(keyOf(item))] ?? 0);
 
   function move(from: number, to: number) {
     if (to < 0 || to >= items.length || to === from) return;
-    onReorder(moveItem(items, from, to));
+    const next = moveItem(items, from, to);
+    setPending(next.map((item) => String(keyOf(item))));
+    onReorder(next);
     AccessibilityInfo.announceForAccessibility(
       format(t('sort.moved'), {
         n: String(to + 1),
