@@ -95,19 +95,11 @@ function readingFields(form: TaskForm) {
   };
 }
 
-/**
- * A failed Yes/No or reading always needs a comment (Model §6, FE Spec §3.3), so the
- * task is always sent with the flag on. A photograph takes no comment: always off.
- */
-const asksWhy = (form: TaskForm) =>
-  form.type === 'BINARY' || form.type === 'NUMBER';
-
 export function toCreateRequest(form: TaskForm): CreateTaskRequest {
   return {
     answer_type: form.type ?? 'BINARY',
     text: form.text.trim(),
     weight: form.weight,
-    requires_comment_on_fail: asksWhy(form),
     ...readingFields(form),
   };
 }
@@ -116,7 +108,6 @@ export function toUpdateRequest(form: TaskForm): UpdateTaskRequest {
   return {
     text: form.text.trim(),
     weight: form.weight,
-    requires_comment_on_fail: asksWhy(form),
     ...readingFields(form),
   };
 }

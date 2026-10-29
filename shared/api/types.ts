@@ -242,14 +242,13 @@ export type CreateChecklistRequest = Pick<
 /** PATCH /checklists/{id} — name and schedule. */
 export type UpdateChecklistRequest = Partial<CreateChecklistRequest>;
 
-/** POST /checklists/{id}/tasks. The type is fixed once the task exists. */
+/**
+ * POST /checklists/{id}/tasks. The type is fixed once the task exists.
+ * `requires_comment_on_fail` is not sent: the platform works it out from the
+ * answer type and refuses it as a field it cannot write (400).
+ */
 export type CreateTaskRequest = Pick<Task, 'answer_type' | 'text'> &
-  Partial<
-    Pick<
-      Task,
-      'unit' | 'min_value' | 'max_value' | 'requires_comment_on_fail' | 'weight'
-    >
-  >;
+  Partial<Pick<Task, 'unit' | 'min_value' | 'max_value' | 'weight'>>;
 
 /** PATCH /tasks/{id}. */
 export type UpdateTaskRequest = Partial<Omit<CreateTaskRequest, 'answer_type'>>;

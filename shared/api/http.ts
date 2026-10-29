@@ -1,5 +1,5 @@
 import { clearTokens, getTokens, setTokens, type Tokens } from './session';
-import type { ApiErrorBody } from './types';
+import type { ApiErrorBody, Page } from './types';
 
 /**
  * The server's address, ending in `/api/v1`. Set `EXPO_PUBLIC_API_BASE_URL` in
@@ -159,4 +159,28 @@ export async function request<T>(
     );
   }
   return parsed as T;
+}
+
+const MAX_PAGE_SIZE = 100;
+
+/**
+ * A list the screens take whole: every page, followed until `next` is null
+ * (API Contract §1: 25 a time by default, 100 at most, `next` a page number).
+ * Used for the short lists, such as outlets and a checklist's tasks and
+ * assignments; a list that can grow large is paged by its screen instead.
+ */
+export async function requestAll<T>(
+  path: string,
+  query: RequestOptions['query'] = {},
+): Promise<T[]> {
+  const items: T[] = [];
+  let page: number | null = 1;
+  while (page !== null) {
+    const result: Page<T> = await request<Page<T>>(path, {
+      query: { ...query, page, page_size: MAX_PAGE_SIZE },
+    });
+    items.push(...result.results);
+    page = result.next;
+  }
+  return items;
 }
