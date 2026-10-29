@@ -28,44 +28,24 @@ import { View } from 'react-native';
 
 type Show = 'active' | 'archived';
 
-/** Fewer than this on screen and more are fetched without waiting for a scroll. */
-const FILL_TO = 10;
-
 /** CHK-10: every checklist in the business, for ADMIN and OWNER. */
 export function ChecklistsAdminScreen() {
   const t = useT();
   const router = useRouter();
   const scheduleText = useScheduleText();
-  const query = useChecklists({ includeArchived: true });
+  const [show, setShow] = React.useState<Show>('active');
+  const archivedView = show === 'archived';
+  // Each filter is its own request: the server does the filtering.
+  const query = useChecklists({ archivedOnly: archivedView });
   const outlets = useOutlets();
   const pull = usePullToRefresh(query.refetch);
   const noticeText = useChecklistNoticeText();
   const clearNotice = useChecklistNotice((state) => state.clearNotice);
-  const [show, setShow] = React.useState<Show>('active');
 
   const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = query;
   const forbidden = isError && isForbidden(query.error);
-  const archivedView = show === 'archived';
-
-  const visible = (query.data?.pages.flatMap((page) => page.results) ?? [])
-    .filter((checklist) => checklist.is_archived === archivedView)
-    .sort(
-      (a, b) =>
-        a.st_time.localeCompare(b.st_time) || a.name.localeCompare(b.name),
-    );
-
-  // A filter that shows few rows (Archived, usually) would otherwise wait for
-  // a scroll that never comes.
-  React.useEffect(() => {
-    if (
-      hasNextPage &&
-      !isFetchingNextPage &&
-      !isError &&
-      visible.length < FILL_TO
-    ) {
-      void fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, isError, visible.length, fetchNextPage]);
+  // Already in opening-time order from the server, so paging does not reshuffle.
+  const visible = query.data?.pages.flatMap((page) => page.results) ?? [];
 
   // Outlet counts say nothing in a business with one outlet.
   const singleOutlet =

@@ -167,12 +167,16 @@ export const api = {
   checklists: {
     /**
      * GET /checklists?page=&page_size= — scoped to what the caller can see.
-     * `includeArchived` is for the admin list's Archived filter.
+     * `archivedOnly` is the admin list's Archived filter: only archived checklists come
+     * back, and the server applies it so no page is fetched just to be thrown away.
+     * TODO(server): needs a query parameter on `GET /checklists` (suggested
+     * `?is_archived=true`); `mise-be` only has `?include_archived=` today, which returns
+     * active and archived together.
      */
     list(
       page: number,
       pageSize: number,
-      options?: { includeArchived?: boolean },
+      options?: { archivedOnly?: boolean },
     ): Promise<Page<ChecklistListItem>> {
       // TODO(server): GET {API_BASE_URL}/api/v1/checklists
       return mockListChecklists(page, pageSize, options);

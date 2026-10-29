@@ -1330,12 +1330,13 @@ function assertValidSchedule(schedule: ScheduleFields) {
 /**
  * GET /checklists — scoped to what the caller can see (§5): ADMIN/OWNER get
  * every checklist, anyone else only those where they are CL_ADMIN or CL_IMP.
- * Archived ones are left out unless an admin asks for them (CHK-10).
+ * Archived ones are left out unless an admin asks for them, and then only they
+ * come back (CHK-10), so the Archived filter is the server's to apply.
  */
 export async function mockListChecklists(
   page: number,
   pageSize: number,
-  { includeArchived = false }: { includeArchived?: boolean } = {},
+  { archivedOnly = false }: { archivedOnly?: boolean } = {},
 ): Promise<Page<ChecklistListItem>> {
   await delay();
   const me = resolveMe();
@@ -1347,7 +1348,8 @@ export async function mockListChecklists(
   const all: ChecklistListItem[] = [];
   for (const checklist of state.checklists) {
     if (checklist.tenant_id !== me.business.id) continue;
-    if (checklist.is_archived && !(includeArchived && mayAdminister)) continue;
+    if (checklist.is_archived && !(archivedOnly && mayAdminister)) continue;
+    if (archivedOnly && !checklist.is_archived) continue;
     const assignments = activeAssignments(checklist.id).map((a) => ({
       id: a.id,
       outlet_name: a.outlet_name,
@@ -1373,8 +1375,8 @@ export async function mockListChecklists(
     }
   }
 
-  // The admin list is ordered by opening time, so paging does not reshuffle.
-  if (includeArchived && mayAdminister) {
+  // An admin's lists are ordered by opening time, so paging does not reshuffle.
+  if (mayAdminister) {
     all.sort(
       (a, b) =>
         a.st_time.localeCompare(b.st_time) || a.name.localeCompare(b.name),
