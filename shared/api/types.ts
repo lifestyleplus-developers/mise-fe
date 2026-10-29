@@ -193,10 +193,9 @@ export type ChecklistAssignment = {
 };
 
 /**
- * GET /checklists row. The contract (§5) lists only the checklist fields; the
- * assignments and scores FE Spec §3.4 asks for ("the outlets it runs at that
- * you can see, and the most recent score") are not in it yet. Assumed here as
- * a nested array until Lamax confirms the shape.
+ * GET /checklists row: the checklist plus `assignments`, the active outlets it
+ * runs at that the caller can see (FE Spec §3.4), each with the caller's part
+ * there. `score` is null until a period has closed and reporting exists.
  */
 export type ChecklistListItem = Checklist & {
   assignments: ChecklistAssignment[];
