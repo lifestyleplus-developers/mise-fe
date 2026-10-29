@@ -26,7 +26,7 @@ pnpm format        # prettier --write .
 - **Lint / format:** `expo lint` + Prettier (`singleQuote: true`). _(Done — see `eslint.config.js`, `.prettierrc.json`, `.prettierignore`.)_
 - **Shared constants:** Role codes, error codes, and answer types belong in `shared/constants/`, typed — not copy-pasted string literals across screens. Create this the moment the first screen needs one of these, not before.
 - **i18n:** _(Wired — `shared/i18n/`.)_ Interface strings never appear as literals in screens; they go in `locales/en.ts` (the typed source of truth) and are read via `useT()`/`t()`. HI/ML/KN are partials that fall back to English — Lifestyle supplies the wording (Language Assist §5). Authored content is never translated (Model §15).
-- **Environment config:** `API_BASE_URL` is a placeholder until a real dev backend exists. Mechanism not yet chosen — `app.json`'s `extra` field + `expo-constants`, `.env`, or EAS environment variables — decide when a real value is actually needed.
+- **Environment config:** The platform's address is `EXPO_PUBLIC_API_BASE_URL` (ending in `/api/v1`), read in `shared/api/http.ts`. Locally it comes from `.env` (gitignored). For EAS builds it is set in each profile's `env` in `eas.json`, because cloud builds never see `.env`; a build without it silently runs on the mock. It is public, so never put a secret in an `EXPO_PUBLIC_` variable. See `DEPLOYMENT.md`.
 - **Testing:** Deferred, not forgotten. Not set up yet. Jest + React Native Testing Library are the likely candidates when it's time.
 
 ## Product decisions

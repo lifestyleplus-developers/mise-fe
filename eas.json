@@ -6,7 +6,8 @@
     "preview": {
       "distribution": "store",
       "env": {
-        "APP_VARIANT": "preview"
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_API_BASE_URL": "https://web-production-72086.up.railway.app/api/v1"
       },
       "android": {
         "buildType": "apk"
@@ -16,7 +17,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://web-production-72086.up.railway.app/api/v1"
       }
     }
   },
