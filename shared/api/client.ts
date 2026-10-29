@@ -71,7 +71,7 @@ import type {
   UploadSignResponse,
 } from './types';
 
-export { MockApiError } from '@/shared/mocks/mock-db';
+export { ApiError } from './http';
 
 export const api = {
   auth: {

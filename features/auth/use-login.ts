@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as React from 'react';
 
-import { api, MockApiError } from '@/shared/api/client';
+import { api, ApiError } from '@/shared/api/client';
 import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 import {
   API_ERROR_CODE,
@@ -38,7 +38,7 @@ export type LoginState =
     };
 
 function classify(error: unknown): LoginFailure {
-  if (!(error instanceof MockApiError)) return LOGIN_FAILURE.UNREACHABLE;
+  if (!(error instanceof ApiError)) return LOGIN_FAILURE.UNREACHABLE;
 
   const { code } = error.body.error;
   if (code === API_ERROR_CODE.INVALID_CREDENTIALS) {
@@ -71,7 +71,7 @@ export function useLogin() {
 
     onError: (error) => {
       if (
-        error instanceof MockApiError &&
+        error instanceof ApiError &&
         error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
       ) {
         setCandidates(
@@ -121,7 +121,7 @@ export function useLogin() {
     if (mutation.isError) {
       const error = mutation.error;
       if (
-        error instanceof MockApiError &&
+        error instanceof ApiError &&
         error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
       ) {
         return {

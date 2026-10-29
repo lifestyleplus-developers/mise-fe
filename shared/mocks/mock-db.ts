@@ -68,6 +68,8 @@ import {
   isRunTime,
   windowOverlapsNextRun,
 } from '@/shared/lib/schedule';
+import { ApiError } from '@/shared/api/http';
+
 import businesses from './fixtures/businesses.json';
 import checklistFixtures from './fixtures/checklists.json';
 import outletFixtures from './fixtures/outlets.json';
@@ -187,17 +189,6 @@ const db: MockDb = (store.__miseMockDb ??= {
   startedAt: Date.now(),
 });
 
-export class MockApiError extends Error {
-  readonly status: number;
-  readonly body: ApiErrorBody;
-
-  constructor(status: number, body: ApiErrorBody) {
-    super(body.error.code);
-    this.status = status;
-    this.body = body;
-  }
-}
-
 /** Single choke point for simulated latency — randomised per AGENTS.md. */
 function delay(): Promise<void> {
   const jitter = NETWORK_DELAY_MS * (0.75 + Math.random() * 0.5);
@@ -297,7 +288,7 @@ function liveOutlets(
 
 function resolveMe(): MeResponse {
   if (!db.session) {
-    throw new MockApiError(401, {
+    throw new ApiError(401, {
       error: {
         code: API_ERROR_CODE.TOKEN_EXPIRED,
         message: 'Not signed in.',
@@ -333,8 +324,7 @@ function resolveMe(): MeResponse {
 export async function mockLogin(request: LoginRequest): Promise<LoginResponse> {
   await delay();
   const outcome = resolveLogin(request);
-  if (outcome.status !== 200)
-    throw new MockApiError(outcome.status, outcome.body);
+  if (outcome.status !== 200) throw new ApiError(outcome.status, outcome.body);
   return outcome.body;
 }
 
@@ -367,7 +357,7 @@ function apiError(
   message: string,
   field?: string,
 ) {
-  return new MockApiError(status, {
+  return new ApiError(status, {
     error: { code, message, field: field ?? null },
   });
 }

@@ -1,4 +1,4 @@
-import { MockApiError } from '@/shared/api/client';
+import { ApiError } from '@/shared/api/client';
 import { API_ERROR_CODE, type AssignmentRole } from '@/shared/api/types';
 
 /** What a failed change to a team means for the screen. */
@@ -30,7 +30,7 @@ export function classifyTeamError(
   error: unknown,
   context: { role: AssignmentRole; viewerIsAdmin: boolean },
 ): TeamFailure {
-  if (!(error instanceof MockApiError)) return 'saveFailed';
+  if (!(error instanceof ApiError)) return 'saveFailed';
   const { status, body } = error;
   if (status === 404 || (status === 409 && body.error.code === 'archived')) {
     return 'gone';
