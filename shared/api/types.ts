@@ -293,6 +293,20 @@ export type TeamPerson = {
   is_active: boolean;
 };
 
+/** GET /assignments/{id}/candidates — active, and not on the assignment yet. */
+export type Candidate = {
+  id: number;
+  username: string;
+  full_name: string;
+};
+
+/** GET /assignments/{id}/candidates filters. */
+export type CandidatesQuery = {
+  page: number;
+  pageSize: number;
+  search?: string;
+};
+
 /** Someone taken off an assignment: who they were, and when and by whom. */
 export type RemovedTeamPerson = TeamPerson & {
   role: AssignmentRole;

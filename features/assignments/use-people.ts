@@ -1,19 +1,21 @@
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 
+import { checklistKeys } from '@/features/checklists/checklist-keys';
 import { api } from '@/shared/api/client';
 
 const PAGE_SIZE = 20;
 
 /**
- * Everyone in the business, active or not, for choosing a person to put on a
- * checklist: twenty at a time as the list is scrolled, and searched on the
- * server, so anyone can be found however many people there are.
+ * Who could be added to an assignment: active people not already on it, twenty
+ * at a time as the list is scrolled, and searched on the server. This is the
+ * assignment's candidates list, not /users, which a Checklist Manager may not
+ * read.
  */
-export function usePeople(search: string) {
+export function usePeople(assignmentId: number, search: string) {
   return useInfiniteQuery({
-    queryKey: ['users', 'picker', search],
+    queryKey: [...checklistKeys.members(assignmentId), 'candidates', search],
     queryFn: ({ pageParam }) =>
-      api.users.list({
+      api.assignments.candidates(assignmentId, {
         page: pageParam,
         pageSize: PAGE_SIZE,
         search: search || undefined,

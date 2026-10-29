@@ -444,8 +444,6 @@ export const en = {
   'out.part-failed': "Couldn't apply to {n}. Can't reach mise.",
   'out.forbidden': 'Only head office can change where this checklist runs.',
   'out.save-failed': "Couldn't save. Can't reach mise.",
-  'team.reason-manager': 'Already a Checklist Manager',
-  'team.reason-member': 'Team Member here',
   'team.no-result':
     'No one called {name}. Ask head office to create an account for {name}.',
 
@@ -459,8 +457,6 @@ export const en = {
     'No Checklist Manager yet. Issues here will have no manager.',
   'team.members-empty':
     'No Team Members yet. Add the people who do this checklist.',
-  'team.reason-already-member': 'Already on the team',
-  'team.reason-here-manager': 'Checklist Manager here',
   'team.added': '{name} added.',
   'team.removed': '{name} removed.',
   'team.remove-title': 'Remove {name} from {where}?',

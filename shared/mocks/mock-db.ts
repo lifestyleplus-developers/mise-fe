@@ -27,6 +27,8 @@ import type {
   AmbiguousUsernameBody,
   AnswerTaskRequest,
   ApiErrorBody,
+  Candidate,
+  CandidatesQuery,
   Checklist,
   ChecklistDetail,
   CreateAssignmentsRequest,
@@ -1865,6 +1867,47 @@ export async function mockListMembers(
   const me = resolveMe();
   findAssignmentForTeamRead(me, assignmentId);
   return teamOf(me.business.id, assignmentId, includeRemoved);
+}
+
+/**
+ * GET /assignments/{id}/candidates — active people with no place on the
+ * assignment, by username. Open to whoever may read the team.
+ */
+export async function mockListCandidates(
+  assignmentId: number,
+  query: CandidatesQuery,
+): Promise<Page<Candidate>> {
+  await delay();
+  const me = resolveMe();
+  findAssignmentForTeamRead(me, assignmentId);
+  const team = teamOf(me.business.id, assignmentId);
+  const onIt = new Set(
+    [...team.cl_admins, ...team.cl_imps].map((person) => person.id),
+  );
+  const needle = query.search?.trim().toLowerCase();
+  const matches = db.users
+    .filter((user) => user.tenant_id === me.business.id && user.is_active)
+    .filter((user) => !onIt.has(user.id))
+    .filter(
+      (user) =>
+        !needle ||
+        user.full_name.toLowerCase().includes(needle) ||
+        user.username.toLowerCase().includes(needle),
+    )
+    .sort((a, b) => a.username.localeCompare(b.username) || a.id - b.id);
+  const pageSize = Math.min(Math.max(query.pageSize, 1), 100);
+  const start = (query.page - 1) * pageSize;
+  if (query.page > 1 && start >= matches.length) {
+    throw apiError(404, 'not_found', 'Not found.');
+  }
+  return {
+    count: matches.length,
+    next: start + pageSize < matches.length ? query.page + 1 : null,
+    previous: query.page > 1 ? query.page - 1 : null,
+    results: matches
+      .slice(start, start + pageSize)
+      .map(({ id, username, full_name }) => ({ id, username, full_name })),
+  };
 }
 
 /**

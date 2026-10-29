@@ -3,7 +3,7 @@ import {
   classifyTeamError,
   type TeamFailure,
 } from '@/features/assignments/team-errors';
-import { useAddMember, useMembers } from '@/features/assignments/use-members';
+import { useAddMember } from '@/features/assignments/use-members';
 import { usePeople } from '@/features/assignments/use-people';
 import type { AssignmentRole } from '@/shared/api/types';
 import { PeoplePicker } from '@/shared/components/people-picker';
@@ -26,8 +26,8 @@ type TeamPickerProps = {
 };
 
 /**
- * Adds a person to one bucket of a team, from everyone in the business.
- * Anyone already on the assignment, in either role, is greyed out with why.
+ * Adds a person to one bucket of a team, from the assignment's candidates:
+ * active people not already on it, so nobody here needs greying out.
  */
 function TeamPicker({
   assignmentId,
@@ -40,42 +40,20 @@ function TeamPicker({
 }: TeamPickerProps) {
   const t = useT();
   const [search, setSearch] = React.useState('');
-  const people = usePeople(useDebouncedValue(search.trim()));
-  const members = useMembers(assignmentId);
+  const people = usePeople(assignmentId, useDebouncedValue(search.trim()));
   const add = useAddMember(assignmentId);
   const [pendingId, setPendingId] = React.useState<number | null>(null);
   const [error, setError] = React.useState<string | undefined>();
 
-  const reasonFor = (userId: number, active: boolean): string | undefined => {
-    const member = members.data?.find((m) => m.user_id === userId);
-    if (member) {
-      if (member.role === role) {
-        return t(
-          role === 'CL_ADMIN'
-            ? 'team.reason-manager'
-            : 'team.reason-already-member',
-        );
-      }
-      return t(
-        member.role === 'CL_ADMIN'
-          ? 'team.reason-here-manager'
-          : 'team.reason-member',
-      );
-    }
-    return active ? undefined : t('people.inactive');
-  };
-
-  const list =
-    people.data && members.data
-      ? people.data.pages
-          .flatMap((page) => page.results)
-          .map((person) => ({
-            id: person.id,
-            name: person.full_name,
-            username: person.username,
-            disabledReason: reasonFor(person.id, person.is_active),
-          }))
-      : undefined;
+  const list = people.data
+    ? people.data.pages
+        .flatMap((page) => page.results)
+        .map((person) => ({
+          id: person.id,
+          name: person.full_name,
+          username: person.username,
+        }))
+    : undefined;
 
   function textFor(failure: TeamFailure, name: string): string {
     switch (failure) {
@@ -95,17 +73,14 @@ function TeamPicker({
       visible
       title={title}
       people={list}
-      loading={people.isPending || members.isPending}
+      loading={people.isPending}
       onSearchChange={setSearch}
       searching={people.isPlaceholderData}
       hasMore={people.hasNextPage}
       loadingMore={people.isFetchingNextPage}
       onLoadMore={() => void people.fetchNextPage()}
-      failed={people.isError || members.isError}
-      onRetry={() => {
-        void people.refetch();
-        void members.refetch();
-      }}
+      failed={people.isError}
+      onRetry={() => void people.refetch()}
       pendingId={pendingId}
       error={error}
       noResultMessage={(name) => format(t('team.no-result'), { name })}

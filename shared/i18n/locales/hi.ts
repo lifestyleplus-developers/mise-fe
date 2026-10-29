@@ -418,8 +418,6 @@ export const hi = {
   'out.forbidden':
     'यह चेकलिस्ट कहाँ चलेगी, यह केवल मुख्य कार्यालय बदल सकता है।',
   'out.save-failed': 'सेव नहीं हो सका। mise तक नहीं पहुँच पा रहे।',
-  'team.reason-manager': 'पहले से चेकलिस्ट मैनेजर हैं',
-  'team.reason-member': 'यहाँ टीम सदस्य हैं',
   'team.no-result':
     '{name} नाम का कोई नहीं मिला। {name} का खाता बनवाने के लिए मुख्य कार्यालय से कहें।',
 
@@ -433,8 +431,6 @@ export const hi = {
     'अभी कोई चेकलिस्ट मैनेजर नहीं। यहाँ की समस्याओं का कोई मैनेजर नहीं होगा।',
   'team.members-empty':
     'अभी कोई टीम सदस्य नहीं। इस चेकलिस्ट को करने वालों को जोड़ें।',
-  'team.reason-already-member': 'पहले से टीम में है',
-  'team.reason-here-manager': 'यहाँ चेकलिस्ट मैनेजर है',
   'team.added': '{name} जोड़ा गया।',
   'team.removed': '{name} हटाया गया।',
   'team.remove-title': '{name} को {where} से हटाएँ?',

@@ -17,6 +17,7 @@ import {
   mockGetRun,
   mockGetUser,
   mockListAssignments,
+  mockListCandidates,
   mockListChecklists,
   mockListMembers,
   mockListOutlets,
@@ -39,6 +40,8 @@ import {
 import type {
   AddMemberRequest,
   AnswerTaskRequest,
+  Candidate,
+  CandidatesQuery,
   Checklist,
   ChecklistDetail,
   ChecklistListItem,
@@ -273,6 +276,16 @@ export const api = {
     members(id: number, options?: { includeRemoved?: boolean }): Promise<Team> {
       // TODO(server): GET {API_BASE_URL}/api/v1/assignments/{id}/members?include_removed=
       return mockListMembers(id, options);
+    },
+
+    /**
+     * GET /assignments/{id}/candidates?search=&page=&page_size= — the people who
+     * could be added: active, and not on the assignment. A Checklist Manager may
+     * read this where they may not read /users.
+     */
+    candidates(id: number, query: CandidatesQuery): Promise<Page<Candidate>> {
+      // TODO(server): request(`/assignments/${id}/candidates`, { query: { search, page, page_size } })
+      return mockListCandidates(id, query);
     },
 
     /**
