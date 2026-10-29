@@ -43,8 +43,8 @@ function ProgressBar({ value, total }: { value: number; total: number }) {
 
 /**
  * One run on Home. Tapping the row opens the run; "Show tasks" unfolds its tasks in
- * place. An upcoming run is greyed and has no progress, but it opens too, read-only,
- * so the checklist can be read before its window starts.
+ * place. An upcoming run is greyed, has no progress and no chevron, and the row does
+ * not open: nothing can be done with a window that has not started (FE Spec §3.2, §11).
  */
 export function RunRow({
   runId,
@@ -107,19 +107,27 @@ export function RunRow({
         </View>
       ) : null}
 
-      <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+      {!upcoming ? (
+        <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+      ) : null}
     </>
   );
 
   return (
     <View className={cn(!first && 'border-border border-t')}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onPress}
-        className="active:bg-accent min-h-16 flex-row items-center gap-3 px-4 py-3"
-      >
-        {content}
-      </Pressable>
+      {upcoming ? (
+        <View className="min-h-16 flex-row items-center gap-3 px-4 py-3">
+          {content}
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onPress}
+          className="active:bg-accent min-h-16 flex-row items-center gap-3 px-4 py-3"
+        >
+          {content}
+        </Pressable>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: showTasks }}

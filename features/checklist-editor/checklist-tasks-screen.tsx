@@ -161,11 +161,18 @@ export function ChecklistTasksScreen() {
     setStartFailed(false);
     assign.mutate([outlet.id], {
       onError: () => setStartFailed(true),
-      onSuccess: (rows) =>
+      onSuccess: (rows) => {
+        // The reply lists every assignment of the checklist, not only this one.
+        const row = rows.find((r) => r.outlet.id === outlet.id);
+        if (!row) {
+          setStartFailed(true);
+          return;
+        }
         router.push({
           pathname: '/assignments/[id]/members',
-          params: { id: rows[0].id, checklist: name, outlet: outlet.name },
-        }),
+          params: { id: row.id, checklist: name, outlet: outlet.name },
+        });
+      },
     });
   }
 
