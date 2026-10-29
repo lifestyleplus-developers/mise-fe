@@ -1,4 +1,5 @@
 import {
+  DEFAULT_WEIGHT,
   canFail,
   checkTaskForm,
   cleanLimitInput,
@@ -319,7 +320,9 @@ function TaskSheet({
                 <Text className="font-sans-medium min-w-0 flex-1 text-[15px]">
                   {format(
                     t(
-                      form.weight === 5 ? 'task.weight-std' : 'task.weight-val',
+                      form.weight === DEFAULT_WEIGHT
+                        ? 'task.weight-std'
+                        : 'task.weight-val',
                     ),
                     { n: String(form.weight) },
                   )}

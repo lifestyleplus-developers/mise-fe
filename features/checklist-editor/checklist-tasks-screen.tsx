@@ -7,6 +7,7 @@ import {
   isTextRejected,
 } from '@/features/checklist-editor/checklist-errors';
 import {
+  DEFAULT_WEIGHT,
   EMPTY_TASK_FORM,
   formFromTask,
   showNumber,
@@ -108,7 +109,7 @@ export function ChecklistTasksScreen() {
                 }),
       );
     }
-    if (task.weight !== 5) {
+    if (task.weight !== DEFAULT_WEIGHT) {
       parts.push(format(t('task.weight-n'), { n: String(task.weight) }));
     }
     return parts.join(' · ');
