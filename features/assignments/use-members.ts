@@ -9,6 +9,13 @@ import { checklistKeys } from '@/features/checklists/checklist-keys';
 import { api } from '@/shared/api/client';
 import type { AssignmentMember, AssignmentRole } from '@/shared/api/types';
 
+import { currentMembers, removedMembers } from './team';
+
+/** The members query and `useTeams` share a key, so they share this shape. */
+async function fetchMembers(assignmentId: number) {
+  return currentMembers(await api.assignments.members(assignmentId));
+}
+
 /** Both buckets of one assignment, Checklist Managers first. */
 export function useMembers(
   assignmentId: number,
@@ -16,7 +23,7 @@ export function useMembers(
 ) {
   return useQuery({
     queryKey: checklistKeys.members(assignmentId),
-    queryFn: () => api.assignments.members(assignmentId),
+    queryFn: () => fetchMembers(assignmentId),
     enabled,
   });
 }
@@ -56,11 +63,13 @@ function useMembersCache(assignmentId: number) {
 export function useAddMember(assignmentId: number) {
   const cache = useMembersCache(assignmentId);
   return useMutation({
-    mutationFn: (request: { userId: number; role: AssignmentRole }) =>
-      api.assignments.addMember(assignmentId, {
-        user_id: request.userId,
-        role: request.role,
-      }),
+    mutationFn: async (request: { userId: number; role: AssignmentRole }) =>
+      currentMembers(
+        await api.assignments.addMember(assignmentId, {
+          user_id: request.userId,
+          role: request.role,
+        }),
+      ),
     networkMode: 'always',
     // The platform answers with the team as it now stands.
     onSuccess: (team) => {
@@ -94,9 +103,9 @@ export function usePastMembers(
   return useQuery({
     queryKey: checklistKeys.pastMembers(assignmentId),
     queryFn: async () =>
-      (
-        await api.assignments.members(assignmentId, { includeRemoved: true })
-      ).filter((member) => member.removed_at !== null),
+      removedMembers(
+        await api.assignments.members(assignmentId, { includeRemoved: true }),
+      ),
     enabled,
   });
 }
@@ -109,7 +118,7 @@ export function useTeams(assignmentIds: readonly number[]) {
   return useQueries({
     queries: assignmentIds.map((id) => ({
       queryKey: checklistKeys.members(id),
-      queryFn: () => api.assignments.members(id),
+      queryFn: () => fetchMembers(id),
     })),
     combine: (results) => ({
       byAssignment: Object.fromEntries(

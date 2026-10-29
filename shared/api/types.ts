@@ -282,19 +282,44 @@ export type CreateAssignmentsRequest = { outlet_ids: number[] };
 
 export type AssignmentRole = 'CL_ADMIN' | 'CL_IMP';
 
+/** One person in a bucket of GET /assignments/{id}/members. */
+export type TeamPerson = {
+  id: number;
+  username: string;
+  full_name: string;
+  /** False for a deactivated account that is still on the assignment. */
+  is_active: boolean;
+};
+
+/** Someone taken off an assignment: who they were, and when and by whom. */
+export type RemovedTeamPerson = TeamPerson & {
+  role: AssignmentRole;
+  removed_at: string;
+  removed_by: { id: number; full_name: string } | null;
+};
+
 /**
- * GET /assignments/{id}/members — one flat row per person, supervisors first. Someone
- * taken off is not deleted: `removed_at` and `removed_by` say when and by whom, and they
- * appear only with `?include_removed=true`.
+ * GET /assignments/{id}/members — both buckets, each by username. Someone taken
+ * off is not deleted: `removed` lists them, latest first, and is present only
+ * with `?include_removed=true`.
+ */
+export type Team = {
+  cl_admins: TeamPerson[];
+  cl_imps: TeamPerson[];
+  removed?: RemovedTeamPerson[];
+};
+
+/**
+ * One person on a team as the screens use them: a `Team` flattened, with the
+ * role of the bucket they were in. Built in `features/assignments/team.ts`; the
+ * platform never sends this shape.
  */
 export type AssignmentMember = {
   user_id: number;
   username: string;
   full_name: string;
   role: AssignmentRole;
-  /** False for a deactivated account that is still on the assignment. */
   is_active: boolean;
-  added_at: string;
   removed_at: string | null;
   removed_by: { id: number; full_name: string } | null;
 };

@@ -27,7 +27,6 @@ import type {
   AmbiguousUsernameBody,
   AnswerTaskRequest,
   ApiErrorBody,
-  AssignmentMember,
   Checklist,
   ChecklistDetail,
   CreateAssignmentsRequest,
@@ -37,6 +36,9 @@ import type {
   LoginResponse,
   CreateOutletRequest,
   CreateUserRequest,
+  RemovedTeamPerson,
+  Team,
+  TeamPerson,
   ChecklistListItem,
   OutletAssignment,
   ReorderTasksRequest,
@@ -1714,11 +1716,7 @@ export async function mockCreateAssignments(
   return assignmentsOf(checklist.id).map((assignment) => ({
     ...toOutletAssignment(assignment),
     returning_members: switchedOn.has(assignment.id)
-      ? membersOf(me.business.id, assignment.id).map((m) => ({
-          user_id: m.user_id,
-          full_name: m.full_name,
-          role: m.role,
-        }))
+      ? returningOf(me.business.id, assignment.id)
       : [],
   }));
 }
@@ -1801,58 +1799,73 @@ function assertMayChangeTeam(
 }
 
 /**
- * The people on an assignment, one flat row each: supervisors first, then by
- * username. With `includeRemoved`, those taken off follow, the latest first.
+ * The people on an assignment in two buckets, each by username. With
+ * `includeRemoved`, `removed` lists those taken off, the latest first.
  */
-function membersOf(
+function teamOf(
   tenantId: number,
   assignmentId: number,
   includeRemoved = false,
-): AssignmentMember[] {
-  const toMember = (entry: MemberLogEntry): AssignmentMember => {
+): Team {
+  const person = (entry: MemberLogEntry): TeamPerson => {
     const user = db.users.find((u) => u.id === entry.user_id)!;
-    const by = entry.removed_by
-      ? db.users.find((u) => u.id === entry.removed_by)
-      : undefined;
     return {
-      user_id: user.id,
+      id: user.id,
       username: user.username,
       full_name: user.full_name,
-      role: entry.role,
       is_active: user.is_active,
-      added_at: entry.added_at,
-      removed_at: entry.removed_at,
-      removed_by: by ? { id: by.id, full_name: by.full_name } : null,
     };
   };
   const log = checklistState().memberLog.filter(
     (entry) =>
       entry.tenant_id === tenantId && entry.assignment_id === assignmentId,
   );
-  const current = log
-    .filter((entry) => entry.removed_at === null)
-    .map(toMember)
-    .sort(
-      (a, b) =>
-        a.role.localeCompare(b.role) || a.username.localeCompare(b.username),
-    );
-  if (!includeRemoved) return current;
-  const removed = log
+  const current = log.filter((entry) => entry.removed_at === null);
+  const bucket = (role: 'CL_ADMIN' | 'CL_IMP') =>
+    current
+      .filter((entry) => entry.role === role)
+      .map(person)
+      .sort((a, b) => a.username.localeCompare(b.username));
+  const team: Team = {
+    cl_admins: bucket('CL_ADMIN'),
+    cl_imps: bucket('CL_IMP'),
+  };
+  if (!includeRemoved) return team;
+  team.removed = log
     .filter((entry) => entry.removed_at !== null)
-    .map(toMember)
-    .sort((a, b) => (b.removed_at ?? '').localeCompare(a.removed_at ?? ''));
-  return [...current, ...removed];
+    .sort((a, b) => (b.removed_at ?? '').localeCompare(a.removed_at ?? ''))
+    .map((entry): RemovedTeamPerson => {
+      const by = entry.removed_by
+        ? db.users.find((u) => u.id === entry.removed_by)
+        : undefined;
+      return {
+        ...person(entry),
+        role: entry.role,
+        removed_at: entry.removed_at!,
+        removed_by: by ? { id: by.id, full_name: by.full_name } : null,
+      };
+    });
+  return team;
 }
 
-/** GET /assignments/{id}/members — flat, supervisors first. */
+/** The people still on a switched-back-on assignment: supervisors first. */
+function returningOf(tenantId: number, assignmentId: number) {
+  const team = teamOf(tenantId, assignmentId);
+  return [
+    ...team.cl_admins.map((p) => ({ ...p, role: 'CL_ADMIN' as const })),
+    ...team.cl_imps.map((p) => ({ ...p, role: 'CL_IMP' as const })),
+  ].map((p) => ({ user_id: p.id, full_name: p.full_name, role: p.role }));
+}
+
+/** GET /assignments/{id}/members — both buckets. */
 export async function mockListMembers(
   assignmentId: number,
   { includeRemoved = false }: { includeRemoved?: boolean } = {},
-): Promise<AssignmentMember[]> {
+): Promise<Team> {
   await delay();
   const me = resolveMe();
   findAssignmentForTeamRead(me, assignmentId);
-  return membersOf(me.business.id, assignmentId, includeRemoved);
+  return teamOf(me.business.id, assignmentId, includeRemoved);
 }
 
 /**
@@ -1864,7 +1877,7 @@ export async function mockListMembers(
 export async function mockAddMember(
   assignmentId: number,
   request: AddMemberRequest,
-): Promise<AssignmentMember[]> {
+): Promise<Team> {
   await delay();
   const me = resolveMe();
   const assignment = findAssignmentForTeam(me, assignmentId);
@@ -1915,7 +1928,7 @@ export async function mockAddMember(
     });
   }
   user.memberships[MEMBERSHIP_KEY[request.role]].push(assignmentId);
-  return membersOf(me.business.id, assignmentId);
+  return teamOf(me.business.id, assignmentId);
 }
 
 /**

@@ -39,7 +39,6 @@ import {
 import type {
   AddMemberRequest,
   AnswerTaskRequest,
-  AssignmentMember,
   Checklist,
   ChecklistDetail,
   ChecklistListItem,
@@ -59,6 +58,7 @@ import type {
   Run,
   RunDetail,
   RunTask,
+  Team,
   Task,
   UpdateChecklistRequest,
   UpdateMeRequest,
@@ -266,14 +266,11 @@ export const api = {
     },
 
     /**
-     * GET /assignments/{id}/members — flat, supervisors first. Only for an
-     * admin or this assignment's own supervisor (403 `not_your_assignment`
-     * otherwise). `includeRemoved` adds the people taken off, latest first.
+     * GET /assignments/{id}/members — both buckets. Only for an admin or this
+     * assignment's own supervisor (403 `not_your_assignment` otherwise).
+     * `includeRemoved` adds `removed`: the people taken off, latest first.
      */
-    members(
-      id: number,
-      options?: { includeRemoved?: boolean },
-    ): Promise<AssignmentMember[]> {
+    members(id: number, options?: { includeRemoved?: boolean }): Promise<Team> {
       // TODO(server): GET {API_BASE_URL}/api/v1/assignments/{id}/members?include_removed=
       return mockListMembers(id, options);
     },
@@ -282,10 +279,7 @@ export const api = {
      * POST /assignments/{id}/members — 409 `role_conflict` if already on it in
      * the other role. Answers with the team as GET gives it.
      */
-    addMember(
-      id: number,
-      request: AddMemberRequest,
-    ): Promise<AssignmentMember[]> {
+    addMember(id: number, request: AddMemberRequest): Promise<Team> {
       // TODO(server): POST {API_BASE_URL}/api/v1/assignments/{id}/members
       return mockAddMember(id, request);
     },
