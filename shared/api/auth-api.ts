@@ -1,18 +1,21 @@
 import { request } from './http';
 import { clearTokens, getTokens, setTokens, type Tokens } from './session';
-import type { LoginRequest } from './types';
+import type { LoginRequest, LoginResponse } from './types';
 
 /**
  * POST /auth/login. The tokens are kept here, so the caller only has to ask
  * `/auth/me` next. A 409 `ambiguous_username` throws an `ApiError` as usual.
  */
-export async function loginRequest(login: LoginRequest): Promise<void> {
+export async function loginRequest(
+  login: LoginRequest,
+): Promise<LoginResponse> {
   const tokens = await request<Tokens>('/auth/login', {
     method: 'POST',
     body: login,
     authenticated: false,
   });
   await setTokens(tokens);
+  return tokens;
 }
 
 /**

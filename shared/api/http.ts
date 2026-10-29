@@ -10,6 +10,9 @@ const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(
   '',
 );
 
+/** True when a server address is set; otherwise the app runs on the mock. */
+export const USE_REAL_API = API_BASE_URL !== '';
+
 /**
  * An error answer from the platform, or from the mock standing in for it.
  * Screens switch on `body.error.code` and `status`, never on the message.
