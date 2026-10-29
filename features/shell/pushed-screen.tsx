@@ -8,7 +8,10 @@ import { Redirect, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 type PushedScreenProps = {
   title: string;
@@ -17,7 +20,13 @@ type PushedScreenProps = {
   /** Sits opposite Back, e.g. a New button. */
   action?: React.ReactNode;
   /** Where Back goes when nothing is behind this screen. Defaults to More. */
-  backHref?: '/more' | '/outlets' | '/users' | '/checklists' | '/home';
+  backHref?:
+    | '/more'
+    | '/outlets'
+    | '/users'
+    | '/checklists'
+    | '/checklists/admin'
+    | '/home';
   /** Wires pull to refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -25,6 +34,12 @@ type PushedScreenProps = {
   scrollRef?: React.Ref<ScrollView>;
   /** Called when the scroll nears the bottom, for paged lists. */
   onEndReached?: () => void;
+  /** Pinned under the scrolling content, e.g. a Save button. */
+  footer?: React.ReactNode;
+  /** A small line above the title, e.g. the section the title belongs to. */
+  eyebrow?: string;
+  /** False while something on the screen is being dragged. */
+  scrollEnabled?: boolean;
   children: React.ReactNode;
 };
 
@@ -38,18 +53,22 @@ export function PushedScreen({
   refreshing = false,
   scrollRef,
   onEndReached,
+  footer,
+  eyebrow,
+  scrollEnabled = true,
   children,
 }: PushedScreenProps) {
   const { data: me, isError, error } = useMe();
   const router = useRouter();
   const t = useT();
   const theme = useAppliedTheme();
+  const insets = useSafeAreaInsets();
 
   if (!me) {
     if (isError && isSessionExpired(error)) return <Redirect href="/" />;
     return null;
   }
-  if (adminOnly && !canAdminister(me.user.role)) {
+  if (adminOnly && !canAdminister(me.user.tenant_role)) {
     return <Redirect href="/more" />;
   }
 
@@ -66,7 +85,10 @@ export function PushedScreen({
         experimental_backgroundImage: WASH[theme].backgroundImage,
       }}
     >
-      <SafeAreaView edges={['top', 'bottom']} className="flex-1">
+      <SafeAreaView
+        edges={footer ? ['top'] : ['top', 'bottom']}
+        className="flex-1"
+      >
         <View className="px-2 pt-2 pb-3">
           <View className="flex-row items-center justify-between gap-2 pr-2">
             <Pressable
@@ -81,6 +103,11 @@ export function PushedScreen({
             </Pressable>
             {action}
           </View>
+          {eyebrow ? (
+            <Text className="text-muted-foreground mt-1 px-3 text-[13px]">
+              {eyebrow}
+            </Text>
+          ) : null}
           <Text
             variant="h1"
             className="mt-1 px-3 text-left text-[26px] leading-tight"
@@ -90,6 +117,7 @@ export function PushedScreen({
         </View>
         <ScrollView
           ref={scrollRef}
+          scrollEnabled={scrollEnabled}
           contentContainerClassName="pt-2 pb-8"
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={100}
@@ -115,6 +143,15 @@ export function PushedScreen({
         >
           {children}
         </ScrollView>
+        {footer ? (
+          <View
+            className="border-border bg-card border-t px-4 pt-3"
+            // Runs to the bottom edge; the gesture bar's room is its own padding.
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
+            {footer}
+          </View>
+        ) : null}
       </SafeAreaView>
     </View>
   );

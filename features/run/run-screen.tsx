@@ -4,6 +4,7 @@ import { clockTime, dayKey } from '@/features/home/run-time';
 import { useRuns } from '@/features/home/use-runs';
 import { AnswerDisplay, type AnswerView } from '@/features/run/answer-display';
 import { CommentSheet } from '@/features/run/comment-sheet';
+import { AiVerdict } from '@/features/run/ai-verdict';
 import { PhotoRow } from '@/features/run/photo-row';
 import { RunProgressCard } from '@/features/run/run-progress';
 import { TaskRow, TaskRowsSkeleton } from '@/features/run/task-row';
@@ -59,6 +60,9 @@ export function RunScreen() {
   const closeIso = run?.window_close ?? listed?.window_close;
   const countdown = useCountdown(closeIso);
   const closed = closeIso ? now >= new Date(closeIso).getTime() : false;
+  // A run that has not opened yet can be read, not answered.
+  const openIso = run?.window_open ?? listed?.window_open;
+  const notOpenYet = openIso ? now < new Date(openIso).getTime() : false;
 
   const [drafts, setDrafts] = React.useState<Record<number, string>>({});
   const [rowErrors, setRowErrors] = React.useState<Record<number, RowError>>(
@@ -233,12 +237,9 @@ export function RunScreen() {
       await writeAnswer(task, { answer_bool: true });
       return;
     }
-    if (task.requires_comment_on_fail) {
-      setSheetAnswer({ answer_bool: false });
-      setSheetFor(task.id);
-    } else {
-      await writeAnswer(task, { answer_bool: false, comment: null });
-    }
+    // A No always needs its reason (Model §6, FE Spec §3.3).
+    setSheetAnswer({ answer_bool: false });
+    setSheetFor(task.id);
   }
 
   async function answerReading(task: RunTask) {
@@ -252,7 +253,7 @@ export function RunScreen() {
     const { min_value: min, max_value: max } = task;
     const fails =
       (min !== null && parsed < min) || (max !== null && parsed > max);
-    if (fails && task.requires_comment_on_fail) {
+    if (fails) {
       // Ask for the reason in the same interaction (FE Spec §3.3).
       setSheetAnswer({ answer_number: parsed });
       setSheetFor(task.id);
@@ -292,7 +293,7 @@ export function RunScreen() {
         });
 
   const showCard = Boolean(closeIso) && !(query.isError && !run);
-  const isAnswering = !isSupervisor && !closed;
+  const isAnswering = !isSupervisor && !closed && !notOpenYet;
 
   return (
     <PushedScreen title={title} backHref="/home" scrollRef={scrollRef}>
@@ -309,6 +310,17 @@ export function RunScreen() {
           onRetry={() => void query.refetch()}
           retrying={query.isRefetching}
         />
+      ) : null}
+
+      {notOpenYet && openIso ? (
+        <View className="mx-4 mb-3">
+          <Banner
+            tone="notice"
+            message={format(t('run.not-open-yet'), {
+              time: clockTime(openIso),
+            })}
+          />
+        </View>
       ) : null}
 
       {showCard && closeIso ? (
@@ -408,6 +420,12 @@ export function RunScreen() {
                   }
                   onLayout={(y) => rowY.current.set(task.id, y)}
                 >
+                  {isImage && !open ? (
+                    <AiVerdict
+                      outcome={task.outcome}
+                      comment={task.ai_comment}
+                    />
+                  ) : null}
                   {isAnswering && !open && !editing ? (
                     <Pressable
                       accessibilityRole="button"

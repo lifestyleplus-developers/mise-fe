@@ -1,6 +1,8 @@
 import { cssInterop } from 'nativewind';
 import {
   Archive,
+  ArrowDown,
+  ArrowUp,
   Camera,
   Check,
   ChevronDown,
@@ -12,10 +14,12 @@ import {
   CirclePlay,
   ClipboardList,
   Clock,
+  EllipsisVertical,
   Eye,
   EyeOff,
   Flag,
   Globe,
+  GripVertical,
   House,
   Info,
   KeyRound,
@@ -32,10 +36,14 @@ import {
   Store,
   Sun,
   TriangleAlert,
+  User,
   Users,
   UserX,
   WifiOff,
   X,
+  Gauge,
+  Minus,
+  Trash,
 } from 'lucide-react-native';
 
 /**
@@ -45,6 +53,8 @@ import {
  */
 const ICONS = [
   Archive,
+  ArrowDown,
+  ArrowUp,
   Camera,
   Check,
   ChevronDown,
@@ -56,10 +66,12 @@ const ICONS = [
   CirclePlay,
   ClipboardList,
   Clock,
+  EllipsisVertical,
   Eye,
   EyeOff,
   Flag,
   Globe,
+  GripVertical,
   House,
   Info,
   KeyRound,
@@ -76,10 +88,14 @@ const ICONS = [
   Store,
   Sun,
   TriangleAlert,
+  User,
   Users,
   UserX,
   WifiOff,
   X,
+  Gauge,
+  Minus,
+  Trash,
 ];
 
 for (const Icon of ICONS) {

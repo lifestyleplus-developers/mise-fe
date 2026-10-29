@@ -14,9 +14,9 @@ export function assignableRoles(viewer: Viewer): Role[] {
  */
 export function userRules(viewer: Viewer, target: User) {
   const isSelf = target.id === viewer.id;
-  const isOwner = target.role === ROLE.OWNER;
+  const isOwner = target.tenant_role === ROLE.OWNER;
   const isPeerAdmin =
-    viewer.role === ROLE.ADMIN && target.role === ROLE.ADMIN && !isSelf;
+    viewer.role === ROLE.ADMIN && target.tenant_role === ROLE.ADMIN && !isSelf;
   const untouchable = isSelf || isOwner || isPeerAdmin;
 
   return {

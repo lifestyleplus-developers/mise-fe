@@ -1,10 +1,11 @@
 import { useMe } from '@/features/auth/use-me';
+import { ProfileCard } from '@/features/more/profile-card';
 import { TabScreen } from '@/features/shell/tab-screen';
 import { ListGroup } from '@/shared/components/list-group';
 import { canAdminister } from '@/shared/constants/roles';
 import { useT } from '@/shared/i18n';
 import { useRouter } from 'expo-router';
-import { Settings, Store, Users } from 'lucide-react-native';
+import { ClipboardList, Settings, Store, Users } from 'lucide-react-native';
 
 /** More tab: Settings, plus Administration for OWNER and ADMIN. */
 export function MoreScreen() {
@@ -16,6 +17,11 @@ export function MoreScreen() {
 
   return (
     <TabScreen title={t('tab.more')}>
+      <ProfileCard
+        fullName={me.user.full_name}
+        username={me.user.username}
+        role={me.user.tenant_role}
+      />
       <ListGroup
         rows={[
           {
@@ -26,10 +32,16 @@ export function MoreScreen() {
           },
         ]}
       />
-      {canAdminister(me.user.role) ? (
+      {canAdminister(me.user.tenant_role) ? (
         <ListGroup
           heading={t('more.administration')}
           rows={[
+            {
+              id: 'checklists',
+              icon: ClipboardList,
+              label: t('more.checklists'),
+              onSelect: () => router.push('/checklists/admin'),
+            },
             {
               id: 'outlets',
               icon: Store,

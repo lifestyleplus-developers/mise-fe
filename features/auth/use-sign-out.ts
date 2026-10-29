@@ -9,6 +9,8 @@ export function useSignOut() {
 
   return () => {
     void api.auth.logout().catch(() => undefined);
+    // Drop Home, More, Settings… from the history, so back cannot reach them.
+    if (router.canDismiss()) router.dismissAll();
     router.replace('/');
     // clear() also drops queued writes, which do not survive sign-out (§6).
     queryClient.clear();

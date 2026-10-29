@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as React from 'react';
 
-import { api, MockApiError } from '@/shared/api/client';
+import { api, ApiError } from '@/shared/api/client';
 import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 import {
   API_ERROR_CODE,
   type AmbiguousUsernameBody,
-  type ApiErrorBody,
   type BusinessRef,
   type LoginRequest,
   type LoginResponse,
@@ -38,7 +37,7 @@ export type LoginState =
     };
 
 function classify(error: unknown): LoginFailure {
-  if (!(error instanceof MockApiError)) return LOGIN_FAILURE.UNREACHABLE;
+  if (!(error instanceof ApiError)) return LOGIN_FAILURE.UNREACHABLE;
 
   const { code } = error.body.error;
   if (code === API_ERROR_CODE.INVALID_CREDENTIALS) {
@@ -62,6 +61,8 @@ export function useLogin() {
     null,
   );
   const lastRequest = React.useRef<LoginRequest | null>(null);
+  /** True when the person picked a language on the Login screen itself. */
+  const pickedLanguage = React.useRef(false);
 
   const mutation = useMutation<LoginResponse, unknown, LoginRequest>({
     mutationKey: ['auth', 'login'],
@@ -69,12 +70,10 @@ export function useLogin() {
 
     onError: (error) => {
       if (
-        error instanceof MockApiError &&
+        error instanceof ApiError &&
         error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
       ) {
-        setCandidates(
-          (error.body as ApiErrorBody & AmbiguousUsernameBody).businesses,
-        );
+        setCandidates((error.body as AmbiguousUsernameBody).error.businesses);
       } else {
         setCandidates(null);
       }
@@ -85,10 +84,20 @@ export function useLogin() {
       dropSessionCache();
       queryClient_
         .fetchQuery({ queryKey: ['auth', 'me'], queryFn: () => api.auth.me() })
-        .then((meResponse) => {
-          useLanguageStore
-            .getState()
-            .setLanguage(meResponse.user.interface_language);
+        .then(async (meResponse) => {
+          const store = useLanguageStore.getState();
+          const saved = meResponse.user.interface_language;
+          if (pickedLanguage.current && store.language !== saved) {
+            // A language chosen at sign-in is carried forward and saved to
+            // the account. Otherwise the account's own setting wins, so the
+            // same person sees the same language on any phone (Model §15).
+            const updated = await api.auth.updateMe({
+              interface_language: store.language,
+            });
+            queryClient_.setQueryData(['auth', 'me'], updated);
+          } else {
+            store.setLanguage(saved);
+          }
         })
         .catch(() => undefined);
     },
@@ -109,13 +118,12 @@ export function useLogin() {
     if (mutation.isError) {
       const error = mutation.error;
       if (
-        error instanceof MockApiError &&
+        error instanceof ApiError &&
         error.body.error.code === API_ERROR_CODE.AMBIGUOUS_USERNAME
       ) {
         return {
           kind: 'ambiguous_username',
-          businesses: (error.body as ApiErrorBody & AmbiguousUsernameBody)
-            .businesses,
+          businesses: (error.body as AmbiguousUsernameBody).error.businesses,
           choosingId: null,
         };
       }
@@ -138,8 +146,12 @@ export function useLogin() {
     return { kind: 'idle' };
   })();
 
-  const login = (request: LoginRequest) => {
+  const login = (
+    request: LoginRequest,
+    options: { pickedLanguage?: boolean } = {},
+  ) => {
     lastRequest.current = request;
+    pickedLanguage.current = options.pickedLanguage ?? false;
     mutation.mutate(request);
   };
 

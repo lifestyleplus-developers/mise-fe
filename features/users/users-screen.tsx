@@ -1,3 +1,4 @@
+import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useMe } from '@/features/auth/use-me';
 import { InactiveBadge } from '@/features/users/inactive-badge';
 import { isForbidden } from '@/features/users/user-errors';
@@ -47,6 +48,7 @@ export function UsersScreen() {
     isActive: status === 'active',
     search: useDebouncedValue(search.trim()),
   });
+  const pull = usePullToRefresh(query.refetch);
 
   if (!me) return null;
 
@@ -69,8 +71,8 @@ export function UsersScreen() {
     <PushedScreen
       title={t('more.users')}
       adminOnly
-      onRefresh={() => void query.refetch()}
-      refreshing={query.isRefetching && !query.isFetchingNextPage}
+      onRefresh={pull.onRefresh}
+      refreshing={pull.refreshing}
       onEndReached={loadMore}
       action={<NewButton onPress={openAdd} />}
     >
@@ -185,7 +187,8 @@ export function UsersScreen() {
                       {user.full_name}
                     </Text>
                     <Text className="text-muted-foreground text-[13px]">
-                      @{user.username} · {t(`role.${user.role}` as MessageKey)}
+                      @{user.username} ·{' '}
+                      {t(`role.${user.tenant_role}` as MessageKey)}
                     </Text>
                   </View>
                   {user.is_active ? null : <InactiveBadge />}
@@ -213,7 +216,7 @@ export function UsersScreen() {
 
       <AddUserSheet
         visible={adding}
-        viewer={{ id: me.user.id, role: me.user.role }}
+        viewer={{ id: me.user.id, role: me.user.tenant_role }}
         onClose={() => setAdding(false)}
         onAdded={(user) =>
           setAdded({

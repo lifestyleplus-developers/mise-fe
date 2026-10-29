@@ -47,7 +47,7 @@ export const TAB_LABEL: Record<TabId, MessageKey> = {
 
 /** Whether the person has a module to open. */
 function hasVisibleModule({ modules, memberships, user }: MeResponse) {
-  const admin = canAdminister(user.role);
+  const admin = canAdminister(user.tenant_role);
   return (
     (modules.attendance_outlets.length > 0 &&
       (memberships.attendance_configs.length > 0 || admin)) ||
@@ -65,7 +65,7 @@ export function visibleTabs(me: MeResponse): TabId[] {
     checklists: true,
     issues:
       me.memberships.cl_admin_assignments.length > 0 ||
-      canAdminister(me.user.role),
+      canAdminister(me.user.tenant_role),
     modules: hasVisibleModule(me),
     more: true,
   };

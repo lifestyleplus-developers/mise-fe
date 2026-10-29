@@ -26,5 +26,11 @@ pnpm format        # prettier --write .
 - **Lint / format:** `expo lint` + Prettier (`singleQuote: true`). _(Done — see `eslint.config.js`, `.prettierrc.json`, `.prettierignore`.)_
 - **Shared constants:** Role codes, error codes, and answer types belong in `shared/constants/`, typed — not copy-pasted string literals across screens. Create this the moment the first screen needs one of these, not before.
 - **i18n:** _(Wired — `shared/i18n/`.)_ Interface strings never appear as literals in screens; they go in `locales/en.ts` (the typed source of truth) and are read via `useT()`/`t()`. HI/ML/KN are partials that fall back to English — Lifestyle supplies the wording (Language Assist §5). Authored content is never translated (Model §15).
-- **Environment config:** `API_BASE_URL` is a placeholder until a real dev backend exists. Mechanism not yet chosen — `app.json`'s `extra` field + `expo-constants`, `.env`, or EAS environment variables — decide when a real value is actually needed.
+- **Environment config:** The platform's address is `EXPO_PUBLIC_API_BASE_URL` (ending in `/api/v1`), read in `shared/api/http.ts`. Locally it comes from `.env` (gitignored). For EAS builds it is set in each profile's `env` in `eas.json`, because cloud builds never see `.env`; a build without it silently runs on the mock. It is public, so never put a secret in an `EXPO_PUBLIC_` variable. See `DEPLOYMENT.md`.
 - **Testing:** Deferred, not forgotten. Not set up yet. Jest + React Native Testing Library are the likely candidates when it's time.
+
+## Product decisions
+
+Spec conflicts the project owners have settled. Build to these; do not reopen them in code.
+
+- **Comment on failure is always required (settles Known Inconsistency #12).** A Yes/No answered **No**, and a reading outside its bounds, cannot be saved without a comment — Model §6 and FE Spec §3.3. Photograph tasks take no comment. The platform derives `requires_comment_on_fail` from the answer type (true for Yes/No and reading, false for photograph) and refuses it as a field to write, so the app never sends it. In the app: there is no per-task "ask for a comment" switch in the task editor (the sheet states the rule instead), and the run screen opens the comment sheet on every failing Yes/No or reading. The mock derives the flag the same way.

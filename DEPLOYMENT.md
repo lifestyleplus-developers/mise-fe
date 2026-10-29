@@ -42,6 +42,14 @@ eas login
 
 6. In TestFlight, add the build to your tester group (answer the export compliance question if asked).
 
+## Which server the build talks to
+
+The address of the platform is `EXPO_PUBLIC_API_BASE_URL`, set in each profile's `env` in `eas.json` (currently the Railway backend, ending in `/api/v1`). It has to be there: `mise-fe/.env` is gitignored, so EAS cloud builds never see it, and a build without the variable silently runs on the app's built-in mock. The value is a public address, so it is safe to commit. Never put a secret in an `EXPO_PUBLIC_` variable.
+
+When there are separate test and live servers, give each profile its own address.
+
+The build talks to the real platform, so only what is wired works. Home is empty, and the Run screen, answering and photo tasks fail until the runs and uploads endpoints land (see `API-INTEGRATION.md` §2). Testers sign in with the accounts on that server, not the mock's.
+
 ## Notes
 
 - Track build progress at https://expo.dev under the project's Builds tab.

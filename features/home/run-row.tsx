@@ -1,12 +1,16 @@
+import { RunTasks } from '@/features/home/run-tasks';
 import { Text } from '@/shared/components/ui/text';
+import { useT } from '@/shared/i18n';
 import { cn } from '@/shared/lib/utils';
-import { ChevronRight, Clock, Eye } from 'lucide-react-native';
+import { ChevronDown, ChevronRight, Clock, Eye } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
 export type RunRowVariant = 'open' | 'overseeing' | 'upcoming';
 
 type RunRowProps = {
+  /** Whose tasks the row can unfold. */
+  runId: number;
   first: boolean;
   variant: RunRowVariant;
   name: string;
@@ -17,7 +21,7 @@ type RunRowProps = {
   completeLabel: string;
   isComplete: boolean;
   watchLabel: string;
-  onPress?: () => void;
+  onPress: () => void;
 };
 
 function ProgressBar({ value, total }: { value: number; total: number }) {
@@ -37,8 +41,13 @@ function ProgressBar({ value, total }: { value: number; total: number }) {
   );
 }
 
-/** One run on Home. Upcoming rows are inert: greyed, no press, no chevron (FE Spec §11). */
+/**
+ * One run on Home. Tapping the row opens the run; "Show tasks" unfolds its tasks in
+ * place. An upcoming run is greyed, has no progress and no chevron, and the row does
+ * not open: nothing can be done with a window that has not started (FE Spec §3.2, §11).
+ */
 export function RunRow({
+  runId,
   first,
   variant,
   name,
@@ -51,7 +60,9 @@ export function RunRow({
   watchLabel,
   onPress,
 }: RunRowProps) {
+  const t = useT();
   const upcoming = variant === 'upcoming';
+  const [showTasks, setShowTasks] = React.useState(false);
 
   const content = (
     <>
@@ -117,6 +128,20 @@ export function RunRow({
           {content}
         </Pressable>
       )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showTasks }}
+        onPress={() => setShowTasks((current) => !current)}
+        className="active:bg-accent min-h-11 flex-row items-center gap-1.5 self-start px-4"
+      >
+        <Text className="font-sans-semibold text-[13px]">
+          {t(showTasks ? 'home.hide-tasks' : 'home.show-tasks')}
+        </Text>
+        <ChevronDown
+          className={cn('text-foreground size-4', showTasks && 'rotate-180')}
+        />
+      </Pressable>
+      {showTasks ? <RunTasks runId={runId} /> : null}
     </View>
   );
 }
