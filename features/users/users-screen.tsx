@@ -187,7 +187,8 @@ export function UsersScreen() {
                       {user.full_name}
                     </Text>
                     <Text className="text-muted-foreground text-[13px]">
-                      @{user.username} · {t(`role.${user.role}` as MessageKey)}
+                      @{user.username} ·{' '}
+                      {t(`role.${user.tenant_role}` as MessageKey)}
                     </Text>
                   </View>
                   {user.is_active ? null : <InactiveBadge />}
@@ -215,7 +216,7 @@ export function UsersScreen() {
 
       <AddUserSheet
         visible={adding}
-        viewer={{ id: me.user.id, role: me.user.role }}
+        viewer={{ id: me.user.id, role: me.user.tenant_role }}
         onClose={() => setAdding(false)}
         onAdded={(user) =>
           setAdded({

@@ -59,7 +59,7 @@ export type MeResponse = {
     id: number;
     username: string;
     full_name: string;
-    role: Role;
+    tenant_role: Role;
     interface_language: 'EN' | 'HI' | 'ML' | 'KN';
   };
   business: {
@@ -117,7 +117,7 @@ export type User = {
   id: number;
   username: string;
   full_name: string;
-  role: Role;
+  tenant_role: Role;
   is_active: boolean;
 };
 
@@ -135,12 +135,12 @@ export type CreateUserRequest = {
   username: string;
   password: string;
   full_name: string;
-  role: Role;
+  tenant_role: Role;
 };
 
 /** PATCH /users/{id}. */
 export type UpdateUserRequest = Partial<
-  Pick<User, 'full_name' | 'role' | 'is_active'>
+  Pick<User, 'full_name' | 'tenant_role' | 'is_active'>
 >;
 
 /** POST /users/{id}/reset-password. */

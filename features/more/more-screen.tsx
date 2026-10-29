@@ -20,7 +20,7 @@ export function MoreScreen() {
       <ProfileCard
         fullName={me.user.full_name}
         username={me.user.username}
-        role={me.user.role}
+        role={me.user.tenant_role}
       />
       <ListGroup
         rows={[
@@ -32,7 +32,7 @@ export function MoreScreen() {
           },
         ]}
       />
-      {canAdminister(me.user.role) ? (
+      {canAdminister(me.user.tenant_role) ? (
         <ListGroup
           heading={t('more.administration')}
           rows={[

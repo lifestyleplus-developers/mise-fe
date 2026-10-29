@@ -104,7 +104,7 @@ export function ChecklistsScreen() {
     if (outlet && hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [outlet, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const isAdmin = me ? canAdminister(me.user.role) : false;
+  const isAdmin = me ? canAdminister(me.user.tenant_role) : false;
 
   const rows = React.useMemo(() => {
     const out: Row[] = [];

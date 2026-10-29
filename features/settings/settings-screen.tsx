@@ -58,7 +58,7 @@ export function SettingsScreen() {
     { value: 'light', label: t('theme.light') },
     { value: 'dark', label: t('theme.dark') },
   ];
-  const roleKey = `role.${me.user.role}` as MessageKey;
+  const roleKey = `role.${me.user.tenant_role}` as MessageKey;
 
   return (
     <PushedScreen title={t('more.settings')}>
@@ -93,7 +93,7 @@ export function SettingsScreen() {
         />
         <Text className="mt-2 px-1 text-[13px] leading-snug">
           {t(
-            me.user.role === ROLE.MEMBER
+            me.user.tenant_role === ROLE.MEMBER
               ? 'profile.hint'
               : 'profile.hint-admin',
           )}

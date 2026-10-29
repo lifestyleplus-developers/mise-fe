@@ -68,7 +68,7 @@ export function PushedScreen({
     if (isError && isSessionExpired(error)) return <Redirect href="/" />;
     return null;
   }
-  if (adminOnly && !canAdminister(me.user.role)) {
+  if (adminOnly && !canAdminister(me.user.tenant_role)) {
     return <Redirect href="/more" />;
   }
 

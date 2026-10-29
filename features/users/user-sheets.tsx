@@ -51,7 +51,7 @@ export function AddUserSheet({
   function save() {
     if (!filled || create.isPending) return;
     create.mutate(
-      { full_name: fullName, username, password, role },
+      { full_name: fullName, username, password, tenant_role: role },
       {
         onSuccess: (user) => {
           onAdded(user);

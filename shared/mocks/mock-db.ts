@@ -307,7 +307,7 @@ function resolveMe(): MeResponse {
       id: user.id,
       username: user.username,
       full_name: user.full_name,
-      role: user.tenant_role,
+      tenant_role: user.tenant_role,
       interface_language: user.interface_language,
     },
     business: { id: business.id, name: business.name },
@@ -365,7 +365,7 @@ function apiError(
 /** The signed-in ADMIN or OWNER; anyone else is refused, as the platform does. */
 function requireAdmin() {
   const me = resolveMe();
-  if (!canAdminister(me.user.role)) {
+  if (!canAdminister(me.user.tenant_role)) {
     throw apiError(403, 'authoring_forbidden', 'Not permitted.');
   }
   return me;
@@ -487,7 +487,7 @@ function toUser(user: DbUser): User {
     id: user.id,
     username: user.username,
     full_name: user.full_name,
-    role: user.tenant_role,
+    tenant_role: user.tenant_role,
     is_active: user.is_active,
   };
 }
@@ -501,11 +501,14 @@ function findUser(tenantId: number, id: number): DbUser {
 }
 
 /** Who may act on whom: nobody on themselves, the Owner, or (for an Admin) a peer Admin. */
-function actorRelation(viewer: { id: number; role: Role }, target: DbUser) {
+function actorRelation(
+  viewer: { id: number; tenant_role: Role },
+  target: DbUser,
+) {
   const self = target.id === viewer.id;
   const ownerTarget = target.tenant_role === 'OWNER';
   const peerAdmin =
-    viewer.role === 'ADMIN' && target.tenant_role === 'ADMIN' && !self;
+    viewer.tenant_role === 'ADMIN' && target.tenant_role === 'ADMIN' && !self;
   return { self, ownerTarget, peerAdmin };
 }
 
@@ -565,10 +568,10 @@ export async function mockCreateUser(
   const me = requireAdmin();
   const username = request.username.trim().toLowerCase();
   if (username === 'offline') throw new Error('Network request failed');
-  if (request.role === 'OWNER') {
+  if (request.tenant_role === 'OWNER') {
     throw apiError(409, 'owner_exists', 'There is already an Owner.');
   }
-  if (request.role === 'ADMIN' && me.user.role !== 'OWNER') {
+  if (request.tenant_role === 'ADMIN' && me.user.tenant_role !== 'OWNER') {
     throw apiError(403, 'authoring_forbidden', 'Not permitted.');
   }
   const taken = db.users.some(
@@ -588,7 +591,7 @@ export async function mockCreateUser(
     username,
     password: request.password,
     full_name: request.full_name.trim(),
-    tenant_role: request.role,
+    tenant_role: request.tenant_role,
     interface_language: 'EN',
     memberships: {
       cl_admin_assignments: [],
@@ -614,12 +617,15 @@ export async function mockUpdateUser(
   const { self, ownerTarget, peerAdmin } = actorRelation(me.user, user);
   const forbidden = self || ownerTarget || peerAdmin;
 
-  if (request.role !== undefined && request.role !== user.tenant_role) {
+  if (
+    request.tenant_role !== undefined &&
+    request.tenant_role !== user.tenant_role
+  ) {
     if (forbidden) throw apiError(403, 'authoring_forbidden', 'Not permitted.');
-    if (request.role === 'OWNER') {
+    if (request.tenant_role === 'OWNER') {
       throw apiError(409, 'owner_exists', 'There is already an Owner.');
     }
-    if (request.role === 'ADMIN' && me.user.role !== 'OWNER') {
+    if (request.tenant_role === 'ADMIN' && me.user.tenant_role !== 'OWNER') {
       throw apiError(403, 'authoring_forbidden', 'Not permitted.');
     }
   }
@@ -629,7 +635,7 @@ export async function mockUpdateUser(
 
   if (request.full_name !== undefined)
     user.full_name = request.full_name.trim();
-  if (request.role !== undefined) user.tenant_role = request.role;
+  if (request.tenant_role !== undefined) user.tenant_role = request.tenant_role;
   if (request.is_active !== undefined) user.is_active = request.is_active;
   return toUser(user);
 }
@@ -646,7 +652,7 @@ export async function mockResetPassword(
   if (
     !user.is_active ||
     peerAdmin ||
-    (ownerTarget && me.user.role !== 'OWNER')
+    (ownerTarget && me.user.tenant_role !== 'OWNER')
   ) {
     throw apiError(403, 'authoring_forbidden', 'Not permitted.');
   }
@@ -1164,7 +1170,7 @@ function isOnChecklist(me: MeResponse, checklistId: number): boolean {
 /** A checklist the caller may read: ADMIN/OWNER any, anyone else their own. */
 function findReadableChecklist(me: MeResponse, id: number): DbChecklist {
   const checklist = findChecklist(me.business.id, id);
-  if (!canAdminister(me.user.role) && !isOnChecklist(me, id)) {
+  if (!canAdminister(me.user.tenant_role) && !isOnChecklist(me, id)) {
     throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
   }
   return checklist;
@@ -1335,7 +1341,7 @@ export async function mockListChecklists(
   const admin = new Set(me.memberships.cl_admin_assignments);
   const implementer = new Set(me.memberships.cl_imp_assignments);
   const state = checklistState();
-  const mayAdminister = canAdminister(me.user.role);
+  const mayAdminister = canAdminister(me.user.tenant_role);
 
   const all: ChecklistListItem[] = [];
   for (const checklist of state.checklists) {
@@ -1748,7 +1754,7 @@ const MEMBERSHIP_KEY = {
 /** An assignment the caller can see at all; anyone else gets a 404. */
 function findAssignmentForTeam(me: MeResponse, id: number): DbAssignment {
   const assignment = findAssignment(me.business.id, id);
-  if (!canAdminister(me.user.role) && !callerRole(me, id)) {
+  if (!canAdminister(me.user.tenant_role) && !callerRole(me, id)) {
     throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
   }
   return assignment;
@@ -1760,7 +1766,10 @@ function findAssignmentForTeam(me: MeResponse, id: number): DbAssignment {
  */
 function findAssignmentForTeamRead(me: MeResponse, id: number): DbAssignment {
   const assignment = findAssignmentForTeam(me, id);
-  if (!canAdminister(me.user.role) && callerRole(me, id) !== 'CL_ADMIN') {
+  if (
+    !canAdminister(me.user.tenant_role) &&
+    callerRole(me, id) !== 'CL_ADMIN'
+  ) {
     throw apiError(
       403,
       API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
@@ -1779,7 +1788,7 @@ function assertMayChangeTeam(
   assignmentId: number,
   role: 'CL_ADMIN' | 'CL_IMP',
 ) {
-  if (canAdminister(me.user.role)) return;
+  if (canAdminister(me.user.tenant_role)) return;
   if (callerRole(me, assignmentId) === 'CL_ADMIN' && role === 'CL_IMP') return;
   throw apiError(
     403,

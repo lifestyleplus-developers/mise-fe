@@ -60,7 +60,7 @@ export function AssignmentMembersScreen() {
   const remove = useRemoveMember(assignmentId);
   const stopRunning = useStopRunning(assignmentId);
 
-  const viewerIsAdmin = me ? canAdminister(me.user.role) : false;
+  const viewerIsAdmin = me ? canAdminister(me.user.tenant_role) : false;
   const supervises =
     me?.memberships.cl_admin_assignments.includes(assignmentId) ?? false;
 

@@ -73,7 +73,7 @@ export function UserEditScreen() {
             <UserForm
               key={user.id}
               user={user}
-              viewer={{ id: me.user.id, role: me.user.role }}
+              viewer={{ id: me.user.id, role: me.user.tenant_role }}
             />
           )}
         </>
@@ -119,7 +119,7 @@ function UserForm({
   const save = useUpdateUser(user.id);
   const statusChange = useUpdateUser(user.id);
   const [name, setName] = React.useState(user.full_name);
-  const [role, setRole] = React.useState<Role>(user.role);
+  const [role, setRole] = React.useState<Role>(user.tenant_role);
   const [settingPassword, setSettingPassword] = React.useState(false);
   const [passwordSaved, setPasswordSaved] = React.useState(false);
   const [confirmingDeactivate, setConfirmingDeactivate] = React.useState(false);
@@ -127,12 +127,12 @@ function UserForm({
   const failure = [save, statusChange]
     .filter((mutation) => mutation.isError)
     .map((mutation) => classifyUserSaveError(mutation.error))[0];
-  const changed = name.trim() !== user.full_name || role !== user.role;
+  const changed = name.trim() !== user.full_name || role !== user.tenant_role;
   const roleLabel = (value: Role) => t(`role.${value}` as MessageKey);
 
   function doSave() {
     if (!name.trim() || !changed || save.isPending) return;
-    save.mutate({ full_name: name, role });
+    save.mutate({ full_name: name, tenant_role: role });
   }
 
   return (
@@ -200,7 +200,7 @@ function UserForm({
             />
           ) : (
             <Text className="bg-muted font-sans-medium rounded-2xl px-4 py-3 text-[15px]">
-              {roleLabel(user.role)}
+              {roleLabel(user.tenant_role)}
             </Text>
           )}
         </View>

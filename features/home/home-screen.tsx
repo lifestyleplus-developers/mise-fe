@@ -145,7 +145,7 @@ export function HomeScreen() {
     // Failed with nothing cached: the banner and Retry are all there is.
     body = null;
   } else if (!hasAssignments) {
-    body = canAdminister(me.user.role) ? (
+    body = canAdminister(me.user.tenant_role) ? (
       <EmptyState
         icon={ClipboardList}
         title={t('home.empty.title')}
