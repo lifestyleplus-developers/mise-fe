@@ -111,7 +111,6 @@ export function ChecklistTasksScreen() {
     if (task.weight !== 5) {
       parts.push(format(t('task.weight-n'), { n: String(task.weight) }));
     }
-    if (task.requires_comment_on_fail) parts.push(t('task.asks-why'));
     return parts.join(' · ');
   }
 

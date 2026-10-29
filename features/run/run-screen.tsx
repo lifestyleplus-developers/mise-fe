@@ -237,12 +237,9 @@ export function RunScreen() {
       await writeAnswer(task, { answer_bool: true });
       return;
     }
-    if (task.requires_comment_on_fail) {
-      setSheetAnswer({ answer_bool: false });
-      setSheetFor(task.id);
-    } else {
-      await writeAnswer(task, { answer_bool: false, comment: null });
-    }
+    // A No always needs its reason (Model §6, FE Spec §3.3).
+    setSheetAnswer({ answer_bool: false });
+    setSheetFor(task.id);
   }
 
   async function answerReading(task: RunTask) {
@@ -256,7 +253,7 @@ export function RunScreen() {
     const { min_value: min, max_value: max } = task;
     const fails =
       (min !== null && parsed < min) || (max !== null && parsed > max);
-    if (fails && task.requires_comment_on_fail) {
+    if (fails) {
       // Ask for the reason in the same interaction (FE Spec §3.3).
       setSheetAnswer({ answer_number: parsed });
       setSheetFor(task.id);

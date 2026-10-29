@@ -367,6 +367,7 @@ export const en = {
   'task.max': '{max} or below',
   'task.min': '{min} or above',
   'task.range': '{min} to {max}',
+  'task.comment-always': 'Staff must say why when this fails.',
   'task.unit': 'Unit (optional)',
   'task.unit-placeholder': 'For example °C, kg or litres',
   'task.log-only-short': 'no range: only logged',
@@ -496,10 +497,6 @@ export const en = {
   'sched.short': 'The window must be at least 5 minutes.',
   'chk-list.hourly-one': 'Hourly · {first} to {last}',
   'chk-list.hourly-n': 'Every {e} hours · {first} to {last}',
-
-  'task.comment-switch': 'Ask for a comment when this fails',
-  'task.comment-hint': 'Staff must say why before a failed answer is saved.',
-  'task.asks-why': 'asks why',
 
   'team.past': 'Past members',
   'team.past-row': '{name} · removed {when} by {by}',

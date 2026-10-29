@@ -789,8 +789,6 @@ type TaskTemplate = {
   unit?: string;
   min?: number;
   max?: number;
-  /** Whether a failed answer must come with a comment. On for Yes/No and readings unless set. */
-  askWhy?: boolean;
   /** What the answer is, for the first `answered` tasks of the run. */
   answer?: { n?: number; b?: boolean; comment?: string; by: string };
 };
@@ -801,14 +799,12 @@ const OPENING_CASH_TASKS: TaskTemplate[] = [
     type: 'NUMBER',
     text: 'Cash in the drawer',
     unit: '₹',
-    askWhy: false,
     answer: { n: 12500, by: 'priya' },
   },
   {
     type: 'NUMBER',
     text: 'Cash in the safe',
     unit: '₹',
-    askWhy: false,
     answer: { n: 48000, by: 'priya' },
   },
   {
@@ -820,8 +816,8 @@ const OPENING_CASH_TASKS: TaskTemplate[] = [
 ];
 
 const CLOSING_CASH_TASKS: TaskTemplate[] = [
-  { type: 'NUMBER', text: 'Cash in the drawer', unit: '₹', askWhy: false },
-  { type: 'NUMBER', text: 'Cash taken to the safe', unit: '₹', askWhy: false },
+  { type: 'NUMBER', text: 'Cash in the drawer', unit: '₹' },
+  { type: 'NUMBER', text: 'Cash taken to the safe', unit: '₹' },
   {
     type: 'BINARY',
     text: "The closing balance matches the day's sales report",
@@ -834,7 +830,7 @@ const CLOSING_CASH_TASKS: TaskTemplate[] = [
 const TEST_CHECKLIST_TASKS: TaskTemplate[] = [
   { type: 'IMAGE', text: 'Photograph the counter' },
   { type: 'IMAGE', text: 'Photograph the storage shelf' },
-  { type: 'BINARY', text: 'The area is clean', askWhy: false },
+  { type: 'BINARY', text: 'The area is clean' },
 ];
 
 /** Both cash checklists have the same tasks at every outlet. */
@@ -963,7 +959,7 @@ function buildTasks(
       min_value: task.min ?? null,
       max_value: task.max ?? null,
       weight: 5,
-      requires_comment_on_fail: task.askWhy ?? task.type !== 'IMAGE',
+      requires_comment_on_fail: task.type !== 'IMAGE',
       answer_number: answer?.n ?? null,
       answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
       image_key:
@@ -1105,7 +1101,7 @@ function seedChecklistState(): ChecklistState {
         unit: template.unit ?? null,
         min_value: template.min ?? null,
         max_value: template.max ?? null,
-        requires_comment_on_fail: template.askWhy ?? template.type !== 'IMAGE',
+        requires_comment_on_fail: template.type !== 'IMAGE',
         weight: 5,
         is_archived: false,
       });
@@ -1559,8 +1555,8 @@ export async function mockCreateTask(
     min_value: request.min_value ?? null,
     max_value: request.max_value ?? null,
     weight: request.weight ?? 5,
-    // Off unless the author turns it on.
-    requires_comment_on_fail: request.requires_comment_on_fail ?? false,
+    // A failed Yes/No or reading always needs a comment; a photograph takes none.
+    requires_comment_on_fail: request.answer_type !== 'IMAGE',
   };
   assertReachable(fields.text);
   assertValidTask(fields);
@@ -1595,8 +1591,7 @@ export async function mockUpdateTask(
     max_value:
       request.max_value === undefined ? task.max_value : request.max_value,
     weight: request.weight ?? task.weight,
-    requires_comment_on_fail:
-      request.requires_comment_on_fail ?? task.requires_comment_on_fail,
+    requires_comment_on_fail: task.answer_type !== 'IMAGE',
   };
   assertReachable(next.text);
   assertValidTask(next);
@@ -1998,7 +1993,7 @@ export async function mockAnswerTask(
         next.answer_number !== undefined &&
         ((task.min !== undefined && next.answer_number < task.min) ||
           (task.max !== undefined && next.answer_number > task.max)));
-    if (fails && (task.askWhy ?? true) && !next.comment) {
+    if (fails && !next.comment) {
       throw apiError(
         400,
         API_ERROR_CODE.COMMENT_REQUIRED_ON_FAILURE,

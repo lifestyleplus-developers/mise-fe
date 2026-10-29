@@ -474,10 +474,6 @@ export const kn = {
   'chk-list.hourly-one': 'ಪ್ರತಿ ಗಂಟೆ · {first} ರಿಂದ {last}',
   'chk-list.hourly-n': 'ಪ್ರತಿ {e} ಗಂಟೆಗೆ · {first} ರಿಂದ {last}',
 
-  'task.comment-switch': 'ವಿಫಲವಾದಾಗ ಟಿಪ್ಪಣಿ ಕೇಳಿ',
-  'task.comment-hint': 'ವಿಫಲ ಉತ್ತರ ಉಳಿಸುವ ಮೊದಲು ಸಿಬ್ಬಂದಿ ಕಾರಣ ಹೇಳಬೇಕು.',
-  'task.asks-why': 'ಕಾರಣ ಕೇಳುತ್ತದೆ',
-
   'team.past': 'ಹಿಂದಿನ ಸದಸ್ಯರು',
   'team.past-row': '{name} · {when} {by} ತೆಗೆದುಹಾಕಿದರು',
   'team.past-none': 'ಈ ತಂಡದಿಂದ ಯಾರನ್ನೂ ತೆಗೆದುಹಾಕಿಲ್ಲ.',

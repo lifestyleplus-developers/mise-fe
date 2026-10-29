@@ -14,8 +14,6 @@ export type TaskForm = {
   min: string;
   max: string;
   weight: number;
-  /** Ask for a comment when this fails. Off unless the author turns it on. */
-  askWhy: boolean;
 };
 
 export const DEFAULT_WEIGHT = 5;
@@ -28,7 +26,6 @@ export const EMPTY_TASK_FORM: TaskForm = {
   min: '',
   max: '',
   weight: DEFAULT_WEIGHT,
-  askWhy: false,
 };
 
 export function formFromTask(task: Task): TaskForm {
@@ -39,7 +36,6 @@ export function formFromTask(task: Task): TaskForm {
     min: task.min_value === null ? '' : String(task.min_value),
     max: task.max_value === null ? '' : String(task.max_value),
     weight: task.weight,
-    askWhy: task.requires_comment_on_fail,
   };
 }
 
@@ -100,10 +96,11 @@ function readingFields(form: TaskForm) {
 }
 
 /**
- * Whether the switch is sent on. It only means something where a task can fail, so a
- * photo, or a reading with no limit, is always sent off however the form was left.
+ * A failed Yes/No or reading always needs a comment (Model §6, FE Spec §3.3), so the
+ * task is always sent with the flag on. A photograph takes no comment: always off.
  */
-const asksWhy = (form: TaskForm) => form.askWhy && canFail(form);
+const asksWhy = (form: TaskForm) =>
+  form.type === 'BINARY' || form.type === 'NUMBER';
 
 export function toCreateRequest(form: TaskForm): CreateTaskRequest {
   return {

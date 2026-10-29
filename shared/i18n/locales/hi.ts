@@ -472,10 +472,6 @@ export const hi = {
   'chk-list.hourly-one': 'हर घंटे · {first} से {last}',
   'chk-list.hourly-n': 'हर {e} घंटे · {first} से {last}',
 
-  'task.comment-switch': 'फ़ेल होने पर टिप्पणी माँगें',
-  'task.comment-hint': 'फ़ेल जवाब सेव करने से पहले स्टाफ़ को कारण बताना होगा।',
-  'task.asks-why': 'कारण पूछता है',
-
   'team.past': 'पिछले सदस्य',
   'team.past-row': '{name} · {when} को {by} ने हटाया',
   'team.past-none': 'इस टीम से किसी को नहीं हटाया गया।',

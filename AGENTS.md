@@ -28,3 +28,9 @@ pnpm format        # prettier --write .
 - **i18n:** _(Wired — `shared/i18n/`.)_ Interface strings never appear as literals in screens; they go in `locales/en.ts` (the typed source of truth) and are read via `useT()`/`t()`. HI/ML/KN are partials that fall back to English — Lifestyle supplies the wording (Language Assist §5). Authored content is never translated (Model §15).
 - **Environment config:** `API_BASE_URL` is a placeholder until a real dev backend exists. Mechanism not yet chosen — `app.json`'s `extra` field + `expo-constants`, `.env`, or EAS environment variables — decide when a real value is actually needed.
 - **Testing:** Deferred, not forgotten. Not set up yet. Jest + React Native Testing Library are the likely candidates when it's time.
+
+## Product decisions
+
+Spec conflicts the project owners have settled. Build to these; do not reopen them in code.
+
+- **Comment on failure is always required (settles Known Inconsistency #12).** A Yes/No answered **No**, and a reading outside its bounds, cannot be saved without a comment — Model §6 and FE Spec §3.3, not the per-task flag the Schema describes. Photograph tasks take no comment. In the app: there is no per-task "ask for a comment" switch in the task editor (the sheet states the rule instead); the run screen opens the comment sheet on every failing Yes/No or reading, whatever the task's `requires_comment_on_fail` says; and the editor always sends that field as `true` for a Yes/No or reading and `false` for a photograph, so the stored flag matches the rule. The mock enforces it for every task. **Backend follow-up for Lamax:** `mise-be` still treats the flag as per task, so it should enforce the comment on every failing Yes/No or reading, or stored flags and the app could disagree.

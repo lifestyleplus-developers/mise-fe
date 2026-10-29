@@ -485,11 +485,6 @@ export const ml = {
   'chk-list.hourly-one': 'മണിക്കൂറിൽ · {first} മുതൽ {last} വരെ',
   'chk-list.hourly-n': 'ഓരോ {e} മണിക്കൂറിലും · {first} മുതൽ {last} വരെ',
 
-  'task.comment-switch': 'പരാജയപ്പെട്ടാൽ അഭിപ്രായം ചോദിക്കുക',
-  'task.comment-hint':
-    'പരാജയപ്പെട്ട ഉത്തരം സേവ് ചെയ്യുന്നതിന് മുമ്പ് സ്റ്റാഫ് കാരണം പറയണം.',
-  'task.asks-why': 'കാരണം ചോദിക്കും',
-
   'team.past': 'മുൻ അംഗങ്ങൾ',
   'team.past-row': '{name} · {when} {by} നീക്കം ചെയ്തു',
   'team.past-none': 'ഈ ടീമിൽ നിന്ന് ആരെയും നീക്കം ചെയ്തിട്ടില്ല.',
