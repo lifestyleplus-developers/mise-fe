@@ -41,9 +41,9 @@
 29. **archiveConfirmNowhere** — a checklist that runs at no outlet. **R** — create one and archive it before starting it anywhere.
 30. **archiveFailed** — "Couldn't archive. It is still active." **—** only when the network really fails; the mock has no trigger.
 31. **archived** — back on CHK-10 with "{name} archived." **R**.
-32. **archivedView** — read-only, "Archived.", Restore. **R** — archive a checklist, then open it from the Archived filter.
-33. **restoreFailed** — "Couldn't restore." **—** as 30.
-34. **restored** — back on CHK-10 with "{name} restored." **R**.
+32. **archivedView** — read-only, "Archived.", no action: archiving is one-way. **R** — archive a checklist, then open it from the Archived filter.
+33. ~~restoreFailed~~ — removed with Restore.
+34. ~~restored~~ — removed with Restore.
 35. **discard** — Back with unsaved changes: "Discard changes?" **R**.
 36. **forbidden** — "Only head office can change this checklist." **—** only on a real 403; the frame already sends non-admins away.
 37. **gone** — "This checklist is no longer available." **R** — open an id that does not exist.
@@ -63,7 +63,7 @@
 - **Below the card**: one line saying what the schedule means, once it is complete and sound.
 - **"Edits apply to new runs. Runs already scheduled (up to 24 hours ahead) stay as they are."** shows on an edit that runs somewhere. This is the mockup's wording of the plan's "Edits apply from tomorrow".
 - **Rows to the rest of the checklist**: Tasks (CHK-09), Outlets (CHK-07, hidden in a single-outlet business), Team (CHK-08, single-outlet and running only).
-- **Archive** is a red outline button at the bottom. It asks first, says how many outlets stop running, and returns to CHK-10 with a notice. Its outlets and their people are not touched, so **Restore** puts it back exactly as it was. An archived checklist is read-only with Restore pinned at the bottom.
+- **Archive** is a red outline button at the bottom. It asks first, says how many outlets stop running, and returns to CHK-10 with a notice. Its outlets and their people are not touched, and archiving is one-way: there is no Restore (API Contract §5 and §16). An archived checklist is read-only, with nothing pinned at the bottom.
 - **Leaving with changes asks "Discard changes?"** by any route: Back, the Android key, the swipe. Switching frequency and back is not a change.
 - **Authored text** (the name) is shown as typed; everything else is in all four languages.
 

@@ -26,7 +26,6 @@ import {
   useArchiveChecklist,
   useChecklist,
   useCreateChecklist,
-  useRestoreChecklist,
   useUpdateChecklist,
 } from '@/features/checklist-editor/use-checklist';
 import { useChecklistNotice } from '@/features/checklists/checklist-notice';
@@ -120,12 +119,10 @@ function EditorForm({ checklist }: { checklist: ChecklistDetail | null }) {
   const [savedNotice, setSavedNotice] = React.useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = React.useState(false);
   const [archiveFailed, setArchiveFailed] = React.useState(false);
-  const [restoreFailed, setRestoreFailed] = React.useState(false);
 
   const create = useCreateChecklist();
   const update = useUpdateChecklist(id);
   const archive = useArchiveChecklist(id);
-  const restore = useRestoreChecklist(id);
   const saving = create.isPending || update.isPending;
 
   const guard = useUnsavedChanges({
@@ -217,17 +214,6 @@ function EditorForm({ checklist }: { checklist: ChecklistDetail | null }) {
     });
   }
 
-  function restoreNow() {
-    setRestoreFailed(false);
-    restore.mutate(undefined, {
-      onError: () => setRestoreFailed(true),
-      onSuccess: (restored) => {
-        setListNotice({ kind: 'restored', name: restored.name });
-        backToList();
-      },
-    });
-  }
-
   const taskCount = checklist?.tasks.length ?? 0;
   const rows: SummaryRow[] = [];
   if (checklist) {
@@ -301,33 +287,18 @@ function EditorForm({ checklist }: { checklist: ChecklistDetail | null }) {
     <ActivityIndicator size="small" color={THEME[theme].primaryForeground} />
   );
 
-  const footer = locked ? undefined : archivedView ? (
-    <View className="gap-3">
-      {restoreFailed ? (
-        <Banner
-          tone="error"
-          message={`${t('sched.restore-failed')} ${t('common.offline')}`}
-        />
-      ) : null}
+  // An archived checklist is read-only and archiving is one-way: no footer.
+  const footer =
+    locked || archivedView ? undefined : (
       <Button
         className="w-full"
-        disabled={restore.isPending}
-        onPress={restoreNow}
+        disabled={saving || (!isNew && !guard.changed)}
+        onPress={save}
       >
-        {restore.isPending ? spinner : null}
-        <Text>{t('sched.restore')}</Text>
+        {saving ? spinner : null}
+        <Text>{t(isNew ? 'sched.save-add' : 'admin.save')}</Text>
       </Button>
-    </View>
-  ) : (
-    <Button
-      className="w-full"
-      disabled={saving || (!isNew && !guard.changed)}
-      onPress={save}
-    >
-      {saving ? spinner : null}
-      <Text>{t(isNew ? 'sched.save-add' : 'admin.save')}</Text>
-    </Button>
-  );
+    );
 
   const archiveBody =
     running.length === 0

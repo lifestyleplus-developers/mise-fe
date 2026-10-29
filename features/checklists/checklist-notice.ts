@@ -1,7 +1,7 @@
 import { format, useT } from '@/shared/i18n';
 import { create } from 'zustand';
 
-type ChecklistNotice = { kind: 'archived' | 'restored'; name: string };
+type ChecklistNotice = { kind: 'archived'; name: string };
 
 type ChecklistNoticeStore = {
   notice: ChecklistNotice | null;
@@ -11,7 +11,7 @@ type ChecklistNoticeStore = {
 
 /**
  * What the admin list shows once after a change made on another screen: the
- * editor archives or restores a checklist and goes back, and the list says so.
+ * editor archives a checklist and goes back, and the list says so.
  */
 export const useChecklistNotice = create<ChecklistNoticeStore>((set) => ({
   notice: null,
@@ -21,7 +21,6 @@ export const useChecklistNotice = create<ChecklistNoticeStore>((set) => ({
 
 const NOTICE_KEY = {
   archived: 'checklists.archived-done',
-  restored: 'checklists.restored',
 } as const;
 
 /** The notice as text in the current language, or null. */

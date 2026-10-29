@@ -82,12 +82,3 @@ export function useArchiveChecklist(id: number) {
     },
   });
 }
-
-export function useRestoreChecklist(id: number) {
-  const storeChecklist = useStoreChecklist();
-  return useMutation({
-    mutationFn: () => api.checklists.restore(id),
-    networkMode: 'always',
-    onSuccess: storeChecklist,
-  });
-}

@@ -268,7 +268,6 @@ export const en = {
   'sort.menu': 'Actions for {name}',
   'sort.moved': 'Moved to position {n} of {total}',
   'checklists.archived-done': '{name} archived. Its history stays.',
-  'checklists.restored': '{name} restored.',
 
   'more.checklists': 'Checklists',
   'editor.new-title': 'New checklist',
@@ -343,16 +342,13 @@ export const en = {
   'sched.archive': 'Archive checklist',
   'sched.archive-title': 'Are you sure you want to archive {name}?',
   'sched.archive-body':
-    'No new runs will be made at its {n} outlets. Its past runs, scores and issues stay. You can restore it from Archived on the Checklists list.',
+    'No new runs will be made at its {n} outlets. Its past runs, scores and issues stay.',
   'sched.archive-body-one':
-    'No new runs will be made at its outlet. Its past runs, scores and issues stay. You can restore it from Archived on the Checklists list.',
-  'sched.archive-body-nowhere':
-    'It runs at no outlet yet. You can restore it from Archived on the Checklists list.',
+    'No new runs will be made at its outlet. Its past runs, scores and issues stay.',
+  'sched.archive-body-nowhere': 'It runs at no outlet yet.',
   'sched.archive-confirm': 'Archive',
   'sched.archive-failed': "Couldn't archive. It is still active.",
   'sched.archived': 'Archived.',
-  'sched.restore': 'Restore',
-  'sched.restore-failed': "Couldn't restore.",
   'sched.forbidden': 'Only head office can change this checklist.',
   'sched.gone': 'This checklist is no longer available.',
   'duration.days': '{n} d',

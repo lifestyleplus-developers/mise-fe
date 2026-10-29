@@ -1457,26 +1457,14 @@ export async function mockUpdateChecklist(
 }
 
 /**
- * POST /checklists/{id}/archive. No further runs anywhere; history stays. Its
- * outlets and their people are not touched, so restoring puts it back as it was.
+ * POST /checklists/{id}/archive. No further runs anywhere; history stays. One-way:
+ * there is no restore (API §5 and §16).
  */
 export async function mockArchiveChecklist(id: number): Promise<Checklist> {
   await delay();
   const me = requireAdmin();
   const checklist = findChecklist(me.business.id, id);
   checklist.is_archived = true;
-  return toChecklist(checklist);
-}
-
-/**
- * POST /checklists/{id}/restore. Undoes archive exactly: its tasks, outlets and
- * their people were never touched, so it runs again from the next generation.
- */
-export async function mockRestoreChecklist(id: number): Promise<Checklist> {
-  await delay();
-  const me = requireAdmin();
-  const checklist = findChecklist(me.business.id, id);
-  checklist.is_archived = false;
   return toChecklist(checklist);
 }
 

@@ -29,7 +29,6 @@ import {
   mockRemoveMember,
   mockReorderTasks,
   mockResetPassword,
-  mockRestoreChecklist,
   mockSignUpload,
   mockUpdateChecklist,
   mockUpdateMe,
@@ -172,16 +171,14 @@ export const api = {
      * GET /checklists?page=&page_size= — scoped to what the caller can see.
      * `archivedOnly` is the admin list's Archived filter: only archived checklists come
      * back, and the server applies it so no page is fetched just to be thrown away.
-     * TODO(server): needs a query parameter on `GET /checklists` (suggested
-     * `?is_archived=true`); `mise-be` only has `?include_archived=` today, which returns
-     * active and archived together.
+     * It is `?is_archived=true`; the Active view sends `?is_archived=false`.
      */
     list(
       page: number,
       pageSize: number,
       options?: { archivedOnly?: boolean },
     ): Promise<Page<ChecklistListItem>> {
-      // TODO(server): GET {API_BASE_URL}/api/v1/checklists
+      // TODO(server): request('/checklists', { query: { page, page_size: pageSize, is_archived: options?.archivedOnly ?? false } })
       return mockListChecklists(page, pageSize, options);
     },
 
@@ -207,12 +204,6 @@ export const api = {
     archive(id: number): Promise<Checklist> {
       // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/archive
       return mockArchiveChecklist(id);
-    },
-
-    /** POST /checklists/{id}/restore — not in the contract yet; see the mock. */
-    restore(id: number): Promise<Checklist> {
-      // TODO(server): POST {API_BASE_URL}/api/v1/checklists/{id}/restore
-      return mockRestoreChecklist(id);
     },
 
     /** GET /checklists/{id}/tasks — ordered. */

@@ -15,7 +15,7 @@ Exactly 17, in mockup order. "Reach it with" names the sign-in that shows the st
 3. **archived** — the Archived filter. _archive a checklist first, then switch to Archived._
 4. **archivedEmpty** — Archived filter with none. _raheem, before anything has been archived._
 5. **afterArchive** — back from CHK-06 with "{name} archived. Its history stays." Needs CHK-06; the notice store is in place.
-6. **afterRestore** — back from CHK-06 Restore with "{name} restored." Same.
+6. ~~afterRestore~~ — removed with Restore.
 7. **noCounts** — no task or outlet counts in the list: the note line is left off. Shown when the API sends neither count.
 8. **singleOutlet** — one outlet in the business: task count only. _Not reachable: the mock now has one business with several outlets._
 9. **empty** — no checklists yet: "No checklists yet" and a pointer. New is still in the header.
