@@ -110,6 +110,65 @@ type MockDb = {
   checklistState?: ChecklistState;
 };
 
+const STAFF_FIRST_NAMES = [
+  'Aarav',
+  'Bina',
+  'Chetan',
+  'Divya',
+  'Eshan',
+  'Farah',
+  'Gopal',
+  'Hema',
+  'Imran',
+  'Jaya',
+];
+const STAFF_LAST_NAMES = [
+  'Menon',
+  'Pillai',
+  'Rao',
+  'Shetty',
+  'Nambiar',
+  'Kurup',
+  'Das',
+  'Iyer',
+  'Bhat',
+  'Khan',
+  'Thomas',
+  'George',
+  'Varma',
+];
+
+/**
+ * 130 more team members for ZamZam, so a list of people runs past one page and
+ * the picker's scrolling and server-side search have something to work on.
+ */
+function extraStaff(): DbUser[] {
+  const tenantId = 7;
+  return STAFF_FIRST_NAMES.flatMap((first, f) =>
+    STAFF_LAST_NAMES.map((last, l) => {
+      const index = f * STAFF_LAST_NAMES.length + l;
+      return {
+        id: 1000 + index,
+        tenant_id: tenantId,
+        username: `${first}.${last}`.toLowerCase(),
+        password: '1234',
+        full_name: `${first} ${last}`,
+        tenant_role: 'MEMBER' as const,
+        interface_language: 'EN' as const,
+        memberships: {
+          cl_admin_assignments: [],
+          cl_imp_assignments: [],
+          attendance_configs: [],
+          inventory_outlets: [],
+          spot_check_outlets: [],
+        },
+        // A few have left, so "Inactive" rows show up in the picker too.
+        is_active: index % 17 !== 0,
+      };
+    }),
+  );
+}
+
 /**
  * Kept on `globalThis` so a hot reload of this file does not wipe the session
  * and every edit made so far, which would make each call answer token_expired
@@ -119,7 +178,7 @@ const store = globalThis as typeof globalThis & { __miseMockDb?: MockDb };
 const db: MockDb = (store.__miseMockDb ??= {
   answers: new Map(),
   signedUploadKeys: new Map(),
-  users: users as DbUser[],
+  users: [...(users as DbUser[]), ...extraStaff()],
   businesses,
   outlets: outletFixtures.map((outlet) => ({ ...outlet })),
   session: null,
@@ -481,14 +540,21 @@ export async function mockListUsers(query: UsersQuery): Promise<Page<User>> {
     .sort(
       (a, b) =>
         ROLE_RANK[a.tenant_role] - ROLE_RANK[b.tenant_role] ||
-        a.full_name.localeCompare(b.full_name),
+        a.full_name.localeCompare(b.full_name) ||
+        a.id - b.id,
     );
-  const start = (query.page - 1) * query.pageSize;
+  // Like the platform: a page size above 100 is cut to 100, and a page past the
+  // end is a 404 (page 1 of an empty result is fine).
+  const pageSize = Math.min(Math.max(query.pageSize, 1), 100);
+  const start = (query.page - 1) * pageSize;
+  if (query.page > 1 && start >= matches.length) {
+    throw apiError(404, 'not_found', 'Not found.');
+  }
   return {
     count: matches.length,
-    next: start + query.pageSize < matches.length ? query.page + 1 : null,
+    next: start + pageSize < matches.length ? query.page + 1 : null,
     previous: query.page > 1 ? query.page - 1 : null,
-    results: matches.slice(start, start + query.pageSize).map(toUser),
+    results: matches.slice(start, start + pageSize).map(toUser),
   };
 }
 

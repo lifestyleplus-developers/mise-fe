@@ -8,6 +8,7 @@ import { usePeople } from '@/features/assignments/use-people';
 import type { AssignmentRole } from '@/shared/api/types';
 import { PeoplePicker } from '@/shared/components/people-picker';
 import { format, useT } from '@/shared/i18n';
+import { useDebouncedValue } from '@/shared/lib/use-debounced-value';
 import * as React from 'react';
 
 type TeamPickerProps = {
@@ -38,7 +39,8 @@ function TeamPicker({
   onLocked,
 }: TeamPickerProps) {
   const t = useT();
-  const people = usePeople();
+  const [search, setSearch] = React.useState('');
+  const people = usePeople(useDebouncedValue(search.trim()));
   const members = useMembers(assignmentId);
   const add = useAddMember(assignmentId);
   const [pendingId, setPendingId] = React.useState<number | null>(null);
@@ -65,12 +67,14 @@ function TeamPicker({
 
   const list =
     people.data && members.data
-      ? people.data.results.map((person) => ({
-          id: person.id,
-          name: person.full_name,
-          username: person.username,
-          disabledReason: reasonFor(person.id, person.is_active),
-        }))
+      ? people.data.pages
+          .flatMap((page) => page.results)
+          .map((person) => ({
+            id: person.id,
+            name: person.full_name,
+            username: person.username,
+            disabledReason: reasonFor(person.id, person.is_active),
+          }))
       : undefined;
 
   function textFor(failure: TeamFailure, name: string): string {
@@ -92,6 +96,11 @@ function TeamPicker({
       title={title}
       people={list}
       loading={people.isPending || members.isPending}
+      onSearchChange={setSearch}
+      searching={people.isPlaceholderData}
+      hasMore={people.hasNextPage}
+      loadingMore={people.isFetchingNextPage}
+      onLoadMore={() => void people.fetchNextPage()}
       failed={people.isError || members.isError}
       onRetry={() => {
         void people.refetch();

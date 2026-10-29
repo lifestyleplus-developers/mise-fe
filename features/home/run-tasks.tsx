@@ -27,8 +27,9 @@ function useAnswerText() {
 
 /**
  * The tasks of one run, read-only, for a Home card to unfold: the task, and what has
- * been answered so far. A failed answer wears a flag and a pass a tick, so it is not
- * colour alone that says which; a task not answered yet is an empty circle.
+ * been answered so far. A failed or missed answer wears a flag and a pass a tick, so it
+ * is not colour alone that says which; an answer the platform has not judged yet wears
+ * a clock, and a task not answered yet is an empty circle.
  */
 export function RunTasks({ runId }: { runId: number }) {
   const t = useT();
@@ -69,8 +70,10 @@ export function RunTasks({ runId }: { runId: number }) {
     <View className="gap-2.5 px-4 pb-3">
       {query.data.tasks.map((task) => {
         const answer = answerText(task);
-        const failed = task.outcome === 'FAIL';
-        const judging = task.outcome === 'PENDING_JUDGEMENT';
+        // A tick means the platform said PASS. Until it has said anything, or while
+        // the AI is still looking at a photo, the task waits behind a clock.
+        const failed = task.outcome === 'FAIL' || task.outcome === 'MISSED';
+        const passed = task.outcome === 'PASS';
         return (
           <View
             key={task.id}
@@ -83,15 +86,15 @@ export function RunTasks({ runId }: { runId: number }) {
           >
             {answer === null ? (
               <Circle className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-            ) : judging ? (
-              <Clock className="text-pending-soft-foreground mt-0.5 size-4 shrink-0" />
             ) : failed ? (
               <Flag className="text-destructive-soft-foreground mt-0.5 size-4 shrink-0" />
-            ) : (
+            ) : passed ? (
               <Check
                 className="text-foreground mt-0.5 size-4 shrink-0"
                 strokeWidth={2.5}
               />
+            ) : (
+              <Clock className="text-pending-soft-foreground mt-0.5 size-4 shrink-0" />
             )}
             <View className="min-w-0 flex-1 flex-row flex-wrap items-baseline gap-x-2">
               <Text className="min-w-0 shrink text-[14px] leading-snug">

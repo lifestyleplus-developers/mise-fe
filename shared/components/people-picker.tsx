@@ -41,6 +41,17 @@ type PeoplePickerProps = {
   noResultMessage?: (query: string) => string;
   /** A failure to show above the list, e.g. the last pick did not save. */
   error?: string;
+  /**
+   * Set when the list is searched by whoever owns it (on the server): the picker
+   * reports what is typed and shows `people` as given, instead of filtering it.
+   */
+  onSearchChange?: (query: string) => void;
+  /** A new search is loading; the previous results stay up meanwhile. */
+  searching?: boolean;
+  /** More people can be loaded by scrolling to the end. */
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 };
 
 /** A searchable list of people to choose one from, in a bottom sheet. */
@@ -56,6 +67,11 @@ function PeoplePicker({
   pendingId = null,
   noResultMessage,
   error,
+  onSearchChange,
+  searching = false,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: PeoplePickerProps) {
   const t = useT();
   const theme = useAppliedTheme();
@@ -64,12 +80,16 @@ function PeoplePicker({
   // A fresh search each time it opens.
   if (visible !== wasVisible) {
     setWasVisible(visible);
-    if (visible) setQuery('');
+    if (visible) {
+      setQuery('');
+      onSearchChange?.('');
+    }
   }
 
   const needle = query.trim().toLowerCase();
   const shown = (people ?? []).filter(
     (person) =>
+      onSearchChange ||
       !needle ||
       person.name.toLowerCase().includes(needle) ||
       (person.username ?? '').toLowerCase().includes(needle),
@@ -95,11 +115,20 @@ function PeoplePicker({
       <View className="mb-3">
         <SearchField
           value={query}
-          onChange={setQuery}
+          onChange={(next) => {
+            setQuery(next);
+            onSearchChange?.(next);
+          }}
           placeholder={t('people.search')}
           clearLabel={t('people.clear')}
         />
       </View>
+
+      {searching ? (
+        <View className="items-center pb-3">
+          <ActivityIndicator size="small" color={THEME[theme].foreground} />
+        </View>
+      ) : null}
 
       {error ? (
         <Text
@@ -151,6 +180,18 @@ function PeoplePicker({
         <ScrollView
           className="max-h-[340px]"
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={100}
+          onScroll={(event) => {
+            if (!hasMore || loadingMore || !onLoadMore) return;
+            const { layoutMeasurement, contentOffset, contentSize } =
+              event.nativeEvent;
+            if (
+              layoutMeasurement.height + contentOffset.y >=
+              contentSize.height - 80
+            ) {
+              onLoadMore();
+            }
+          }}
         >
           <View className="border-border bg-card overflow-hidden rounded-3xl border">
             {shown.map((person, index) => {
@@ -208,6 +249,11 @@ function PeoplePicker({
               );
             })}
           </View>
+          {loadingMore ? (
+            <View className="items-center py-3">
+              <ActivityIndicator size="small" color={THEME[theme].foreground} />
+            </View>
+          ) : null}
         </ScrollView>
       )}
     </BottomSheet>
