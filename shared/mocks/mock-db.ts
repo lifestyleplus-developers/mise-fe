@@ -27,6 +27,37 @@ import type {
   AmbiguousUsernameBody,
   AnswerTaskRequest,
   ApiErrorBody,
+  AppointManagerRequest,
+  AttendanceConfig,
+  AttendanceConfigsQuery,
+  AttendanceCounts,
+  AttendanceMark,
+  AttendanceMarkChange,
+  AttendanceMarkStatus,
+  AttendanceSession,
+  AttendanceSessionDetail,
+  AttendanceSessionsQuery,
+  CreateAttendanceConfigRequest,
+  CreateInventoryItemRequest,
+  CreateStaffRequest,
+  EnrolStaffRequest,
+  InventoryItem,
+  InventoryItemsQuery,
+  InventoryMovement,
+  InventoryMovementKind,
+  InventoryMovementsQuery,
+  InventoryUnit,
+  MarkPersonRequest,
+  RecordMovementRequest,
+  Staff,
+  StaffQuery,
+  StockOnHandReport,
+  StockReportQuery,
+  StockSpendReport,
+  StockSummaryReport,
+  UpdateAttendanceConfigRequest,
+  UpdateInventoryItemRequest,
+  UpdateStaffRequest,
   Candidate,
   CandidatesQuery,
   Checklist,
@@ -72,8 +103,10 @@ import {
 } from '@/shared/lib/schedule';
 import { ApiError } from '@/shared/api/http';
 
+import attendanceFixtures from './fixtures/attendance.json';
 import businesses from './fixtures/businesses.json';
 import checklistFixtures from './fixtures/checklists.json';
+import inventoryFixtures from './fixtures/inventory.json';
 import outletFixtures from './fixtures/outlets.json';
 import users from './fixtures/users.json';
 
@@ -111,6 +144,10 @@ type MockDb = {
   judgements?: Map<number, { readyAt: number; verdict: 'PASS' | 'FAIL' }>;
   /** Authored checklists, tasks and assignments; seeded on first use. */
   checklistState?: ChecklistState;
+  /** Staff, attendance configurations, sessions and marks; seeded on first use. */
+  attendanceState?: AttendanceState;
+  /** Inventory items and their append-only movements; seeded on first use. */
+  inventoryState?: InventoryState;
 };
 
 const STAFF_FIRST_NAMES = [
@@ -2045,5 +2082,1677 @@ export async function mockSignUpload(
     method: 'PUT',
     headers: { 'content-type': request.content_type },
     key,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Week 8 — attendance (API Contract §11) and inventory (§12)
+//
+// Failure triggers, so the error states can be reached by hand:
+//   a name, note or search of "offline" — the network dies (a save that cannot send)
+//   a name, note or search of "fault"   — a 500 (save failed, load failed, row failed)
+// A module that is off answers 404; a role that was lost answers 403.
+// ---------------------------------------------------------------------------
+
+function triggerFault(text?: string | null) {
+  const value = text?.trim().toLowerCase();
+  if (value === 'offline') throw new Error('Network request failed');
+  if (value === 'fault') {
+    throw apiError(500, 'server_error', 'Server fault.');
+  }
+}
+
+function invalid(message: string, field: string) {
+  return apiError(400, API_ERROR_CODE.VALIDATION_ERROR, message, field);
+}
+
+/** Like the platform: a page size above 100 is cut to 100, a page past the end is 404. */
+function paginate<T>(matches: T[], page: number, pageSize: number): Page<T> {
+  const size = Math.min(Math.max(pageSize, 1), 100);
+  const start = (page - 1) * size;
+  if (page > 1 && start >= matches.length) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return {
+    count: matches.length,
+    next: start + size < matches.length ? page + 1 : null,
+    previous: page > 1 ? page - 1 : null,
+    results: matches.slice(start, start + size),
+  };
+}
+
+const MINUTE_MS = 60_000;
+
+/** The device's local day, as the YYYY-MM-DD the platform's `from`/`to` take. */
+function localDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** `hhmm` on the local day `daysAgo` days back. */
+function localTime(daysAgo: number, hhmm: string): Date {
+  const moment = new Date();
+  moment.setHours(Number(hhmm.slice(0, 2)), Number(hhmm.slice(3)), 0, 0);
+  moment.setDate(moment.getDate() - daysAgo);
+  return moment;
+}
+
+function parseDay(value: string, field: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const moment = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : null;
+  if (!moment || Number.isNaN(moment.getTime())) {
+    throw invalid('Use a date like 2026-10-14.', field);
+  }
+  return moment;
+}
+
+/** `from` starts its day, `to` takes in all of its day; `to` before `from` is refused. */
+function dayRange(from?: string, to?: string) {
+  const start = from ? parseDay(from, 'from') : null;
+  const end = to ? parseDay(to, 'to') : null;
+  if (end) end.setHours(23, 59, 59, 999);
+  if (start && end && end.getTime() < start.getTime()) {
+    throw invalid('The end date cannot be before the start date.', 'to');
+  }
+  return { fromMs: start?.getTime() ?? null, toMs: end?.getTime() ?? null };
+}
+
+function userRef(id: number | null) {
+  if (id === null) return null;
+  const user = db.users.find((candidate) => candidate.id === id);
+  return user ? { id: user.id, full_name: user.full_name } : null;
+}
+
+/** Cheap, repeatable 0–99 from two ids, so a year of history looks lived in but never changes. */
+function pseudo(a: number, b: number): number {
+  return Math.abs(Math.imul(a, 2654435761) ^ Math.imul(b, 40503)) % 100;
+}
+
+// --- attendance ------------------------------------------------------------
+
+type DbStaff = Staff & { tenant_id: number };
+
+type DbAttendanceConfig = Omit<AttendanceConfig, 'managers'> & {
+  tenant_id: number;
+  manager_ids: number[];
+};
+
+type DbMark = {
+  id: number;
+  staff_id: number;
+  status: AttendanceMarkStatus;
+  source: AttendanceMark['source'];
+  note: string | null;
+  marked_by_id: number | null;
+  marked_at: string | null;
+  changes: AttendanceMarkChange[];
+};
+
+type DbSession = {
+  id: number;
+  tenant_id: number;
+  config_id: number;
+  /** The local day it belongs to: one session per config per day. */
+  period: string;
+  window_open: string;
+  window_close: string;
+  status: 'OPEN' | 'FINALIZED';
+  finalized_at: string | null;
+  marks: DbMark[];
+};
+
+type AttendanceState = {
+  staff: DbStaff[];
+  configs: DbAttendanceConfig[];
+  sessions: DbSession[];
+  nextStaffId: number;
+  nextConfigId: number;
+};
+
+/**
+ * Today's window as minutes from when the app started (like the run fixtures), so
+ * there is always something open, and something that has just closed, to try.
+ * Evening and Kitchen keep their real clock times.
+ */
+const TODAY_FROM_NOW: Record<number, { open: number; close: number }> = {
+  2: { open: -20, close: 40 },
+  3: { open: -10, close: 50 },
+  4: { open: -150, close: -60 },
+};
+
+/** How many people are already marked present when today's session opens. */
+const TODAY_PREMARKED: Record<number, number> = { 2: 8, 3: 3, 4: 9 };
+
+/** Morning at ZamZam has a year behind it: 200 sessions, spread over 365 days. */
+function historyDays(configId: number): number[] {
+  if (configId !== 2) return [1, 2, 3, 4, 5, 6, 7];
+  const days: number[] = [];
+  for (let day = 1; day <= 365; day++) {
+    if (Math.floor((day * 200) / 365) !== Math.floor(((day - 1) * 200) / 365)) {
+      days.push(day);
+    }
+  }
+  return days;
+}
+
+/** 120 people at Central Kitchen, so a roster runs past one page of 25. */
+function kitchenStaff(): DbStaff[] {
+  return Array.from({ length: 120 }, (_, index) => ({
+    id: 201 + index,
+    tenant_id: 7,
+    full_name: `${STAFF_FIRST_NAMES[index % STAFF_FIRST_NAMES.length]} ${
+      STAFF_LAST_NAMES[
+        Math.floor(index / STAFF_FIRST_NAMES.length) % STAFF_LAST_NAMES.length
+      ]
+    }`,
+    staff_code: `CK-${String(index + 1).padStart(3, '0')}`,
+    is_archived: false,
+    outlets: [{ outlet_id: 12, is_active: true }],
+  }));
+}
+
+function windowFor(config: DbAttendanceConfig, daysAgo: number) {
+  const rolling = daysAgo === 0 ? TODAY_FROM_NOW[config.id] : undefined;
+  const open = rolling
+    ? new Date(db.startedAt + rolling.open * MINUTE_MS)
+    : localTime(daysAgo, config.st_time);
+  const close = rolling
+    ? new Date(db.startedAt + rolling.close * MINUTE_MS)
+    : new Date(open.getTime() + config.deadline_minutes * MINUTE_MS);
+  return { open, close };
+}
+
+/** Who is on the roster of an outlet when a session opens, by name. */
+function rosterAt(
+  state: AttendanceState,
+  outletId: number,
+  daysAgo: number,
+): DbStaff[] {
+  return state.staff
+    .filter((person) => {
+      const link = person.outlets.find((o) => o.outlet_id === outletId);
+      if (!link) return false;
+      if (link.is_active && !person.is_archived) return true;
+      // Someone who has since left was still on the roster of an older session.
+      return daysAgo > 14;
+    })
+    .sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id - b.id);
+}
+
+function pastMark(
+  session: Pick<DbSession, 'id' | 'window_open' | 'window_close'>,
+  person: DbStaff,
+  managerId: number,
+): DbMark {
+  const roll = pseudo(session.id, person.id);
+  const open = new Date(session.window_open).getTime();
+  const close = new Date(session.window_close).getTime();
+  const marker = roll < 88 ? managerId : null;
+  const markedAt =
+    marker === null
+      ? session.window_close
+      : new Date(
+          Math.min(open + (5 + (roll % 40)) * MINUTE_MS, close),
+        ).toISOString();
+  const present = roll < 80;
+  const corrected = roll >= 70 && roll < 73;
+  return {
+    id: session.id * 1000 + person.id,
+    staff_id: person.id,
+    status: present ? 'PRESENT' : 'NOT_PRESENT',
+    source: marker === null ? 'SYSTEM' : 'MANUAL',
+    note: present && roll % 23 === 0 ? 'Came late' : null,
+    marked_by_id: marker,
+    marked_at: markedAt,
+    changes: corrected
+      ? [
+          {
+            from_status: 'NOT_PRESENT',
+            to_status: 'PRESENT',
+            changed_by: managerId,
+            changed_at: new Date(open + (close - open) * 0.8).toISOString(),
+          },
+        ]
+      : [],
+  };
+}
+
+function seedAttendanceState(): AttendanceState {
+  const state: AttendanceState = {
+    staff: [
+      ...attendanceFixtures.staff.map((person) => ({
+        ...person,
+        tenant_id: 7,
+        outlets: person.outlets.map((link) => ({ ...link })),
+      })),
+      ...kitchenStaff(),
+    ],
+    configs: attendanceFixtures.configs.map((config) => ({
+      ...config,
+      tenant_id: 7,
+      manager_ids: [...config.manager_ids],
+    })) as DbAttendanceConfig[],
+    sessions: [],
+    nextStaffId: 400,
+    nextConfigId: 10,
+  };
+
+  for (const config of state.configs) {
+    const managerId = config.manager_ids[0] ?? 4;
+    for (const daysAgo of historyDays(config.id)) {
+      const { open, close } = windowFor(config, daysAgo);
+      const session: DbSession = {
+        id: config.id * 1000 + daysAgo,
+        tenant_id: config.tenant_id,
+        config_id: config.id,
+        period: localDay(open),
+        window_open: open.toISOString(),
+        window_close: close.toISOString(),
+        status: 'FINALIZED',
+        finalized_at: close.toISOString(),
+        marks: [],
+      };
+      session.marks = rosterAt(state, config.outlet_id, daysAgo).map((person) =>
+        pastMark(session, person, managerId),
+      );
+      state.sessions.push(session);
+    }
+  }
+  return state;
+}
+
+function attendanceState(): AttendanceState {
+  return (db.attendanceState ??= seedAttendanceState());
+}
+
+/** Generation: a session exists once its window has opened, one per config per day. */
+function openTodaySessions(state: AttendanceState) {
+  const now = Date.now();
+  const today = localDay(new Date());
+  for (const config of state.configs) {
+    if (config.is_archived) continue;
+    if (
+      state.sessions.some(
+        (s) => s.config_id === config.id && s.period === today,
+      )
+    ) {
+      continue;
+    }
+    const { open, close } = windowFor(config, 0);
+    if (open.getTime() > now) continue;
+    const session: DbSession = {
+      id: config.id * 1000,
+      tenant_id: config.tenant_id,
+      config_id: config.id,
+      period: today,
+      window_open: open.toISOString(),
+      window_close: close.toISOString(),
+      status: 'OPEN',
+      finalized_at: null,
+      marks: [],
+    };
+    const managerId = config.manager_ids[0] ?? 4;
+    const premarked = TODAY_PREMARKED[config.id] ?? 0;
+    session.marks = rosterAt(state, config.outlet_id, 0).map(
+      (person, index) => ({
+        id: session.id * 1000 + person.id,
+        staff_id: person.id,
+        status: index < premarked ? 'PRESENT' : 'UNMARKED',
+        source: 'MANUAL',
+        note: null,
+        marked_by_id: index < premarked ? managerId : null,
+        marked_at:
+          index < premarked
+            ? new Date(
+                Math.min(open.getTime() + (index + 1) * 2 * MINUTE_MS, now),
+              ).toISOString()
+            : null,
+        changes: [],
+      }),
+    );
+    state.sessions.push(session);
+  }
+}
+
+/** A read of a session past its close finalises it first: nobody-marked becomes SYSTEM. */
+function finalizeOverdue(state: AttendanceState) {
+  const now = Date.now();
+  for (const session of state.sessions) {
+    if (session.status !== 'OPEN') continue;
+    if (new Date(session.window_close).getTime() > now) continue;
+    for (const mark of session.marks) {
+      if (mark.status !== 'UNMARKED') continue;
+      mark.status = 'NOT_PRESENT';
+      mark.source = 'SYSTEM';
+      mark.marked_by_id = null;
+      mark.marked_at = session.window_close;
+    }
+    session.status = 'FINALIZED';
+    session.finalized_at = session.window_close;
+  }
+}
+
+type AttendanceActor = {
+  me: MeResponse;
+  admin: boolean;
+  /** Configs the caller has a manager row on. */
+  managedConfigIds: Set<number>;
+  /** Outlets of the configs they manage. */
+  managedOutletIds: Set<number>;
+};
+
+function attendanceOutletOn(tenantId: number, outletId: number): boolean {
+  return db.outlets.some(
+    (outlet) =>
+      outlet.id === outletId &&
+      outlet.tenant_id === tenantId &&
+      outlet.attendance_enabled &&
+      !outlet.is_archived,
+  );
+}
+
+/** 404 while no outlet has attendance on; 403 for anyone who is neither admin nor manager. */
+function attendanceActor(): AttendanceActor {
+  const me = resolveMe();
+  const state = attendanceState();
+  if (
+    !db.outlets.some(
+      (outlet) =>
+        outlet.tenant_id === me.business.id &&
+        outlet.attendance_enabled &&
+        !outlet.is_archived,
+    )
+  ) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  const admin = canAdminister(me.user.tenant_role);
+  const managed = state.configs.filter(
+    (config) =>
+      config.tenant_id === me.business.id &&
+      !config.is_archived &&
+      me.memberships.attendance_configs.includes(config.id) &&
+      attendanceOutletOn(me.business.id, config.outlet_id),
+  );
+  if (!admin && managed.length === 0) {
+    throw apiError(403, API_ERROR_CODE.PERMISSION_DENIED, 'Not permitted.');
+  }
+  return {
+    me,
+    admin,
+    managedConfigIds: new Set(managed.map((config) => config.id)),
+    managedOutletIds: new Set(managed.map((config) => config.outlet_id)),
+  };
+}
+
+function requireAttendanceAdmin(actor: AttendanceActor) {
+  if (!actor.admin) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Only an administrator can change configuration.',
+    );
+  }
+}
+
+/** An outlet whose attendance the caller may read; anything else looks the same: 404. */
+function readableAttendanceOutlet(
+  actor: AttendanceActor,
+  outletId: number,
+): number {
+  const readable = actor.admin
+    ? attendanceOutletOn(actor.me.business.id, outletId)
+    : actor.managedOutletIds.has(outletId);
+  if (!readable) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return outletId;
+}
+
+/** The outlets an enrolment or a new person may point at. */
+function assertCanManageOutlet(actor: AttendanceActor, outletId: number) {
+  const outlet = db.outlets.find(
+    (candidate) =>
+      candidate.id === outletId && candidate.tenant_id === actor.me.business.id,
+  );
+  if (!outlet) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!outlet.attendance_enabled || outlet.is_archived) {
+    throw invalid('Attendance is not enabled at this outlet.', 'outlet_ids');
+  }
+  if (!actor.admin && !actor.managedOutletIds.has(outletId)) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'You do not manage attendance at this outlet.',
+    );
+  }
+}
+
+// staff
+
+function visibleStaff(actor: AttendanceActor): DbStaff[] {
+  return attendanceState().staff.filter(
+    (person) =>
+      person.tenant_id === actor.me.business.id &&
+      (actor.admin ||
+        person.outlets.some((link) =>
+          actor.managedOutletIds.has(link.outlet_id),
+        )),
+  );
+}
+
+function toStaff(person: DbStaff, actor: AttendanceActor): Staff {
+  return {
+    id: person.id,
+    full_name: person.full_name,
+    staff_code: person.staff_code,
+    is_archived: person.is_archived,
+    // A manager does not learn where else someone works.
+    outlets: person.outlets
+      .filter(
+        (link) => actor.admin || actor.managedOutletIds.has(link.outlet_id),
+      )
+      .map((link) => ({ ...link }))
+      .sort((a, b) => a.outlet_id - b.outlet_id),
+  };
+}
+
+function findVisibleStaff(actor: AttendanceActor, id: number): DbStaff {
+  const person = visibleStaff(actor).find((candidate) => candidate.id === id);
+  if (!person) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return person;
+}
+
+function assertCodeFree(
+  tenantId: number,
+  code: string | null | undefined,
+  exceptId?: number,
+) {
+  if (!code) return;
+  const taken = attendanceState().staff.some(
+    (person) =>
+      person.tenant_id === tenantId &&
+      person.id !== exceptId &&
+      person.staff_code?.toLowerCase() === code.toLowerCase(),
+  );
+  if (taken) {
+    throw invalid('That code is already used by someone else.', 'staff_code');
+  }
+}
+
+function cleanCode(code: string | null | undefined): string | null {
+  const trimmed = code?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/** GET /staff — by name. An outlet filter lists the people active there. */
+export async function mockListStaff(query: StaffQuery): Promise<Page<Staff>> {
+  await delay();
+  const actor = attendanceActor();
+  triggerFault(query.search);
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableAttendanceOutlet(actor, query.outletId);
+  const needle = query.search?.trim().toLowerCase();
+  const matches = visibleStaff(actor)
+    .filter((person) => query.includeArchived || !person.is_archived)
+    .filter(
+      (person) =>
+        outletId === undefined ||
+        person.outlets.some(
+          (link) => link.outlet_id === outletId && link.is_active,
+        ),
+    )
+    .filter(
+      (person) =>
+        !needle ||
+        person.full_name.toLowerCase().includes(needle) ||
+        person.staff_code?.toLowerCase().includes(needle),
+    )
+    .sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id - b.id)
+    .map((person) => toStaff(person, actor));
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** POST /staff */
+export async function mockCreateStaff(
+  request: CreateStaffRequest,
+): Promise<Staff> {
+  await delay();
+  const actor = attendanceActor();
+  const fullName = request.full_name.trim();
+  if (!fullName) throw invalid('Name is required.', 'full_name');
+  triggerFault(fullName);
+  const code = cleanCode(request.staff_code);
+  assertCodeFree(actor.me.business.id, code);
+
+  const outletIds = [...new Set(request.outlet_ids ?? [])];
+  if (!actor.admin && outletIds.length === 0) {
+    throw invalid('Choose the outlet the person works at.', 'outlet_ids');
+  }
+  for (const outletId of outletIds) assertCanManageOutlet(actor, outletId);
+
+  const state = attendanceState();
+  const person: DbStaff = {
+    id: state.nextStaffId++,
+    tenant_id: actor.me.business.id,
+    full_name: fullName,
+    staff_code: code,
+    is_archived: false,
+    outlets: outletIds.map((outlet_id) => ({ outlet_id, is_active: true })),
+  };
+  state.staff.push(person);
+  return toStaff(person, actor);
+}
+
+/** PATCH /staff/{id} — name, code, archive. */
+export async function mockUpdateStaff(
+  id: number,
+  request: UpdateStaffRequest,
+): Promise<Staff> {
+  await delay();
+  const actor = attendanceActor();
+  const person = findVisibleStaff(actor, id);
+  if (request.full_name !== undefined) {
+    if (!request.full_name.trim())
+      throw invalid('Name is required.', 'full_name');
+    triggerFault(request.full_name);
+  }
+  const code =
+    request.staff_code === undefined
+      ? undefined
+      : cleanCode(request.staff_code);
+  assertCodeFree(actor.me.business.id, code, person.id);
+
+  const next = {
+    full_name: request.full_name?.trim() ?? person.full_name,
+    staff_code: code === undefined ? person.staff_code : code,
+    is_archived: request.is_archived ?? person.is_archived,
+  };
+  const changed =
+    next.full_name !== person.full_name ||
+    next.staff_code !== person.staff_code ||
+    next.is_archived !== person.is_archived;
+  // Name, code and archive belong to the person, not to one outlet: a manager may
+  // change them only while everywhere the person is active is an outlet they manage.
+  const elsewhere = person.outlets.some(
+    (link) => link.is_active && !actor.managedOutletIds.has(link.outlet_id),
+  );
+  if (!actor.admin && elsewhere && changed) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'This person also works at an outlet you do not manage. Ask an admin to change their details.',
+    );
+  }
+  Object.assign(person, next);
+  return toStaff(person, actor);
+}
+
+/** POST /staff/{id}/outlets — enrol, or set whether they are active there. */
+export async function mockEnrolStaff(
+  id: number,
+  request: EnrolStaffRequest,
+): Promise<Staff> {
+  await delay();
+  const actor = attendanceActor();
+  const person = findVisibleStaff(actor, id);
+  assertCanManageOutlet(actor, request.outlet_id);
+  const isActive = request.is_active ?? true;
+  const link = person.outlets.find((o) => o.outlet_id === request.outlet_id);
+  if (link) link.is_active = isActive;
+  else
+    person.outlets.push({ outlet_id: request.outlet_id, is_active: isActive });
+  return toStaff(person, actor);
+}
+
+// configs
+
+function visibleConfigs(actor: AttendanceActor): DbAttendanceConfig[] {
+  return attendanceState().configs.filter(
+    (config) =>
+      config.tenant_id === actor.me.business.id &&
+      attendanceOutletOn(config.tenant_id, config.outlet_id) &&
+      (actor.admin ? true : actor.managedConfigIds.has(config.id)),
+  );
+}
+
+function toConfig(config: DbAttendanceConfig): AttendanceConfig {
+  const { tenant_id: _tenant, manager_ids, ...rest } = config;
+  return {
+    ...rest,
+    managers: manager_ids
+      .map((managerId) => db.users.find((user) => user.id === managerId))
+      .filter((user): user is DbUser => user !== undefined)
+      .sort((a, b) => a.username.localeCompare(b.username))
+      .map((user) => ({
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+      })),
+  };
+}
+
+function findVisibleConfig(actor: AttendanceActor, id: number) {
+  const config = visibleConfigs(actor).find((candidate) => candidate.id === id);
+  if (!config) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return config;
+}
+
+/** An archived configuration is frozen: no edit, no appointment. */
+function assertConfigLive(config: DbAttendanceConfig) {
+  if (config.is_archived) {
+    throw invalid(
+      'This configuration is archived and can no longer be changed.',
+      'config_id',
+    );
+  }
+}
+
+/** §11 and §5: the schedule's shape, the window against the next period, and the name. */
+function assertValidConfig(
+  config: Pick<
+    AttendanceConfig,
+    | 'name'
+    | 'recurrence'
+    | 'st_time'
+    | 'deadline_minutes'
+    | 'weekdays'
+    | 'day_of_month'
+  >,
+  outletId: number,
+  tenantId: number,
+  exceptId?: number,
+) {
+  if ((config.recurrence as string) === 'HOURLY') {
+    throw invalid('Attendance cannot repeat hourly.', 'recurrence');
+  }
+  if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(config.recurrence)) {
+    throw invalid('Choose daily, weekly or monthly.', 'recurrence');
+  }
+  if (config.name.trim().length > 150) {
+    throw invalid('Use 150 characters or fewer.', 'name');
+  }
+  assertValidSchedule({ ...config, interval_hours: null, last_run_time: null });
+
+  const taken = attendanceState().configs.some(
+    (other) =>
+      other.tenant_id === tenantId &&
+      other.outlet_id === outletId &&
+      other.id !== exceptId &&
+      !other.is_archived &&
+      other.name.toLowerCase() === config.name.trim().toLowerCase(),
+  );
+  if (taken) {
+    throw invalid(
+      'This name is already used for another session at this outlet.',
+      'name',
+    );
+  }
+}
+
+/** GET /attendance/configs — ADMIN/OWNER see every outlet's; a manager the ones they manage. */
+export async function mockListAttendanceConfigs(
+  query: AttendanceConfigsQuery,
+): Promise<Page<AttendanceConfig>> {
+  await delay();
+  const actor = attendanceActor();
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableAttendanceOutlet(actor, query.outletId);
+  const matches = visibleConfigs(actor)
+    .filter((config) => query.includeArchived || !config.is_archived)
+    .filter((config) => outletId === undefined || config.outlet_id === outletId)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id)
+    .map(toConfig);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** POST /attendance/configs — ADMIN/OWNER only. */
+export async function mockCreateAttendanceConfig(
+  request: CreateAttendanceConfigRequest,
+): Promise<AttendanceConfig> {
+  await delay();
+  const actor = attendanceActor();
+  requireAttendanceAdmin(actor);
+  if (!request.name.trim()) throw invalid('Name is required.', 'name');
+  triggerFault(request.name);
+  if (!attendanceOutletOn(actor.me.business.id, request.outlet_id)) {
+    throw invalid('Attendance is not enabled at this outlet.', 'outlet_id');
+  }
+  const schedule = {
+    name: request.name.trim(),
+    recurrence: request.recurrence,
+    st_time: request.st_time,
+    deadline_minutes: request.deadline_minutes,
+    weekdays: request.weekdays ?? null,
+    day_of_month: request.day_of_month ?? null,
+  };
+  assertValidConfig(schedule, request.outlet_id, actor.me.business.id);
+
+  const state = attendanceState();
+  const config: DbAttendanceConfig = {
+    id: state.nextConfigId++,
+    tenant_id: actor.me.business.id,
+    outlet_id: request.outlet_id,
+    method: 'MANUAL',
+    is_archived: false,
+    manager_ids: [],
+    ...schedule,
+    weekdays: schedule.weekdays && [...new Set(schedule.weekdays)].sort(),
+  };
+  state.configs.push(config);
+  return toConfig(config);
+}
+
+/** PATCH /attendance/configs/{id} — everything but the outlet. */
+export async function mockUpdateAttendanceConfig(
+  id: number,
+  request: UpdateAttendanceConfigRequest,
+): Promise<AttendanceConfig> {
+  await delay();
+  const actor = attendanceActor();
+  requireAttendanceAdmin(actor);
+  const config = findVisibleConfig(actor, id);
+  assertConfigLive(config);
+  if (request.name !== undefined) triggerFault(request.name);
+
+  const recurrence = request.recurrence ?? config.recurrence;
+  // Weekdays belong to WEEKLY and a day of the month to MONTHLY: changing away from
+  // one clears it, as the platform does.
+  const weekdays =
+    request.weekdays !== undefined
+      ? request.weekdays
+      : recurrence === 'WEEKLY'
+        ? config.weekdays
+        : null;
+  const dayOfMonth =
+    request.day_of_month !== undefined
+      ? request.day_of_month
+      : recurrence === 'MONTHLY'
+        ? config.day_of_month
+        : null;
+  const next = {
+    name: request.name?.trim() ?? config.name,
+    recurrence,
+    st_time: request.st_time ?? config.st_time,
+    deadline_minutes: request.deadline_minutes ?? config.deadline_minutes,
+    weekdays: weekdays && [...new Set(weekdays)].sort(),
+    day_of_month: dayOfMonth,
+  };
+  assertValidConfig(next, config.outlet_id, config.tenant_id, config.id);
+  Object.assign(config, next);
+  return toConfig(config);
+}
+
+/** POST /attendance/configs/{id}/archive — no more sessions; past ones stay. */
+export async function mockArchiveAttendanceConfig(
+  id: number,
+): Promise<AttendanceConfig> {
+  await delay();
+  const actor = attendanceActor();
+  requireAttendanceAdmin(actor);
+  const config = findVisibleConfig(actor, id);
+  config.is_archived = true;
+  return toConfig(config);
+}
+
+/** POST /attendance/configs/{id}/managers */
+export async function mockAppointAttendanceManager(
+  id: number,
+  request: AppointManagerRequest,
+): Promise<AttendanceConfig> {
+  await delay();
+  const actor = attendanceActor();
+  requireAttendanceAdmin(actor);
+  const config = findVisibleConfig(actor, id);
+  assertConfigLive(config);
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === request.user_id &&
+      candidate.tenant_id === actor.me.business.id,
+  );
+  if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!user.is_active) {
+    throw invalid('A deactivated user cannot be appointed.', 'user_id');
+  }
+  if (!config.manager_ids.includes(user.id)) config.manager_ids.push(user.id);
+  if (!user.memberships.attendance_configs.includes(config.id)) {
+    user.memberships.attendance_configs.push(config.id);
+  }
+  return toConfig(config);
+}
+
+/** DELETE /attendance/configs/{id}/managers/{user_id} — they can be appointed again. */
+export async function mockRemoveAttendanceManager(
+  id: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const actor = attendanceActor();
+  requireAttendanceAdmin(actor);
+  const config = findVisibleConfig(actor, id);
+  assertConfigLive(config);
+  if (!config.manager_ids.includes(userId)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  config.manager_ids = config.manager_ids.filter((m) => m !== userId);
+  const user = db.users.find((candidate) => candidate.id === userId);
+  if (user) {
+    user.memberships.attendance_configs =
+      user.memberships.attendance_configs.filter((c) => c !== config.id);
+  }
+}
+
+// sessions and marks
+
+function toMark(mark: DbMark): AttendanceMark {
+  const person = attendanceState().staff.find((s) => s.id === mark.staff_id)!;
+  return {
+    id: mark.id,
+    staff: {
+      id: person.id,
+      full_name: person.full_name,
+      staff_code: person.staff_code,
+    },
+    status: mark.status,
+    source: mark.source,
+    confidence: null,
+    note: mark.note,
+    marked_by: userRef(mark.marked_by_id),
+    marked_at: mark.marked_at,
+    changes: mark.changes.map((change) => ({ ...change })),
+  };
+}
+
+function countsOf(marks: DbMark[]): AttendanceCounts {
+  const count = (test: (mark: DbMark) => boolean) => marks.filter(test).length;
+  return {
+    total: marks.length,
+    present: count((m) => m.status === 'PRESENT'),
+    not_present: count(
+      (m) => m.status === 'NOT_PRESENT' && m.source !== 'SYSTEM',
+    ),
+    not_marked: count(
+      (m) => m.status === 'NOT_PRESENT' && m.source === 'SYSTEM',
+    ),
+    needs_review: count((m) => m.status === 'NEEDS_REVIEW'),
+    unmarked: count((m) => m.status === 'UNMARKED'),
+  };
+}
+
+function toSession(session: DbSession): AttendanceSession {
+  const config = attendanceState().configs.find(
+    (c) => c.id === session.config_id,
+  )!;
+  const outlet = db.outlets.find((o) => o.id === config.outlet_id)!;
+  return {
+    id: session.id,
+    config_id: config.id,
+    config_name: config.name,
+    outlet_id: outlet.id,
+    outlet_name: outlet.name,
+    method: 'MANUAL',
+    status: session.status,
+    window_open: session.window_open,
+    window_close: session.window_close,
+    finalized_at: session.finalized_at,
+    counts: countsOf(session.marks),
+  };
+}
+
+/** Sessions the caller may read: every attendance outlet's, or those of their own configs. */
+function visibleSessions(actor: AttendanceActor): DbSession[] {
+  const state = attendanceState();
+  openTodaySessions(state);
+  finalizeOverdue(state);
+  return state.sessions.filter((session) => {
+    const config = state.configs.find((c) => c.id === session.config_id)!;
+    if (
+      session.tenant_id !== actor.me.business.id ||
+      !attendanceOutletOn(session.tenant_id, config.outlet_id)
+    ) {
+      return false;
+    }
+    return (
+      actor.admin || actor.me.memberships.attendance_configs.includes(config.id)
+    );
+  });
+}
+
+/** GET /attendance/sessions — newest window first. */
+export async function mockListAttendanceSessions(
+  query: AttendanceSessionsQuery,
+): Promise<Page<AttendanceSession>> {
+  await delay();
+  const actor = attendanceActor();
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableAttendanceOutlet(actor, query.outletId);
+  const { fromMs, toMs } = dayRange(query.from, query.to);
+  const now = Date.now();
+  const configs = attendanceState().configs;
+  const matches = visibleSessions(actor)
+    .filter(
+      (session) =>
+        outletId === undefined ||
+        configs.find((c) => c.id === session.config_id)!.outlet_id === outletId,
+    )
+    .filter((session) => {
+      const open = new Date(session.window_open).getTime();
+      const close = new Date(session.window_close).getTime();
+      if (query.state === 'open' && !(open <= now && now < close)) return false;
+      if (query.state === 'upcoming' && !(open > now)) return false;
+      if (query.state === 'closed' && !(close <= now)) return false;
+      if (fromMs !== null && open < fromMs) return false;
+      if (toMs !== null && open > toMs) return false;
+      return true;
+    })
+    .sort((a, b) => b.window_open.localeCompare(a.window_open) || b.id - a.id)
+    .map(toSession);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** GET /attendance/sessions/{id} — with the roster snapshot, by name. */
+export async function mockGetAttendanceSession(
+  id: number,
+): Promise<AttendanceSessionDetail> {
+  await delay();
+  const actor = attendanceActor();
+  const session = visibleSessions(actor).find(
+    (candidate) => candidate.id === id,
+  );
+  if (!session) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return { ...toSession(session), marks: session.marks.map(toMark) };
+}
+
+/**
+ * PATCH /attendance/marks/{id} — marking and correcting, inside the window only
+ * (409 `window_closed`). Only a manager of the session's configuration may: an
+ * ADMIN or OWNER who reads the session gets 403.
+ */
+export async function mockMarkPerson(
+  id: number,
+  request: MarkPersonRequest,
+): Promise<AttendanceMark> {
+  await delay();
+  const actor = attendanceActor();
+  const sessionId = Math.floor(id / 1000);
+  const session = visibleSessions(actor).find((s) => s.id === sessionId);
+  const mark = session?.marks.find((candidate) => candidate.id === id);
+  if (!session || !mark)
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!actor.managedConfigIds.has(session.config_id)) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
+      "Only this session's attendance managers can mark or correct it.",
+    );
+  }
+  if (request.status !== 'PRESENT' && request.status !== 'NOT_PRESENT') {
+    throw invalid('Mark someone present or not present.', 'status');
+  }
+  let note = mark.note;
+  if (request.note !== undefined) {
+    const trimmed = request.note?.trim() ?? null;
+    if (request.note !== null && !trimmed) {
+      throw invalid('A note cannot be blank.', 'note');
+    }
+    if (trimmed && trimmed.length > 500) {
+      throw invalid('Use 500 characters or fewer.', 'note');
+    }
+    triggerFault(trimmed);
+    note = trimmed;
+  }
+
+  const now = Date.now();
+  if (
+    session.status !== 'OPEN' ||
+    now >= new Date(session.window_close).getTime()
+  ) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.WINDOW_CLOSED,
+      'This session is closed.',
+    );
+  }
+  if (now < new Date(session.window_open).getTime()) {
+    throw apiError(409, 'window_not_open', 'This session has not opened.');
+  }
+
+  const stamp = new Date(now).toISOString();
+  if (mark.status !== 'UNMARKED' && mark.status !== request.status) {
+    mark.changes.push({
+      from_status: mark.status,
+      to_status: request.status,
+      changed_by: actor.me.user.id,
+      changed_at: stamp,
+    });
+  }
+  mark.status = request.status;
+  mark.source = 'MANUAL';
+  mark.note = note;
+  mark.marked_by_id = actor.me.user.id;
+  mark.marked_at = stamp;
+  return toMark(mark);
+}
+
+// --- inventory -------------------------------------------------------------
+
+type DbInventoryItem = InventoryItem & { tenant_id: number };
+
+type DbInventoryMovement = InventoryMovement & {
+  tenant_id: number;
+  outlet_id: number;
+};
+
+type InventoryState = {
+  items: DbInventoryItem[];
+  movements: DbInventoryMovement[];
+  nextItemId: number;
+  nextMovementId: number;
+};
+
+const BULK_ITEM_NAMES = [
+  'Sugar',
+  'Salt',
+  'Wheat flour',
+  'Red onion',
+  'Tomato',
+  'Potato',
+  'Green chilli',
+  'Coriander',
+  'Curd',
+  'Butter',
+  'Ghee',
+  'Lentils',
+  'Chickpeas',
+  'Cumin',
+  'Mustard seed',
+  'Coconut oil',
+  'Tea leaves',
+  'Coffee beans',
+  'Paper cups',
+  'Napkins',
+];
+const BULK_UNITS: InventoryUnit[] = ['KG', 'KG', 'KG', 'KG', 'L', 'COUNT'];
+
+function round3(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
+/**
+ * Books a movement against an item's balance. A COUNT is the observed total, not a
+ * delta: below the balance it books the difference out, above it as arrived
+ * unrecorded. Nothing here refuses a balance below zero.
+ */
+function bookMovement(
+  state: InventoryState,
+  item: DbInventoryItem,
+  request: RecordMovementRequest,
+  recordedAt: Date,
+  recordedBy: number,
+): DbInventoryMovement {
+  let derivedOut: number | null = null;
+  let derivedIn: number | null = null;
+  let balance = item.balance;
+  if (request.kind === 'ADD') balance = round3(balance + request.quantity);
+  else if (request.kind === 'REMOVE')
+    balance = round3(balance - request.quantity);
+  else {
+    const difference = round3(request.quantity - balance);
+    if (difference < 0) derivedOut = -difference;
+    if (difference > 0) derivedIn = difference;
+    balance = request.quantity;
+  }
+  item.balance = balance;
+  const movement: DbInventoryMovement = {
+    id: state.nextMovementId++,
+    tenant_id: item.tenant_id,
+    outlet_id: item.outlet_id,
+    item_id: item.id,
+    kind: request.kind,
+    quantity: request.quantity,
+    unit_price: request.kind === 'ADD' ? (request.unit_price ?? null) : null,
+    note: request.note ?? null,
+    derived_out: derivedOut,
+    derived_in: derivedIn,
+    balance_after: balance,
+    recorded_by: userRef(recordedBy)!,
+    recorded_at: recordedAt.toISOString(),
+  };
+  state.movements.push(movement);
+  return movement;
+}
+
+function seedInventoryState(): InventoryState {
+  const state: InventoryState = {
+    items: [],
+    movements: [],
+    nextItemId: 400,
+    nextMovementId: 9001,
+  };
+  const seeded: { item: DbInventoryItem; opening: number | null }[] = [
+    ...inventoryFixtures.items.map((fixture) => ({
+      item: {
+        id: fixture.id,
+        tenant_id: 7,
+        outlet_id: fixture.outlet_id,
+        name: fixture.name,
+        unit: fixture.unit as InventoryUnit,
+        reference_price: fixture.reference_price,
+        balance: 0,
+        is_archived: false,
+      },
+      opening: fixture.opening,
+    })),
+    // 60 items at ZamZam Grande, so the list runs past one page of 25.
+    ...Array.from({ length: 60 }, (_, index) => ({
+      item: {
+        id: 300 + index,
+        tenant_id: 7,
+        outlet_id: 11,
+        name: `${BULK_ITEM_NAMES[index % BULK_ITEM_NAMES.length]}${
+          index >= BULK_ITEM_NAMES.length
+            ? ` (${index < 40 ? 'bulk' : 'organic'})`
+            : ''
+        }`,
+        unit: BULK_UNITS[index % BULK_UNITS.length],
+        reference_price: null,
+        balance: 0,
+        is_archived: false,
+      },
+      opening: 5 + ((index * 7) % 45),
+    })),
+  ];
+
+  const SURESH = 3;
+  const entries: {
+    when: Date;
+    item: DbInventoryItem;
+    request: RecordMovementRequest;
+  }[] = [];
+  for (const { item, opening } of seeded) {
+    state.items.push(item);
+    if (opening !== null) {
+      entries.push({
+        when: localTime(6, '21:00'),
+        item,
+        request: { kind: 'COUNT', quantity: opening },
+      });
+    }
+  }
+  for (const movement of inventoryFixtures.movements) {
+    const item = state.items.find(
+      (candidate) => candidate.id === movement.item_id,
+    )!;
+    entries.push({
+      when: localTime(movement.days_ago, movement.time),
+      item,
+      request: {
+        kind: movement.kind as InventoryMovementKind,
+        quantity: movement.quantity,
+        unit_price: movement.unit_price,
+        note: movement.note,
+      },
+    });
+  }
+  entries
+    .sort((a, b) => a.when.getTime() - b.when.getTime())
+    .forEach(({ when, item, request }) =>
+      bookMovement(state, item, request, when, SURESH),
+    );
+  return state;
+}
+
+function inventoryState(): InventoryState {
+  return (db.inventoryState ??= seedInventoryState());
+}
+
+type InventoryActor = {
+  me: MeResponse;
+  admin: boolean;
+  managedOutletIds: Set<number>;
+};
+
+/** 404 where the business has inventory off; 403 for anyone who is neither admin nor manager. */
+function inventoryActor(): InventoryActor {
+  const me = resolveMe();
+  const business = db.businesses.find(
+    (candidate) => candidate.id === me.business.id,
+  );
+  if (!business?.modules.inventory) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  const admin = canAdminister(me.user.tenant_role);
+  const managedOutletIds = new Set(me.memberships.inventory_outlets);
+  if (!admin && managedOutletIds.size === 0) {
+    throw apiError(403, API_ERROR_CODE.PERMISSION_DENIED, 'Not permitted.');
+  }
+  return { me, admin, managedOutletIds };
+}
+
+function readableInventoryOutlets(actor: InventoryActor): Set<number> {
+  return new Set(
+    db.outlets
+      .filter(
+        (outlet) =>
+          outlet.tenant_id === actor.me.business.id &&
+          !outlet.is_archived &&
+          (actor.admin || actor.managedOutletIds.has(outlet.id)),
+      )
+      .map((outlet) => outlet.id),
+  );
+}
+
+function readableInventoryOutlet(actor: InventoryActor, outletId: number) {
+  if (!readableInventoryOutlets(actor).has(outletId)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return outletId;
+}
+
+/** Only an Administrator authors items (the mockup shows an Owner read-only). */
+function requireItemAuthor(actor: InventoryActor) {
+  if (actor.me.user.tenant_role !== 'ADMIN') {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Only an administrator can change items.',
+    );
+  }
+}
+
+function toItem({
+  tenant_id: _tenant,
+  ...item
+}: DbInventoryItem): InventoryItem {
+  return item;
+}
+
+function toMovement({
+  tenant_id: _tenant,
+  outlet_id: _outlet,
+  ...movement
+}: DbInventoryMovement): InventoryMovement {
+  return movement;
+}
+
+/** An item the caller can read, live or archived; anyone else's is a 404. */
+function findReadableItem(actor: InventoryActor, id: number): DbInventoryItem {
+  const readable = readableInventoryOutlets(actor);
+  const item = inventoryState().items.find(
+    (candidate) =>
+      candidate.id === id &&
+      candidate.tenant_id === actor.me.business.id &&
+      readable.has(candidate.outlet_id),
+  );
+  if (!item) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return item;
+}
+
+function assertItemNameFree(
+  item: Pick<DbInventoryItem, 'tenant_id' | 'outlet_id'>,
+  name: string,
+  exceptId?: number,
+) {
+  const taken = inventoryState().items.some(
+    (other) =>
+      other.tenant_id === item.tenant_id &&
+      other.outlet_id === item.outlet_id &&
+      other.id !== exceptId &&
+      !other.is_archived &&
+      other.name.toLowerCase() === name.toLowerCase(),
+  );
+  if (taken) {
+    throw invalid(
+      'An item with this name already exists at this outlet.',
+      'name',
+    );
+  }
+}
+
+function assertValidItemFields(fields: {
+  name?: string;
+  unit?: InventoryUnit;
+  reference_price?: number | null;
+}) {
+  if (fields.name !== undefined) {
+    if (!fields.name.trim()) throw invalid('Name is required.', 'name');
+    if (fields.name.trim().length > 150) {
+      throw invalid('Use 150 characters or fewer.', 'name');
+    }
+  }
+  if (
+    fields.unit !== undefined &&
+    !['KG', 'G', 'L', 'ML', 'COUNT'].includes(fields.unit)
+  ) {
+    throw invalid('Choose a unit.', 'unit');
+  }
+  if (
+    fields.reference_price != null &&
+    (!Number.isFinite(fields.reference_price) || fields.reference_price < 0)
+  ) {
+    throw invalid('Use a price of zero or more.', 'reference_price');
+  }
+}
+
+/** GET /inventory/items — by name, across the outlets the caller can read. */
+export async function mockListInventoryItems(
+  query: InventoryItemsQuery,
+): Promise<Page<InventoryItem>> {
+  await delay();
+  const actor = inventoryActor();
+  triggerFault(query.search);
+  const readable = readableInventoryOutlets(actor);
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableInventoryOutlet(actor, query.outletId);
+  const needle = query.search?.trim().toLowerCase();
+  const matches = inventoryState()
+    .items.filter(
+      (item) =>
+        item.tenant_id === actor.me.business.id &&
+        readable.has(item.outlet_id) &&
+        (outletId === undefined || item.outlet_id === outletId) &&
+        (query.includeArchived || !item.is_archived) &&
+        (!needle || item.name.toLowerCase().includes(needle)),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id)
+    .map(toItem);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** POST /inventory/items */
+export async function mockCreateInventoryItem(
+  request: CreateInventoryItemRequest,
+): Promise<InventoryItem> {
+  await delay();
+  const actor = inventoryActor();
+  requireItemAuthor(actor);
+  assertValidItemFields(request);
+  triggerFault(request.name);
+  const outlet = db.outlets.find(
+    (candidate) =>
+      candidate.id === request.outlet_id &&
+      candidate.tenant_id === actor.me.business.id,
+  );
+  if (!outlet || outlet.is_archived) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  const name = request.name.trim();
+  assertItemNameFree(
+    { tenant_id: actor.me.business.id, outlet_id: outlet.id },
+    name,
+  );
+  const state = inventoryState();
+  const item: DbInventoryItem = {
+    id: state.nextItemId++,
+    tenant_id: actor.me.business.id,
+    outlet_id: outlet.id,
+    name,
+    unit: request.unit,
+    reference_price: request.reference_price ?? null,
+    balance: 0,
+    is_archived: false,
+  };
+  state.items.push(item);
+  return toItem(item);
+}
+
+/** PATCH /inventory/items/{id} — the unit only until movements exist (409 `unit_locked`). */
+export async function mockUpdateInventoryItem(
+  id: number,
+  request: UpdateInventoryItemRequest,
+): Promise<InventoryItem> {
+  await delay();
+  const actor = inventoryActor();
+  const item = findReadableItem(actor, id);
+  requireItemAuthor(actor);
+  assertValidItemFields(request);
+  triggerFault(request.name);
+
+  const name = request.name?.trim();
+  if (name !== undefined) assertItemNameFree(item, name, item.id);
+  if (request.unit !== undefined && request.unit !== item.unit) {
+    if (inventoryState().movements.some((m) => m.item_id === item.id)) {
+      throw apiError(
+        409,
+        API_ERROR_CODE.UNIT_LOCKED,
+        'The unit cannot change once there are movements.',
+        'unit',
+      );
+    }
+    item.unit = request.unit;
+  }
+  if (name !== undefined) item.name = name;
+  if (request.reference_price !== undefined) {
+    item.reference_price = request.reference_price;
+  }
+  if (request.is_archived !== undefined) item.is_archived = request.is_archived;
+  return toItem(item);
+}
+
+/**
+ * GET /inventory/items/{id}/movements, or the same log across an outlet's items
+ * (see `InventoryMovementsQuery`). Newest first.
+ */
+export async function mockListInventoryMovements(
+  query: InventoryMovementsQuery,
+): Promise<Page<InventoryMovement>> {
+  await delay();
+  const actor = inventoryActor();
+  const { fromMs, toMs } = dayRange(query.from, query.to);
+  const readable = readableInventoryOutlets(actor);
+  const itemId =
+    query.itemId === undefined
+      ? undefined
+      : findReadableItem(actor, query.itemId).id;
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableInventoryOutlet(actor, query.outletId);
+  const matches = inventoryState()
+    .movements.filter(
+      (movement) =>
+        movement.tenant_id === actor.me.business.id &&
+        readable.has(movement.outlet_id) &&
+        (itemId === undefined || movement.item_id === itemId) &&
+        (outletId === undefined || movement.outlet_id === outletId),
+    )
+    .filter((movement) => {
+      const at = new Date(movement.recorded_at).getTime();
+      return (fromMs === null || at >= fromMs) && (toMs === null || at <= toMs);
+    })
+    .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at) || b.id - a.id)
+    .map(toMovement);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/**
+ * POST /inventory/items/{id}/movements — append-only. Recorded by the item's
+ * Inventory Manager; an archived item is gone (404).
+ */
+export async function mockRecordInventoryMovement(
+  itemId: number,
+  request: RecordMovementRequest,
+): Promise<InventoryMovement> {
+  await delay();
+  const actor = inventoryActor();
+  const item = findReadableItem(actor, itemId);
+  if (item.is_archived) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  if (!actor.managedOutletIds.has(item.outlet_id)) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Only this outlet’s Inventory Manager can record movements.',
+    );
+  }
+  if (!['ADD', 'REMOVE', 'COUNT'].includes(request.kind)) {
+    throw invalid('Choose add, remove or set actual.', 'kind');
+  }
+  const { quantity } = request;
+  if (!Number.isFinite(quantity))
+    throw invalid('Enter a quantity.', 'quantity');
+  if (request.kind === 'COUNT' ? quantity < 0 : quantity <= 0) {
+    throw invalid(
+      request.kind === 'COUNT'
+        ? 'A count cannot be below zero.'
+        : 'Enter more than zero.',
+      'quantity',
+    );
+  }
+  if (item.unit === 'COUNT' && !Number.isInteger(quantity)) {
+    throw invalid('Whole numbers only.', 'quantity');
+  }
+  if (request.unit_price != null) {
+    if (request.kind !== 'ADD') {
+      throw invalid(
+        'A price applies to stock that arrived only.',
+        'unit_price',
+      );
+    }
+    if (!Number.isFinite(request.unit_price) || request.unit_price < 0) {
+      throw invalid('Use a price of zero or more.', 'unit_price');
+    }
+  }
+  const note = request.note?.trim() || null;
+  if (note && note.length > 500)
+    throw invalid('Use 500 characters or fewer.', 'note');
+  triggerFault(note);
+
+  return toMovement(
+    bookMovement(
+      inventoryState(),
+      item,
+      { ...request, note },
+      new Date(),
+      actor.me.user.id,
+    ),
+  );
+}
+
+/** Reports default to the last seven days, today included. */
+function reportRange(query: StockReportQuery) {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const from = query.from ?? localDay(weekAgo);
+  const to = query.to ?? localDay(today);
+  return { from, to, ...dayRange(from, to) };
+}
+
+function reportItems(actor: InventoryActor, outletId: number) {
+  readableInventoryOutlet(actor, outletId);
+  return inventoryState()
+    .items.filter((item) => item.outlet_id === outletId && !item.is_archived)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
+}
+
+/** GET /inventory/reports/stock-on-hand */
+export async function mockStockOnHandReport(
+  query: Pick<StockReportQuery, 'outletId'>,
+): Promise<StockOnHandReport> {
+  await delay();
+  const actor = inventoryActor();
+  return {
+    outlet_id: query.outletId,
+    as_of: new Date().toISOString(),
+    items: reportItems(actor, query.outletId).map((item) => ({
+      item_id: item.id,
+      name: item.name,
+      unit: item.unit,
+      balance: item.balance,
+    })),
+  };
+}
+
+/** GET /inventory/reports/summary — opening, in, out and closing over the range. */
+export async function mockStockSummaryReport(
+  query: StockReportQuery,
+): Promise<StockSummaryReport> {
+  await delay();
+  const actor = inventoryActor();
+  const range = reportRange(query);
+  const items = reportItems(actor, query.outletId);
+  const movements = inventoryState().movements;
+  return {
+    outlet_id: query.outletId,
+    from: range.from,
+    to: range.to,
+    items: items.map((item) => {
+      const own = movements.filter((m) => m.item_id === item.id);
+      const at = (m: DbInventoryMovement) => new Date(m.recorded_at).getTime();
+      const before = own.filter((m) => at(m) < range.fromMs!);
+      const during = own.filter(
+        (m) => at(m) >= range.fromMs! && at(m) <= range.toMs!,
+      );
+      const opening = before.length
+        ? before[before.length - 1].balance_after
+        : 0;
+      const sum = (values: (number | null)[]) =>
+        round3(values.reduce<number>((total, v) => total + (v ?? 0), 0));
+      return {
+        item_id: item.id,
+        name: item.name,
+        unit: item.unit,
+        opening,
+        // Stock that arrived unrecorded (a count above the balance) is in "in".
+        in: sum(
+          during.map((m) => (m.kind === 'ADD' ? m.quantity : m.derived_in)),
+        ),
+        out: sum(
+          during.map((m) => (m.kind === 'REMOVE' ? m.quantity : m.derived_out)),
+        ),
+        closing: during.length
+          ? during[during.length - 1].balance_after
+          : opening,
+      };
+    }),
+  };
+}
+
+/** GET /inventory/reports/spend — deliveries that carried a price, in rupees. */
+export async function mockStockSpendReport(
+  query: StockReportQuery,
+): Promise<StockSpendReport> {
+  await delay();
+  const actor = inventoryActor();
+  const range = reportRange(query);
+  const items = reportItems(actor, query.outletId);
+  const movements = inventoryState().movements;
+  const rows = items
+    .map((item) => {
+      const priced = movements.filter(
+        (m) =>
+          m.item_id === item.id &&
+          m.kind === 'ADD' &&
+          m.unit_price !== null &&
+          new Date(m.recorded_at).getTime() >= range.fromMs! &&
+          new Date(m.recorded_at).getTime() <= range.toMs!,
+      );
+      return {
+        item_id: item.id,
+        name: item.name,
+        unit: item.unit,
+        quantity: round3(priced.reduce((total, m) => total + m.quantity, 0)),
+        amount: round3(
+          priced.reduce((total, m) => total + m.quantity * m.unit_price!, 0),
+        ),
+      };
+    })
+    .filter((row) => row.quantity > 0);
+  return {
+    outlet_id: query.outletId,
+    from: range.from,
+    to: range.to,
+    total: round3(rows.reduce((total, row) => total + row.amount, 0)),
+    items: rows,
   };
 }

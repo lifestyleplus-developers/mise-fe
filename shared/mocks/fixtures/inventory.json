@@ -1,0 +1,194 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "outlet_id": 3,
+      "name": "Chicken",
+      "unit": "KG",
+      "reference_price": 220,
+      "opening": 54
+    },
+    {
+      "id": 2,
+      "outlet_id": 3,
+      "name": "Basmati rice",
+      "unit": "KG",
+      "reference_price": null,
+      "opening": 3
+    },
+    {
+      "id": 3,
+      "outlet_id": 3,
+      "name": "Milk",
+      "unit": "L",
+      "reference_price": null,
+      "opening": 23
+    },
+    {
+      "id": 4,
+      "outlet_id": 3,
+      "name": "Eggs",
+      "unit": "COUNT",
+      "reference_price": null,
+      "opening": 300
+    },
+    {
+      "id": 5,
+      "outlet_id": 3,
+      "name": "Cooking oil",
+      "unit": "L",
+      "reference_price": null,
+      "opening": 3
+    },
+    {
+      "id": 6,
+      "outlet_id": 3,
+      "name": "Paneer",
+      "unit": "KG",
+      "reference_price": null,
+      "opening": null
+    },
+    {
+      "id": 7,
+      "outlet_id": 3,
+      "name": "Turmeric",
+      "unit": "G",
+      "reference_price": null,
+      "opening": null
+    },
+    {
+      "id": 21,
+      "outlet_id": 5,
+      "name": "Chicken",
+      "unit": "KG",
+      "reference_price": 215,
+      "opening": null
+    },
+    {
+      "id": 22,
+      "outlet_id": 5,
+      "name": "Basmati rice",
+      "unit": "KG",
+      "reference_price": null,
+      "opening": null
+    },
+    {
+      "id": 23,
+      "outlet_id": 5,
+      "name": "മസാല ചേർത്ത ഉണക്ക ചെമ്മീൻ പൊടി (വലിയ പാക്കറ്റ്)",
+      "unit": "G",
+      "reference_price": null,
+      "opening": null
+    }
+  ],
+  "movements": [
+    {
+      "item_id": 1,
+      "kind": "ADD",
+      "quantity": 20,
+      "days_ago": 4,
+      "time": "08:10",
+      "unit_price": 220,
+      "note": null
+    },
+    {
+      "item_id": 1,
+      "kind": "REMOVE",
+      "quantity": 2,
+      "days_ago": 4,
+      "time": "19:30",
+      "unit_price": null,
+      "note": "Spoiled"
+    },
+    {
+      "item_id": 1,
+      "kind": "COUNT",
+      "quantity": 30,
+      "days_ago": 3,
+      "time": "21:00",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 2,
+      "kind": "ADD",
+      "quantity": 25,
+      "days_ago": 4,
+      "time": "09:15",
+      "unit_price": 90,
+      "note": null
+    },
+    {
+      "item_id": 2,
+      "kind": "COUNT",
+      "quantity": 12.5,
+      "days_ago": 3,
+      "time": "21:02",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 3,
+      "kind": "REMOVE",
+      "quantity": 3,
+      "days_ago": 4,
+      "time": "12:40",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 3,
+      "kind": "COUNT",
+      "quantity": 18,
+      "days_ago": 3,
+      "time": "21:04",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 4,
+      "kind": "COUNT",
+      "quantity": 240,
+      "days_ago": 3,
+      "time": "21:06",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 5,
+      "kind": "REMOVE",
+      "quantity": 5,
+      "days_ago": 3,
+      "time": "20:45",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 7,
+      "kind": "COUNT",
+      "quantity": 850,
+      "days_ago": 3,
+      "time": "21:03",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 21,
+      "kind": "COUNT",
+      "quantity": 14,
+      "days_ago": 3,
+      "time": "21:10",
+      "unit_price": null,
+      "note": null
+    },
+    {
+      "item_id": 22,
+      "kind": "COUNT",
+      "quantity": 8,
+      "days_ago": 3,
+      "time": "21:12",
+      "unit_price": null,
+      "note": null
+    }
+  ]
+}
