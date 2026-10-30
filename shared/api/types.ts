@@ -359,11 +359,6 @@ export type RunTask = {
   image_url: string | null;
   comment: string | null;
   outcome: 'PASS' | 'FAIL' | 'MISSED' | 'PENDING_JUDGEMENT' | null;
-  /**
-   * The AI's reason for an image verdict. Not in API Contract §7 yet: the mock
-   * sends it, and the real platform must be asked to before this is relied on.
-   */
-  ai_comment?: string | null;
   answered_by: { id: number; full_name: string } | null;
   answered_at: string | null;
 };

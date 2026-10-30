@@ -108,10 +108,7 @@ type MockDb = {
   /** Upload keys per run task, so an answer's `image_url` can resolve. */
   signedUploadKeys: Map<number, string>;
   /** Image task id → the stand-in AI verdict and when it becomes visible. */
-  judgements?: Map<
-    number,
-    { readyAt: number; verdict: 'PASS' | 'FAIL'; comment: string }
-  >;
+  judgements?: Map<number, { readyAt: number; verdict: 'PASS' | 'FAIL' }>;
   /** Authored checklists, tasks and assignments; seeded on first use. */
   checklistState?: ChecklistState;
 };
@@ -849,29 +846,14 @@ const JUDGE_MIN_MS = 3_000;
 const JUDGE_MAX_MS = 5_000;
 const JUDGE_PASS_CHANCE = 0.6;
 
-const JUDGE_COMMENTS = {
-  PASS: [
-    'The photo is clear and shows what the task asks for.',
-    'Everything the task asks about is in frame and easy to see.',
-    'The subject is well lit and nothing important is hidden.',
-  ],
-  FAIL: [
-    'The photo is too dark to make out what is shown.',
-    'Part of what the task asks about is cut off at the edge of the frame.',
-    'What is in the photo does not match what the task asks for.',
-  ],
-};
-
 /** A photo was just submitted: pick its verdict now, show it after a short wait. */
 function startJudgement(taskId: number): void {
   db.judgements ??= new Map();
   const verdict = Math.random() < JUDGE_PASS_CHANCE ? 'PASS' : 'FAIL';
-  const comments = JUDGE_COMMENTS[verdict];
   db.judgements.set(taskId, {
     readyAt:
       Date.now() + JUDGE_MIN_MS + Math.random() * (JUDGE_MAX_MS - JUDGE_MIN_MS),
     verdict,
-    comment: comments[Math.floor(Math.random() * comments.length)],
   });
 }
 
@@ -882,14 +864,6 @@ function judgementOutcome(taskId: number): RunTask['outcome'] {
   return Date.now() < judgement.readyAt
     ? 'PENDING_JUDGEMENT'
     : judgement.verdict;
-}
-
-/** The AI's reason, once its verdict is visible. */
-function judgementComment(taskId: number): string | null {
-  const judgement = db.judgements?.get(taskId);
-  return judgement && Date.now() >= judgement.readyAt
-    ? judgement.comment
-    : null;
 }
 
 function outcomeFor(
@@ -970,10 +944,6 @@ function buildTasks(
             : null,
       image_url: writtenImage ? `mock://storage/${writtenImage}` : null,
       comment: answer?.comment ?? null,
-      ai_comment:
-        task.type === 'IMAGE' && written?.image_key !== undefined
-          ? judgementComment(id)
-          : null,
       outcome: written
         ? outcomeFor(task, templateAnswer, written, id)
         : templateAnswer
