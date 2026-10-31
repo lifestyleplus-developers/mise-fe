@@ -38,8 +38,8 @@ export function useAttendanceConfigs(
  * Who manages a configuration decides what they can mark and see, so the
  * identity and the sessions are refetched with the lists.
  */
-function useConfigWrite<Variables>(
-  mutationFn: (variables: Variables) => Promise<unknown>,
+function useConfigWrite<Variables, Result>(
+  mutationFn: (variables: Variables) => Promise<Result>,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -84,4 +84,16 @@ export function useRemoveManager(configId: number) {
   return useConfigWrite((userId: number) =>
     api.attendance.removeManager(configId, userId),
   );
+}
+
+/**
+ * One configuration, read from the list the screens already hold: the platform
+ * has a GET for it, but the list carries everything and shares one cache.
+ */
+export function useAttendanceConfig(id: number) {
+  const query = useAttendanceConfigs(undefined, { includeArchived: true });
+  return {
+    ...query,
+    config: query.data?.find((candidate) => candidate.id === id),
+  };
 }

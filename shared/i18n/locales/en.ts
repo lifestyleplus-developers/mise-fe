@@ -584,6 +584,35 @@ export const en = {
   'att.required-name': 'Required',
   'att.past-stays': 'Past attendance stays as recorded.',
   'att.forbidden': "You can't see this outlet's attendance.",
+
+  // ATT-04: attendance configuration.
+  'cfg.no-config': 'No attendance sessions set up for {outlet}',
+  'cfg.add': 'Add configuration',
+  'cfg.new': 'New configuration',
+  'cfg.name-ph': 'e.g. Morning',
+  'cfg.method': 'Method',
+  'cfg.manual': 'Manual',
+  'cfg.edits-apply': 'Changes apply to sessions not yet created.',
+  'cfg.managers': 'Attendance Managers · {n}',
+  'cfg.no-manager': 'No Attendance Manager yet',
+  'cfg.add-manager': 'Add Attendance Manager',
+  'cfg.manager-here': 'Manager here',
+  'cfg.remove-title': 'Remove {name} as Attendance Manager for {cfg}?',
+  'cfg.remove-body':
+    "{name} will stop getting its sessions. Past marks keep {name}'s name.",
+  'cfg.remove-last': 'Nobody will be able to mark {cfg}.',
+  'cfg.remove': 'Remove',
+  'cfg.manager-added': '{name} is now an Attendance Manager for {cfg}.',
+  'cfg.manager-removed': '{name} removed as Attendance Manager for {cfg}.',
+  'cfg.saved': 'Saved.',
+  'cfg.forbidden':
+    'Only Owners and Administrators can change attendance sessions.',
+  'cfg.save-add-manager': 'Save and add a manager',
+  'cfg.gone': 'This session is no longer available.',
+  'cfg.rhythm-hint':
+    'Need another session in a day? Add another configuration.',
+  'cfg.line': '{freq} · {time} · open for {dur}',
+  'cfg.fallback-title': '{freq} · {time}',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

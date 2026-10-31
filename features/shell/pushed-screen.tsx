@@ -27,6 +27,7 @@ type PushedScreenProps = {
     | '/checklists'
     | '/checklists/admin'
     | '/modules'
+    | '/attendance/configs'
     | '/home';
   /** Wires pull to refresh. */
   onRefresh?: () => void;

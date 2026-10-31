@@ -562,4 +562,35 @@ export const kn = {
   'att.required-name': 'ಅಗತ್ಯ',
   'att.past-stays': 'ಹಿಂದಿನ ಹಾಜರಾತಿ ದಾಖಲಾದಂತೆಯೇ ಉಳಿಯುತ್ತದೆ.',
   'att.forbidden': 'ಈ ಔಟ್‌ಲೆಟ್‌ನ ಹಾಜರಾತಿಯನ್ನು ನೋಡಲು ನಿಮಗೆ ಸಾಧ್ಯವಿಲ್ಲ.',
+
+  // ATT-04 (mockup wording where it has any, pending Lifestyle's review).
+  'cfg.no-config': '{outlet} ಗೆ ಹಾಜರಾತಿ ಸೆಷನ್‌ಗಳನ್ನು ಹೊಂದಿಸಿಲ್ಲ',
+  'cfg.add': 'ಸೆಟ್ಟಿಂಗ್ ಸೇರಿಸಿ',
+  'cfg.new': 'ಹೊಸ ಕಾನ್ಫಿಗರೇಶನ್',
+  'cfg.name-ph': 'ಉದಾ. ಬೆಳಿಗ್ಗೆ',
+  'cfg.method': 'ವಿಧಾನ',
+  'cfg.manual': 'ಕೈಯಾರೆ',
+  'cfg.edits-apply': 'ಬದಲಾವಣೆಗಳು ಇನ್ನೂ ರಚಿಸದ ಸೆಷನ್‌ಗಳಿಗೆ ಅನ್ವಯಿಸುತ್ತವೆ.',
+  'cfg.managers': 'ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್‌ಗಳು · {n}',
+  'cfg.no-manager': 'ಇನ್ನೂ ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್ ಇಲ್ಲ',
+  'cfg.add-manager': 'ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್ ಸೇರಿಸಿ',
+  'cfg.manager-here': 'ಇಲ್ಲಿ ಮ್ಯಾನೇಜರ್',
+  'cfg.remove-title':
+    '{cfg} ಗೆ {name} ಅವರನ್ನು ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್ ಸ್ಥಾನದಿಂದ ತೆಗೆಯಬೇಕೆ?',
+  'cfg.remove-body':
+    '{name} ಅವರಿಗೆ ಇದರ ಸೆಷನ್‌ಗಳು ಸಿಗುವುದಿಲ್ಲ. ಹಿಂದಿನ ಗುರುತುಗಳಲ್ಲಿ {name} ಅವರ ಹೆಸರು ಉಳಿಯುತ್ತದೆ.',
+  'cfg.remove-last': '{cfg} ಅನ್ನು ಗುರುತಿಸಲು ಯಾರಿಗೂ ಸಾಧ್ಯವಾಗುವುದಿಲ್ಲ.',
+  'cfg.remove': 'ತೆಗೆಯಿರಿ',
+  'cfg.manager-added': '{name} ಈಗ {cfg} ನ ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್.',
+  'cfg.manager-removed':
+    '{cfg} ನ ಅಟೆಂಡೆನ್ಸ್ ಮ್ಯಾನೇಜರ್ ಸ್ಥಾನದಿಂದ {name} ಅವರನ್ನು ತೆಗೆಯಲಾಗಿದೆ.',
+  'cfg.saved': 'ಉಳಿಸಲಾಗಿದೆ.',
+  'cfg.forbidden':
+    'ಮಾಲೀಕರು ಮತ್ತು ಅಡ್ಮಿನಿಸ್ಟ್ರೇಟರ್‌ಗಳು ಮಾತ್ರ ಹಾಜರಾತಿ ಸೆಷನ್‌ಗಳನ್ನು ಬದಲಾಯಿಸಬಹುದು.',
+  'cfg.save-add-manager': 'ಉಳಿಸಿ ಮತ್ತು ಮ್ಯಾನೇಜರ್ ಸೇರಿಸಿ',
+  'cfg.gone': 'ಈ ಸೆಷನ್ ಇನ್ನು ಲಭ್ಯವಿಲ್ಲ.',
+  'cfg.rhythm-hint':
+    'ಒಂದು ದಿನದಲ್ಲಿ ಇನ್ನೊಂದು ಸೆಷನ್ ಬೇಕೇ? ಮತ್ತೊಂದು ಸಂರಚನೆ ಸೇರಿಸಿ.',
+  'cfg.line': '{freq} · {time} · {dur} ತೆರೆದಿರುತ್ತದೆ',
+  'cfg.fallback-title': '{freq} · {time}',
 } satisfies Partial<Catalogue>;

@@ -573,4 +573,35 @@ export const ml = {
   'att.required-name': 'ആവശ്യമാണ്',
   'att.past-stays': 'മുൻ ഹാജർ രേഖപ്പെടുത്തിയതുപോലെ തുടരും.',
   'att.forbidden': 'ഈ ഔട്ട്‌ലെറ്റിലെ ഹാജർ കാണാൻ നിങ്ങൾക്ക് കഴിയില്ല.',
+
+  // ATT-04 (mockup wording where it has any, pending Lifestyle's review).
+  'cfg.no-config': '{outlet}-ന് ഹാജർ സെഷനുകൾ സജ്ജീകരിച്ചിട്ടില്ല',
+  'cfg.add': 'കോൺഫിഗറേഷൻ ചേർക്കുക',
+  'cfg.new': 'പുതിയ കോൺഫിഗറേഷൻ',
+  'cfg.name-ph': 'ഉദാ. രാവിലെ',
+  'cfg.method': 'രീതി',
+  'cfg.manual': 'കൈകൊണ്ട്',
+  'cfg.edits-apply': 'മാറ്റങ്ങൾ ഇതുവരെ ഉണ്ടാക്കാത്ത സെഷനുകൾക്ക് ബാധകമാണ്.',
+  'cfg.managers': 'അറ്റൻഡൻസ് മാനേജർമാർ · {n}',
+  'cfg.no-manager': 'ഇതുവരെ അറ്റൻഡൻസ് മാനേജർ ഇല്ല',
+  'cfg.add-manager': 'അറ്റൻഡൻസ് മാനേജറെ ചേർക്കുക',
+  'cfg.manager-here': 'ഇവിടെ മാനേജർ',
+  'cfg.remove-title':
+    '{cfg}-ന്റെ അറ്റൻഡൻസ് മാനേജർ സ്ഥാനത്തു നിന്ന് {name}-നെ ഒഴിവാക്കണോ?',
+  'cfg.remove-body':
+    '{name}-ന് ഇതിന്റെ സെഷനുകൾ ലഭിക്കില്ല. മുൻ അടയാളങ്ങളിൽ {name}-ന്റെ പേര് നിലനിൽക്കും.',
+  'cfg.remove-last': '{cfg} അടയാളപ്പെടുത്താൻ ആർക്കും കഴിയില്ല.',
+  'cfg.remove': 'ഒഴിവാക്കുക',
+  'cfg.manager-added': '{name} ഇപ്പോൾ {cfg}-ന്റെ അറ്റൻഡൻസ് മാനേജരാണ്.',
+  'cfg.manager-removed':
+    '{cfg}-ന്റെ അറ്റൻഡൻസ് മാനേജർ സ്ഥാനത്തു നിന്ന് {name}-നെ ഒഴിവാക്കി.',
+  'cfg.saved': 'സേവ് ചെയ്തു.',
+  'cfg.forbidden':
+    'ഉടമകൾക്കും അഡ്മിനിസ്ട്രേറ്റർമാർക്കും മാത്രമേ ഹാജർ സെഷനുകൾ മാറ്റാൻ കഴിയൂ.',
+  'cfg.save-add-manager': 'സേവ് ചെയ്ത് മാനേജറെ ചേർക്കുക',
+  'cfg.gone': 'ഈ സെഷൻ ഇനി ലഭ്യമല്ല.',
+  'cfg.rhythm-hint':
+    'ഒരു ദിവസം മറ്റൊരു സെഷൻ വേണോ? മറ്റൊരു കോൺഫിഗറേഷൻ ചേർക്കുക.',
+  'cfg.line': '{freq} · {time} · {dur} തുറന്നിരിക്കും',
+  'cfg.fallback-title': '{freq} · {time}',
 } satisfies Partial<Catalogue>;
