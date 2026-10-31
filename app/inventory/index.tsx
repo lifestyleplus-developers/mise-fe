@@ -1,7 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'modules.items',
-  frame: 'pushed',
-  backHref: '/modules',
-});
+export { InventoryScreen as default } from '@/features/inventory/inventory-screen';

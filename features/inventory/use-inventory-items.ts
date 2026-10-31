@@ -29,7 +29,7 @@ export type ItemFilters = {
 };
 
 /** Items by name, 25 at a time. */
-export function useInventoryItems(filters: ItemFilters) {
+export function useInventoryItems(filters: ItemFilters, enabled = true) {
   return useInfiniteQuery({
     queryKey: inventoryKeys.itemList(filters),
     queryFn: ({ pageParam }) =>
@@ -44,6 +44,7 @@ export function useInventoryItems(filters: ItemFilters) {
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     placeholderData: keepPreviousData,
     retry: retryTransient,
+    enabled,
   });
 }
 

@@ -28,7 +28,10 @@ import {
   mockListAttendanceSessions,
   mockListCandidates,
   mockListChecklists,
+  mockAppointInventoryManager,
   mockListInventoryItems,
+  mockListInventoryManagers,
+  mockRemoveInventoryManager,
   mockListInventoryMovements,
   mockListMembers,
   mockListOutlets,
@@ -83,6 +86,7 @@ import type {
   EnrolStaffRequest,
   InventoryItem,
   InventoryItemsQuery,
+  InventoryManager,
   InventoryMovement,
   InventoryMovementsQuery,
   LoginRequest,
@@ -131,9 +135,11 @@ export { ApiError };
  * endpoints on the platform yet (Lamax, weeks 6 to 8): Home is empty and the rest
  * fail until they land.
  */
+export class NotBuiltError extends Error {}
+
 function notBuilt(endpoint: string): Promise<never> {
   return Promise.reject(
-    new Error(`${endpoint} is not on the platform yet. Use the mock.`),
+    new NotBuiltError(`${endpoint} is not on the platform yet. Use the mock.`),
   );
 }
 
@@ -667,6 +673,27 @@ export const api = {
             body: request,
           })
         : mockRecordInventoryMovement(itemId, request);
+    },
+
+    /** Inventory Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    managers(outletId: number): Promise<InventoryManager[]> {
+      return USE_REAL_API
+        ? notBuilt('GET /inventory/managers')
+        : mockListInventoryManagers(outletId);
+    },
+
+    /** Appoint an Inventory Manager. No endpoint yet. */
+    appointManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('POST /inventory/managers')
+        : mockAppointInventoryManager(outletId, userId);
+    },
+
+    /** Remove an Inventory Manager. No endpoint yet. */
+    removeManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /inventory/managers')
+        : mockRemoveInventoryManager(outletId, userId);
     },
 
     /** GET /inventory/reports/stock-on-hand?outlet_id= */

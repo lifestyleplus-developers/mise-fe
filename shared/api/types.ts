@@ -706,3 +706,13 @@ export type StockReportQuery = {
   from?: string;
   to?: string;
 };
+
+/**
+ * Someone who records stock at an outlet. API Contract §12 has no endpoint for
+ * appointing them yet, so this shape belongs to the mock until Lifestyle adds one.
+ */
+export type InventoryManager = {
+  id: number;
+  username: string;
+  full_name: string;
+};

@@ -43,6 +43,7 @@ import type {
   EnrolStaffRequest,
   InventoryItem,
   InventoryItemsQuery,
+  InventoryManager,
   InventoryMovement,
   InventoryMovementKind,
   InventoryMovementsQuery,
@@ -3355,13 +3356,13 @@ function readableInventoryOutlet(actor: InventoryActor, outletId: number) {
   return outletId;
 }
 
-/** Only an Administrator authors items (the mockup shows an Owner read-only). */
+/** ADMIN and OWNER author items and appoint managers; recording stock is the manager's. */
 function requireItemAuthor(actor: InventoryActor) {
-  if (actor.me.user.tenant_role !== 'ADMIN') {
+  if (!actor.admin) {
     throw apiError(
       403,
       API_ERROR_CODE.PERMISSION_DENIED,
-      'Only an administrator can change items.',
+      'Only head office can change items.',
     );
   }
 }
@@ -3755,4 +3756,73 @@ export async function mockStockSpendReport(
     total: round3(rows.reduce((total, row) => total + row.amount, 0)),
     items: rows,
   };
+}
+
+// Inventory Managers. API Contract §12 has no endpoint for appointing them and the
+// Schema no membership table (Known Inconsistency #7), so this is the mock's own
+// shape, written to the same rows /auth/me reads (`inventory_outlets`).
+
+/** GET (invented) inventory managers of one outlet, by name. */
+export async function mockListInventoryManagers(
+  outletId: number,
+): Promise<InventoryManager[]> {
+  await delay();
+  const actor = inventoryActor();
+  requireItemAuthor(actor);
+  readableInventoryOutlet(actor, outletId);
+  return db.users
+    .filter(
+      (user) =>
+        user.tenant_id === actor.me.business.id &&
+        user.is_active &&
+        user.memberships.inventory_outlets.includes(outletId),
+    )
+    .sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id - b.id)
+    .map((user) => ({
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+    }));
+}
+
+/** Appoint someone as an outlet's Inventory Manager; appointing twice changes nothing. */
+export async function mockAppointInventoryManager(
+  outletId: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const actor = inventoryActor();
+  requireItemAuthor(actor);
+  readableInventoryOutlet(actor, outletId);
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === userId && candidate.tenant_id === actor.me.business.id,
+  );
+  if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!user.is_active) {
+    throw invalid('A deactivated user cannot be appointed.', 'user_id');
+  }
+  if (!user.memberships.inventory_outlets.includes(outletId)) {
+    user.memberships.inventory_outlets.push(outletId);
+  }
+}
+
+/** Take an Inventory Manager off an outlet. Past movements keep their name. */
+export async function mockRemoveInventoryManager(
+  outletId: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const actor = inventoryActor();
+  requireItemAuthor(actor);
+  readableInventoryOutlet(actor, outletId);
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === userId &&
+      candidate.tenant_id === actor.me.business.id &&
+      candidate.memberships.inventory_outlets.includes(outletId),
+  );
+  if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  user.memberships.inventory_outlets =
+    user.memberships.inventory_outlets.filter((id) => id !== outletId);
 }
