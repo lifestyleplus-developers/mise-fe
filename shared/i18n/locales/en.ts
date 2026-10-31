@@ -740,6 +740,23 @@ export const en = {
   'inv.all-items': 'All items',
   'inv.item-sheet': 'Item',
   'inv.none-between': 'No movements between {a} and {b}.',
+
+  // INV-04: stock reports.
+  'inv.stock': 'Stock on hand',
+  'inv.summary': 'Summary',
+  'inv.spend': 'Spend',
+  'inv.opening': 'Opening',
+  'inv.in': 'In',
+  'inv.out-col': 'Out',
+  'inv.closing': 'Closing',
+  'inv.sum-note':
+    'In includes stock that arrived unrecorded, such as an opening count.',
+  'inv.spend-note': 'Only deliveries with a price are counted.',
+  'inv.report': 'Report',
+  'inv.as-of': 'As of {time}',
+  'inv.spend-total': 'Total spend',
+  'inv.no-items': 'No items yet.',
+  'inv.showing-last': 'Showing the last figures',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

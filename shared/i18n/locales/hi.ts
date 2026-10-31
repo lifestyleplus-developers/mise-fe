@@ -714,4 +714,21 @@ export const hi = {
   'inv.all-items': 'सभी सामान',
   'inv.item-sheet': 'सामान',
   'inv.none-between': '{a} और {b} के बीच कोई आवाजाही नहीं।',
+
+  // INV-04 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.stock': 'मौजूदा स्टॉक',
+  'inv.summary': 'सारांश',
+  'inv.spend': 'खर्च',
+  'inv.opening': 'शुरुआत',
+  'inv.in': 'आया',
+  'inv.out-col': 'गया',
+  'inv.closing': 'अंत',
+  'inv.sum-note':
+    "'आया' में बिना दर्ज आया स्टॉक भी शामिल है, जैसे शुरुआती गिनती।",
+  'inv.spend-note': 'केवल कीमत वाली खेप गिनी जाती हैं।',
+  'inv.report': 'रिपोर्ट',
+  'inv.as-of': '{time} तक',
+  'inv.spend-total': 'कुल खर्च',
+  'inv.no-items': 'अभी कोई सामान नहीं।',
+  'inv.showing-last': 'पिछले आँकड़े दिखाए जा रहे हैं',
 } satisfies Partial<Catalogue>;

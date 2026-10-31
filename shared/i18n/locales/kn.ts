@@ -722,4 +722,20 @@ export const kn = {
   'inv.all-items': 'ಎಲ್ಲಾ ಸಾಮಗ್ರಿ',
   'inv.item-sheet': 'ವಸ್ತು',
   'inv.none-between': '{a} ಮತ್ತು {b} ನಡುವೆ ಚಲನೆಗಳಿಲ್ಲ.',
+
+  // INV-04 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.stock': 'ಕೈಯಲ್ಲಿರುವ ಸ್ಟಾಕ್',
+  'inv.summary': 'ಸಾರಾಂಶ',
+  'inv.spend': 'ಖರ್ಚು',
+  'inv.opening': 'ಆರಂಭ',
+  'inv.in': 'ಬಂದದ್ದು',
+  'inv.out-col': 'ಹೋದದ್ದು',
+  'inv.closing': 'ಅಂತ್ಯ',
+  'inv.sum-note': "'ಬಂದದ್ದು' ಒಳಗೆ ಆರಂಭಿಕ ಎಣಿಕೆಯಂತೆ ದಾಖಲಿಸದೆ ಬಂದ ಸ್ಟಾಕ್ ಸೇರಿದೆ.",
+  'inv.spend-note': 'ಬೆಲೆ ದಾಖಲಾದ ಸರಕುಗಳನ್ನು ಮಾತ್ರ ಎಣಿಸಲಾಗುತ್ತದೆ.',
+  'inv.report': 'ವರದಿ',
+  'inv.as-of': '{time} ವರೆಗೆ',
+  'inv.spend-total': 'ಒಟ್ಟು ವೆಚ್ಚ',
+  'inv.no-items': 'ಇನ್ನೂ ವಸ್ತುಗಳಿಲ್ಲ.',
+  'inv.showing-last': 'ಕೊನೆಯ ಅಂಕಿಅಂಶಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ',
 } satisfies Partial<Catalogue>;

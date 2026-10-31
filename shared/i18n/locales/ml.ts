@@ -737,4 +737,21 @@ export const ml = {
   'inv.all-items': 'എല്ലാ ഇനങ്ങളും',
   'inv.item-sheet': 'ഇനം',
   'inv.none-between': '{a}-നും {b}-നും ഇടയിൽ നീക്കങ്ങളില്ല.',
+
+  // INV-04 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.stock': 'കൈവശമുള്ള സ്റ്റോക്ക്',
+  'inv.summary': 'സംഗ്രഹം',
+  'inv.spend': 'ചെലവ്',
+  'inv.opening': 'തുടക്കം',
+  'inv.in': 'വരവ്',
+  'inv.out-col': 'പോക്ക്',
+  'inv.closing': 'ഒടുക്കം',
+  'inv.sum-note':
+    "'വരവ്' എന്നതിൽ ആദ്യ എണ്ണം പോലെ രേഖപ്പെടുത്താതെ വന്ന സ്റ്റോക്കും ഉൾപ്പെടും.",
+  'inv.spend-note': 'വില രേഖപ്പെടുത്തിയ വരവുകൾ മാത്രം കണക്കാക്കുന്നു.',
+  'inv.report': 'റിപ്പോർട്ട്',
+  'inv.as-of': '{time} വരെ',
+  'inv.spend-total': 'ആകെ ചെലവ്',
+  'inv.no-items': 'ഇതുവരെ ഇനങ്ങളില്ല.',
+  'inv.showing-last': 'അവസാന കണക്കുകൾ കാണിക്കുന്നു',
 } satisfies Partial<Catalogue>;
