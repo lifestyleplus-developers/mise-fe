@@ -1,6 +1,7 @@
 import { useFormatQuantity } from '@/features/inventory/format';
 import { ItemSheet } from '@/features/inventory/item-sheet';
 import { ManagersSheet } from '@/features/inventory/managers-sheet';
+import { useInventoryNotice } from '@/features/inventory/inventory-notice';
 import { useInventoryItems } from '@/features/inventory/use-inventory-items';
 import { useInventoryManagers } from '@/features/inventory/use-inventory-managers';
 import { useInventoryOutlets } from '@/features/inventory/use-inventory-outlets';
@@ -95,8 +96,20 @@ export function InventoryScreen() {
     }
   }
 
+  // A message left by the item page, e.g. after archiving from there.
+  const waitingNotice = useInventoryNotice((state) => state.notice);
+  const clearWaitingNotice = useInventoryNotice((state) => state.clearNotice);
+  const shownNotice =
+    notice ?? (waitingNotice ? { id: -1, text: waitingNotice } : null);
+
   function tell(text: string) {
+    clearWaitingNotice();
     setNotice({ id: Date.now(), text });
+  }
+
+  function dismissNotice() {
+    setNotice(null);
+    clearWaitingNotice();
   }
 
   let body: React.ReactNode;
@@ -229,14 +242,14 @@ export function InventoryScreen() {
           {t('inv.cached')}
         </Text>
       ) : null}
-      {notice ? (
+      {shownNotice ? (
         <View className="mx-4 mb-3">
           <AutoDismissBanner
-            key={notice.id}
+            key={shownNotice.id}
             tone="notice"
-            message={notice.text}
+            message={shownNotice.text}
             duration={6000}
-            onDismiss={() => setNotice(null)}
+            onDismiss={dismissNotice}
           />
         </View>
       ) : null}
