@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `ATT-01`, the state list that starts `default, search, searchEmpty, changes…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.4. FE Spec §3.9, §6, §11; API Contract §11; Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.4. FE Spec §3.9, §6, §11; API Contract §11; Model §18.
 - Route: `/attendance`, from Modules → Attendance → Marking (Attendance Managers), or a notification: `/attendance?session=ID`.
 - Code: `features/attendance/marking-screen.tsx` (which session), `marking-session.tsx` (the roster), `note-sheet.tsx`, `next-opening.ts`, and the shared `mark-row.tsx`, `status-badge.tsx`, `use-mark-person.ts`.
 

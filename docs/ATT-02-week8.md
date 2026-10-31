@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `ATT-02`, the state list that starts `default, range30, pickDates…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.5. FE Spec §3.9, API Contract §11, Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.5. FE Spec §3.9, API Contract §11, Model §18.
 - Routes: `/attendance/history` (the list) and `/attendance/history/[id]` (one past session), from Modules → Attendance → History. Attendance Managers (their own sessions), ADMIN and OWNER (every outlet).
 - Code: `features/attendance/history-screen.tsx`, `history-session-screen.tsx`, and the shared `date-range-sheet.tsx`, `mark-row.tsx`, `status-badge.tsx`.
 

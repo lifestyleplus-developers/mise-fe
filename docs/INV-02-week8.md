@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `INV-02`, the state list that starts `default, setActual, setActualBelow…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.7. FE Spec §3.10, §6, §11; API Contract §12; Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.7. FE Spec §3.10, §6, §11; API Contract §12; Model §18.
 - Route: `/inventory/[id]?outlet=ID`, from the item list. Anyone who can open Inventory reads it; recording is the Inventory Manager's at that outlet; Edit item is ADMIN and OWNER.
 - Code: `features/inventory/item-screen.tsx`, `movement-sheet.tsx`, `movement-row.tsx`, `movement-text.ts`, `item-sheet.tsx` (the Edit sheet, built in 2.6), `use-inventory-movements.ts` (the retry queue).
 

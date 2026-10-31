@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `ATT-03`, the state list that starts `default, search, searchEmpty, add…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.2. FE Spec §3.9 (attendance), API Contract §11, Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.2. FE Spec §3.9 (attendance), API Contract §11, Model §18.
 - Route: `/attendance/roster`, from Modules → Attendance → Roster. The Attendance Manager (own outlets) and ADMIN / OWNER.
 - Code: `features/attendance/roster-screen.tsx`, `staff-sheets.tsx`, `use-roster.ts`, `use-attendance-outlets.ts`.
 

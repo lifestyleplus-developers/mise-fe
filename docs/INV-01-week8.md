@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `INV-01`, the state list that starts `default, admin, negative, search…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.6. FE Spec §3.10, API Contract §12, Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.6. FE Spec §3.10, API Contract §12, Model §18.
 - Route: `/inventory`, from Modules → Inventory → Items. Inventory Managers (their outlets), ADMIN and OWNER (every outlet). Adding and editing items, and appointing managers, are ADMIN and OWNER.
 - Code: `features/inventory/inventory-screen.tsx`, `item-sheet.tsx`, `managers-sheet.tsx`, `use-inventory-outlets.ts`, `use-inventory-managers.ts`, `format.ts`.
 

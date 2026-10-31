@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `INV-03`, the state list that starts `default, item, itemSheet, rangeSheet…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.8. FE Spec §3.10, API Contract §12, Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.8. FE Spec §3.10, API Contract §12, Model §18.
 - Route: `/inventory/log`, from Modules → Inventory → Movement log, or "See all movements" on an item (`?item=ID&outlet=ID`). Inventory Managers (their outlets), ADMIN and OWNER.
 - Code: `features/inventory/log-screen.tsx`, `item-filter-sheet.tsx`, `movement-row.tsx`, and the shared `date-range-sheet.tsx`.
 

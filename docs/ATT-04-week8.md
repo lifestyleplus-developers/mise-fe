@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `ATT-04`, the state list that starts `default, noName, empty, new…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.3. FE Spec §3.9, API Contract §11 (and §5 for the schedule rules), Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.3. FE Spec §3.9, API Contract §11 (and §5 for the schedule rules), Model §18.
 - Routes: `/attendance/configs` (the list), `/attendance/configs/new?outlet=ID` and `/attendance/configs/[id]` (the editor). ADMIN and OWNER only; a manager only reads the sessions of their own configurations, elsewhere.
 - Code: `features/attendance/configs-screen.tsx`, `config-editor-screen.tsx`, `config-managers.tsx`, `config-form.ts`, `config-errors.ts`, `config-text.ts`. The schedule fields are the checklist editor's, with no Hourly.
 

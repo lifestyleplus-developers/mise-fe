@@ -3,7 +3,7 @@
 ## References
 
 - `mise-week-08.html` at the mise root: registry entry `INV-04`, the state list that starts `default, negative, summary, summaryDay…`.
-- Build plan: `BUILD-PLAN-WEEK-8.md` §2.9. FE Spec §3.10, API Contract §12, Model §18.
+- Build plan: `old-files/BUILD-PLAN-WEEK-8.md` §2.9. FE Spec §3.10, API Contract §12, Model §18.
 - Route: `/inventory/reports`, from the item list's Reports button or Modules → Inventory → Reports. Inventory Managers (their outlets), ADMIN and OWNER.
 - Code: `features/inventory/reports-screen.tsx`, `use-inventory-reports.ts`, and the shared `date-range-sheet.tsx`, `outlet-picker.tsx`.
 - The three report shapes are not in the API Contract yet; they follow the mockup and move when Lifestyle's endpoints land.
