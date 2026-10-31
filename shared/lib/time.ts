@@ -48,3 +48,12 @@ export function splitMinutes(total: number): {
 export function joinMinutes(hours: number, minutes: number): number {
   return hours * 60 + minutes;
 }
+
+/** An ISO moment as HH:MM on the phone's local clock (the business's time, API §1). */
+export function isoToClock(value: string): string {
+  const moment = new Date(value);
+  return toClockString({
+    hour: moment.getHours(),
+    minute: moment.getMinutes(),
+  });
+}

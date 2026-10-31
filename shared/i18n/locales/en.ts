@@ -508,6 +508,38 @@ export const en = {
   'home.task-open': '{task}: not answered yet',
   'run.not-open-yet':
     'Opens at {time}. You can read the tasks now, and answer once it opens.',
+
+  // Week 8: dates, outlet chip, attendance marks.
+  'range.title': 'Dates',
+  'range.choose': 'Choose dates',
+  'range.today': 'Today',
+  'range.yesterday': 'Yesterday',
+  'range.last-7': 'Last 7 days',
+  'range.last-30': 'Last 30 days',
+  'range.from': 'From',
+  'range.to': 'To',
+  'range.day': 'Day',
+  'range.month': 'Month',
+  'range.year': 'Year',
+  'range.bad': "To can't be before From.",
+  'range.chip': 'Dates: {range}',
+  'range.span': '{from} to {to}',
+  'outlet.chip': 'Outlet: {name}',
+  'att.present': 'Present',
+  'att.not-present': 'Not present',
+  'att.not-marked': 'Not marked',
+  'att.needs-review': 'Needs review',
+  'att.waiting': 'Waiting to send',
+  'att.show-all': 'Show all ({n})',
+  'att.show-less': 'Show less',
+  'att.row-failed': "Couldn't record this. Tap to try again.",
+  'att.late': 'Not recorded: the window closed at {time}.',
+  'att.late-line': '{name} will show as not marked.',
+  'att.note-for': 'Note for {name}',
+  'att.mark-present-for': 'Mark {name} present',
+  'att.mark-absent-for': 'Mark {name} not present',
+  'att.change': '{from} → {to}',
+  'att.change-by': 'by {name}',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;
