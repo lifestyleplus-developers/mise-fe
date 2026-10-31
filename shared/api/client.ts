@@ -137,6 +137,12 @@ export { ApiError };
  */
 export class NotBuiltError extends Error {}
 
+/**
+ * Whether the platform can list the movements of a whole outlet. API Contract §12
+ * has the ledger per item only, so against the real platform the log is per item.
+ */
+export const OUTLET_MOVEMENT_LOG = !USE_REAL_API;
+
 function notBuilt(endpoint: string): Promise<never> {
   return Promise.reject(
     new NotBuiltError(`${endpoint} is not on the platform yet. Use the mock.`),

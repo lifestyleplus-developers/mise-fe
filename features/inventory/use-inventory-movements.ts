@@ -28,7 +28,10 @@ export type MovementFilters = {
 };
 
 /** The log, newest first, 25 at a time. Pass `itemId` for one item's ledger. */
-export function useInventoryMovements(filters: MovementFilters) {
+export function useInventoryMovements(
+  filters: MovementFilters,
+  enabled = true,
+) {
   return useInfiniteQuery({
     queryKey: inventoryKeys.movementList(filters),
     queryFn: ({ pageParam }) =>
@@ -41,6 +44,7 @@ export function useInventoryMovements(filters: MovementFilters) {
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     placeholderData: keepPreviousData,
     retry: retryTransient,
+    enabled,
   });
 }
 

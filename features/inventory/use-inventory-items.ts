@@ -124,3 +124,28 @@ export function useUpdateInventoryItem(id: number) {
     },
   });
 }
+
+/**
+ * Every item of an outlet, archived ones too, for screens that read names and units
+ * off a movement's item id. Pages through the list 100 at a time.
+ */
+export function useAllInventoryItems(outletId: number | undefined) {
+  return useQuery({
+    queryKey: [...inventoryKeys.itemLists, 'all', outletId ?? null],
+    queryFn: async (): Promise<InventoryItem[]> => {
+      const all: InventoryItem[] = [];
+      for (let page = 1; ; page++) {
+        const result = await api.inventory.items({
+          page,
+          pageSize: 100,
+          outletId,
+          includeArchived: true,
+        });
+        all.push(...result.results);
+        if (result.next === null) return all;
+      }
+    },
+    enabled: outletId !== undefined,
+    retry: retryTransient,
+  });
+}

@@ -717,4 +717,9 @@ export const kn = {
   'inv.no-change': 'ಬದಲಾವಣೆ ಇಲ್ಲ',
   'inv.gone': 'ಈ ವಸ್ತು ಇನ್ನು ಲಭ್ಯವಿಲ್ಲ.',
   'inv.not-yours-record': 'ಈ ಔಟ್‌ಲೆಟ್‌ನಲ್ಲಿ ಸ್ಟಾಕ್ ದಾಖಲಿಸಲು ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ.',
+
+  // INV-03 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.all-items': 'ಎಲ್ಲಾ ಸಾಮಗ್ರಿ',
+  'inv.item-sheet': 'ವಸ್ತು',
+  'inv.none-between': '{a} ಮತ್ತು {b} ನಡುವೆ ಚಲನೆಗಳಿಲ್ಲ.',
 } satisfies Partial<Catalogue>;

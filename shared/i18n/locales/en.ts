@@ -735,6 +735,11 @@ export const en = {
   'inv.no-change': 'No change',
   'inv.gone': 'This item is no longer available.',
   'inv.not-yours-record': "You can't record stock at this outlet.",
+
+  // INV-03: movement log.
+  'inv.all-items': 'All items',
+  'inv.item-sheet': 'Item',
+  'inv.none-between': 'No movements between {a} and {b}.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

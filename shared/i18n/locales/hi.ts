@@ -709,4 +709,9 @@ export const hi = {
   'inv.no-change': 'कोई बदलाव नहीं',
   'inv.gone': 'यह सामान अब उपलब्ध नहीं है।',
   'inv.not-yours-record': 'आप इस आउटलेट में स्टॉक दर्ज नहीं कर सकते।',
+
+  // INV-03 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.all-items': 'सभी सामान',
+  'inv.item-sheet': 'सामान',
+  'inv.none-between': '{a} और {b} के बीच कोई आवाजाही नहीं।',
 } satisfies Partial<Catalogue>;

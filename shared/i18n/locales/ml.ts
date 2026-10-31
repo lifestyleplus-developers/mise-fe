@@ -732,4 +732,9 @@ export const ml = {
   'inv.gone': 'ഈ ഇനം ഇനി ലഭ്യമല്ല.',
   'inv.not-yours-record':
     'ഈ ഔട്ട്‌ലെറ്റിൽ സ്റ്റോക്ക് രേഖപ്പെടുത്താൻ നിങ്ങൾക്ക് അനുമതിയില്ല.',
+
+  // INV-03 (mockup wording where it has any, the rest stand-ins, pending Lifestyle's review).
+  'inv.all-items': 'എല്ലാ ഇനങ്ങളും',
+  'inv.item-sheet': 'ഇനം',
+  'inv.none-between': '{a}-നും {b}-നും ഇടയിൽ നീക്കങ്ങളില്ല.',
 } satisfies Partial<Catalogue>;
