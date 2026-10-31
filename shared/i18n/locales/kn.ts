@@ -531,4 +531,35 @@ export const kn = {
   'modules.spot-checks': 'ಸ್ಪಾಟ್ ಚೆಕ್‌ಗಳು',
   'modules.attendance-off': '{outlet} ಗೆ ಹಾಜರಾತಿ ಆನ್ ಆಗಿಲ್ಲ.',
   'modules.inventory-off': 'ದಾಸ್ತಾನು ಆನ್ ಆಗಿಲ್ಲ.',
+
+  // ATT-03 (mockup wording, pending Lifestyle's review).
+  'att.search-ph': 'ಹೆಸರು ಅಥವಾ ಕೋಡ್ ಹುಡುಕಿ',
+  'att.clear': 'ತೆರವುಗೊಳಿಸಿ',
+  'att.no-match-staff': "{outlet} ನಲ್ಲಿ '{q}' ಹೆಸರಿನವರು ಯಾರೂ ಇಲ್ಲ.",
+  'att.add-staff': 'ಸಿಬ್ಬಂದಿ ಸೇರಿಸಿ',
+  'att.archived': 'ಆರ್ಕೈವ್ ಆಗಿದೆ',
+  'att.active': 'ಸಕ್ರಿಯ',
+  'att.not-active-here': 'ಇಲ್ಲಿ ಸಕ್ರಿಯವಿಲ್ಲ',
+  'att.show-deactivated': 'ನಿಷ್ಕ್ರಿಯರನ್ನು ತೋರಿಸಿ',
+  'att.show-archived': 'ಆರ್ಕೈವ್ ಆದವರನ್ನು ತೋರಿಸಿ',
+  'att.name': 'ಹೆಸರು',
+  'att.code': 'ಕೋಡ್',
+  'att.code-hint': 'ನೀವು ಬಳಸುವುದಾದರೆ ನಿಮ್ಮದೇ ಉಲ್ಲೇಖ',
+  'att.works-at': 'ಕೆಲಸ ಮಾಡುವ ಸ್ಥಳ',
+  'att.archive': 'ಆರ್ಕೈವ್ ಮಾಡಿ',
+  'att.staff-forbidden':
+    'ಈ ಔಟ್‌ಲೆಟ್‌ನ ಸಿಬ್ಬಂದಿ ಪಟ್ಟಿಯನ್ನು ಬದಲಾಯಿಸಲು ನಿಮಗೆ ಸಾಧ್ಯವಿಲ್ಲ.',
+  'att.staff-added':
+    '{name} ಸೇರಿಸಲಾಗಿದೆ. ಮುಂದಿನ ಸೆಷನ್‌ನಿಂದ {name} ಕಾಣಿಸುತ್ತಾರೆ.',
+  'att.staff-saved': '{name} ಉಳಿಸಲಾಗಿದೆ.',
+  'att.take-off-title': '{name} ಅವರನ್ನು {outlet} ಪಟ್ಟಿಯಿಂದ ತೆಗೆಯಬೇಕೆ?',
+  'att.take-off': 'ತೆಗೆಯಿರಿ',
+  'att.archive-title': '{name} ಅವರನ್ನು ಆರ್ಕೈವ್ ಮಾಡಬೇಕೆ?',
+  'att.archive-body':
+    '{name} ಎಲ್ಲಾ ಪಟ್ಟಿಗಳಿಂದ ಹೋಗುತ್ತಾರೆ. ಹಿಂದಿನ ಹಾಜರಾತಿ ದಾಖಲಾದಂತೆಯೇ ಉಳಿಯುತ್ತದೆ.',
+  'att.empty-roster': '{outlet} ನಲ್ಲಿ ಇನ್ನೂ ಸಿಬ್ಬಂದಿ ಇಲ್ಲ',
+  'att.empty-roster-body': 'ಹಾಜರಾತಿಯಲ್ಲಿ ನೀವು ಗುರುತಿಸುವವರನ್ನು ಸೇರಿಸಿ.',
+  'att.required-name': 'ಅಗತ್ಯ',
+  'att.past-stays': 'ಹಿಂದಿನ ಹಾಜರಾತಿ ದಾಖಲಾದಂತೆಯೇ ಉಳಿಯುತ್ತದೆ.',
+  'att.forbidden': 'ಈ ಔಟ್‌ಲೆಟ್‌ನ ಹಾಜರಾತಿಯನ್ನು ನೋಡಲು ನಿಮಗೆ ಸಾಧ್ಯವಿಲ್ಲ.',
 } satisfies Partial<Catalogue>;

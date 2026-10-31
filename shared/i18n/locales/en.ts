@@ -555,6 +555,35 @@ export const en = {
   'modules.spot-checks': 'Spot checks',
   'modules.attendance-off': "Attendance isn't turned on for {outlet}.",
   'modules.inventory-off': "Inventory isn't turned on.",
+
+  // ATT-03: staff roster.
+  'att.search-ph': 'Search name or code',
+  'att.clear': 'Clear',
+  'att.no-match-staff': "No one called '{q}' at {outlet}.",
+  'att.add-staff': 'Add staff',
+  'att.archived': 'Archived',
+  'att.active': 'Active',
+  'att.not-active-here': 'Not active here',
+  'att.show-deactivated': 'Show deactivated',
+  'att.show-archived': 'Show archived',
+  'att.name': 'Name',
+  'att.code': 'Code',
+  'att.code-hint': 'Your own reference, if you use one',
+  'att.works-at': 'Works at',
+  'att.archive': 'Archive',
+  'att.staff-forbidden': "You can't change the staff list for this outlet.",
+  'att.staff-added': '{name} added. {name} will appear from the next session.',
+  'att.staff-saved': '{name} saved.',
+  'att.take-off-title': "Take {name} off {outlet}'s list?",
+  'att.take-off': 'Take off',
+  'att.archive-title': 'Archive {name}?',
+  'att.archive-body':
+    '{name} leaves every roster. Past attendance stays as recorded.',
+  'att.empty-roster': 'No staff at {outlet} yet',
+  'att.empty-roster-body': 'Add the people you mark in attendance.',
+  'att.required-name': 'Required',
+  'att.past-stays': 'Past attendance stays as recorded.',
+  'att.forbidden': "You can't see this outlet's attendance.",
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;
