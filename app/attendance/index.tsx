@@ -1,7 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'modules.marking',
-  frame: 'pushed',
-  backHref: '/modules',
-});
+export { MarkingScreen as default } from '@/features/attendance/marking-screen';

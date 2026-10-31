@@ -104,11 +104,18 @@ export function useMarkPerson() {
     onError: (error, { sessionId }, context) => {
       // Only a refusal is rolled back. A write that never arrived stays on the
       // row as it was marked, waiting to send.
-      if (error instanceof ApiError && context?.previous) {
-        queryClient.setQueryData(
-          attendanceKeys.session(sessionId),
-          context.previous,
-        );
+      if (error instanceof ApiError) {
+        if (context?.previous) {
+          queryClient.setQueryData(
+            attendanceKeys.session(sessionId),
+            context.previous,
+          );
+        }
+        // Several marks can be in flight at once ("Mark the rest present"), each
+        // with its own snapshot; asking again settles on what the platform holds.
+        void queryClient.invalidateQueries({
+          queryKey: attendanceKeys.session(sessionId),
+        });
       }
     },
     onSuccess: (mark, { sessionId, markId }) => {

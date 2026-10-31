@@ -613,6 +613,36 @@ export const en = {
     'Need another session in a day? Add another configuration.',
   'cfg.line': '{freq} · {time} · open for {dur}',
   'cfg.fallback-title': '{freq} · {time}',
+
+  // ATT-01: marking.
+  'att.saved-as-you-go': 'Saved as you go',
+  'att.next-is': 'Next: {name}, {time} {day}.',
+  'att.no-roster': 'No one was on the roster when this session opened.',
+  'att.mark-rest-title': 'Mark {n} people present?',
+  'att.mark-rest-body':
+    'They are not marked yet. You can change any mark until {time}.',
+  'att.mark-present': 'Mark present',
+  'att.mark-rest': 'Mark the rest present',
+  'att.n-not-marked-yet': '{n} not marked yet',
+  'att.n-not-marked': '{n} not marked',
+  'att.view-only': 'Viewing only. Marking is for Attendance Managers.',
+  'att.closed-record': "Closed at {time}. This record can't be changed.",
+  'att.closed-at': 'Closed at {time}',
+  'att.closes': 'Closes {time}',
+  'att.note-field': 'Note (optional)',
+  'att.note-read-only':
+    "A saved note can't be changed, so that nothing is overwritten",
+  'att.close': 'Close',
+  'att.load-more': 'Show more',
+  'att.n-present': '{n} present',
+  'att.n-not-present': '{n} not present',
+  'att.n-waiting': '{n} waiting to send',
+  'att.open-now': 'Open now',
+  'att.no-session': 'No session open.',
+  'att.mark-forbidden': "You can't mark this session.",
+  'att.no-match-session': "No one called '{q}' on this session.",
+  'att.tomorrow': 'tomorrow',
+  'att.today': 'today',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

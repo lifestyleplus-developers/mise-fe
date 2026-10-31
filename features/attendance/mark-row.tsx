@@ -64,7 +64,7 @@ function MarkRow({
 
   // Latest first: the row leads with the most recent change.
   const changes = [...mark.changes].reverse();
-  const shown = expanded ? changes : changes.slice(0, 1);
+  const shown = expanded ? changes : changes.slice(0, 2);
 
   return (
     <View className="border-border gap-2 border-b px-4 py-3">
@@ -108,24 +108,36 @@ function MarkRow({
             })}
             onPress={() => onMark?.('NOT_PRESENT')}
           />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={format(t('att.note-for'), {
-              name: staff.full_name,
-            })}
-            onPress={onNote}
-            className={cn(
-              'size-11 shrink-0 items-center justify-center rounded-full border',
-              mark.note ? 'border-primary bg-accent' : 'border-input-edge',
-            )}
-          >
-            <MessageSquare className="text-foreground size-5" />
-          </Pressable>
+          {/* A note goes to the platform with a mark, so it waits for one. */}
+          {mark.status === 'UNMARKED' ? null : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={format(t('att.note-for'), {
+                name: staff.full_name,
+              })}
+              onPress={onNote}
+              className={cn(
+                'size-11 shrink-0 items-center justify-center rounded-full border',
+                mark.note ? 'border-primary bg-accent' : 'border-input-edge',
+              )}
+            >
+              <MessageSquare className="text-foreground size-5" />
+            </Pressable>
+          )}
         </View>
       ) : null}
 
       {mark.note ? (
         <Text className="text-muted-foreground text-[14px]">{mark.note}</Text>
+      ) : null}
+      {/* Who marked them and when, until a correction says it better. */}
+      {!queue &&
+      mark.marked_by &&
+      mark.marked_at &&
+      mark.changes.length === 0 ? (
+        <Text className="text-muted-foreground text-[13px]">
+          {`${mark.marked_by.full_name} ${formatClock(isoToClock(mark.marked_at))}`}
+        </Text>
       ) : null}
 
       <Queue
@@ -157,7 +169,7 @@ function MarkRow({
               </Text>
             );
           })}
-          {changes.length > 1 ? (
+          {changes.length > 2 ? (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded }}

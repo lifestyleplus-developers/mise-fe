@@ -15,12 +15,13 @@ export function retryTransient(count: number, error: unknown): boolean {
  * One write held on the phone. `waiting` is "Waiting to send": still going, or
  * failed in transit and awaiting a retry; never shown as failed (FE Spec §6).
  * `refused` is the platform's answer to a write that did get there, such as
- * 409 `window_closed`; the screen explains it as "Not recorded".
+ * 409 `window_closed`; the screen explains it as "Not recorded". `done` never
+ * leaves this module: it is how a later success replaces an earlier failure.
  */
 export type QueuedWrite<Variables> = {
   key: string;
   variables: Variables;
-  kind: 'waiting' | 'refused';
+  kind: 'waiting' | 'refused' | 'done';
   /** The refusal, when `kind` is `refused`. */
   error: ApiError | null;
   submittedAt: number;
@@ -33,16 +34,21 @@ export type QueuedWrite<Variables> = {
 export function useQueuedWrites<Variables>(
   mutationKey: readonly unknown[],
   keyOf: (variables: Variables) => string,
-): QueuedWrite<Variables>[] {
+): (QueuedWrite<Variables> & { kind: 'waiting' | 'refused' })[] {
   const writes = useMutationState<QueuedWrite<Variables> | null>({
     filters: { mutationKey },
     select: (mutation) => {
       const { status, variables, error, submittedAt } = mutation.state;
-      if (status !== 'pending' && status !== 'error') return null;
+      if (status === 'idle') return null;
       return {
         key: keyOf(variables as Variables),
         variables: variables as Variables,
-        kind: error instanceof ApiError ? 'refused' : 'waiting',
+        kind:
+          status === 'success'
+            ? 'done'
+            : error instanceof ApiError
+              ? 'refused'
+              : 'waiting',
         error: error instanceof ApiError ? error : null,
         submittedAt,
       };
@@ -57,5 +63,10 @@ export function useQueuedWrites<Variables>(
       latest.set(write.key, write);
     }
   }
-  return [...latest.values()];
+  return [...latest.values()].filter(
+    (
+      write,
+    ): write is QueuedWrite<Variables> & { kind: 'waiting' | 'refused' } =>
+      write.kind !== 'done',
+  );
 }

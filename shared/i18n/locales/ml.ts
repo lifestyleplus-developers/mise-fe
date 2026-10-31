@@ -604,4 +604,35 @@ export const ml = {
     'ഒരു ദിവസം മറ്റൊരു സെഷൻ വേണോ? മറ്റൊരു കോൺഫിഗറേഷൻ ചേർക്കുക.',
   'cfg.line': '{freq} · {time} · {dur} തുറന്നിരിക്കും',
   'cfg.fallback-title': '{freq} · {time}',
+
+  // ATT-01 (mockup wording where it has any, pending Lifestyle's review).
+  'att.saved-as-you-go': 'ഓരോന്നും ഉടൻ സേവ് ആകുന്നു',
+  'att.next-is': 'അടുത്തത്: {name}, {day} {time}.',
+  'att.no-roster': 'ഈ സെഷൻ തുറന്നപ്പോൾ പട്ടികയിൽ ആരും ഇല്ലായിരുന്നു.',
+  'att.mark-rest-title': '{n} പേരെ ഹാജരായി അടയാളപ്പെടുത്തണോ?',
+  'att.mark-rest-body':
+    'ഇവരെ ഇതുവരെ അടയാളപ്പെടുത്തിയിട്ടില്ല. {time} വരെ ഏത് അടയാളവും മാറ്റാം.',
+  'att.mark-present': 'ഹാജരായി അടയാളപ്പെടുത്തുക',
+  'att.mark-rest': 'ബാക്കിയുള്ളവരെ ഹാജരാക്കുക',
+  'att.n-not-marked-yet': '{n} ഇതുവരെ അടയാളപ്പെടുത്തിയില്ല',
+  'att.n-not-marked': '{n} അടയാളപ്പെടുത്തിയില്ല',
+  'att.view-only':
+    'കാണാൻ മാത്രം. അടയാളപ്പെടുത്തുന്നത് അറ്റൻഡൻസ് മാനേജർമാരുടെ ജോലിയാണ്.',
+  'att.closed-record': '{time}-ന് അടച്ചു. ഈ രേഖ മാറ്റാനാവില്ല.',
+  'att.closed-at': '{time} ന് അടച്ചു',
+  'att.closes': '{time} ന് അടയ്ക്കും',
+  'att.note-field': 'കുറിപ്പ് (ഓപ്ഷണൽ)',
+  'att.note-read-only':
+    'സേവ് ചെയ്ത കുറിപ്പ് മാറ്റാനാവില്ല, ഒന്നും മായാതിരിക്കാൻ',
+  'att.close': 'അടയ്ക്കുക',
+  'att.load-more': 'കൂടുതൽ കാണിക്കുക',
+  'att.n-present': '{n} ഹാജർ',
+  'att.n-not-present': '{n} ഹാജരില്ല',
+  'att.n-waiting': '{n} അയയ്ക്കാൻ കാത്തിരിക്കുന്നു',
+  'att.open-now': 'ഇപ്പോൾ തുറന്നത്',
+  'att.no-session': 'സെഷൻ തുറന്നിട്ടില്ല.',
+  'att.mark-forbidden': 'ഈ സെഷൻ അടയാളപ്പെടുത്താൻ നിങ്ങൾക്ക് കഴിയില്ല.',
+  'att.no-match-session': "ഈ സെഷനിൽ '{q}' എന്ന പേരിൽ ആരുമില്ല.",
+  'att.tomorrow': 'നാളെ',
+  'att.today': 'ഇന്ന്',
 } satisfies Partial<Catalogue>;
