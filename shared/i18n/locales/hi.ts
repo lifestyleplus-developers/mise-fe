@@ -514,4 +514,19 @@ export const hi = {
   'att.mark-absent-for': '{name} को अनुपस्थित दर्ज करें',
   'att.change': '{from} → {to}',
   'att.change-by': '{name} द्वारा',
+
+  // Week 8 (stand-in wording, unverified).
+  'modules.empty': 'यहाँ अभी खोलने के लिए कुछ नहीं है',
+  'modules.attendance': 'उपस्थिति',
+  'modules.inventory': 'इन्वेंटरी',
+  'modules.marking': 'उपस्थिति दर्ज करें',
+  'modules.history': 'इतिहास',
+  'modules.roster': 'कर्मचारी सूची',
+  'modules.configs': 'कॉन्फ़िगरेशन',
+  'modules.items': 'सामान',
+  'modules.log': 'आवाजाही लॉग',
+  'modules.reports': 'रिपोर्ट',
+  'modules.spot-checks': 'स्पॉट चेक',
+  'modules.attendance-off': '{outlet} के लिए उपस्थिति चालू नहीं है।',
+  'modules.inventory-off': 'इन्वेंटरी चालू नहीं है।',
 } satisfies Partial<Catalogue>;

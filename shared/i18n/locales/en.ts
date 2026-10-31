@@ -540,6 +540,21 @@ export const en = {
   'att.mark-absent-for': 'Mark {name} not present',
   'att.change': '{from} → {to}',
   'att.change-by': 'by {name}',
+
+  // Week 8: the Modules hub.
+  'modules.empty': 'Nothing to open here yet',
+  'modules.attendance': 'Attendance',
+  'modules.inventory': 'Inventory',
+  'modules.marking': 'Marking',
+  'modules.history': 'History',
+  'modules.roster': 'Roster',
+  'modules.configs': 'Configurations',
+  'modules.items': 'Items',
+  'modules.log': 'Movement log',
+  'modules.reports': 'Reports',
+  'modules.spot-checks': 'Spot checks',
+  'modules.attendance-off': "Attendance isn't turned on for {outlet}.",
+  'modules.inventory-off': "Inventory isn't turned on.",
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

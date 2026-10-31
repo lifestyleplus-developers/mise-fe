@@ -516,4 +516,19 @@ export const kn = {
   'att.mark-absent-for': '{name} ಅವರನ್ನು ಗೈರು ಎಂದು ಗುರುತಿಸಿ',
   'att.change': '{from} → {to}',
   'att.change-by': '{name} ಅವರಿಂದ',
+
+  // Week 8 (stand-in wording, unverified).
+  'modules.empty': 'ಇಲ್ಲಿ ತೆರೆಯಲು ಏನೂ ಇಲ್ಲ',
+  'modules.attendance': 'ಹಾಜರಾತಿ',
+  'modules.inventory': 'ದಾಸ್ತಾನು',
+  'modules.marking': 'ಹಾಜರಾತಿ ಗುರುತಿಸಿ',
+  'modules.history': 'ಇತಿಹಾಸ',
+  'modules.roster': 'ಸಿಬ್ಬಂದಿ ಪಟ್ಟಿ',
+  'modules.configs': 'ಸಂರಚನೆಗಳು',
+  'modules.items': 'ವಸ್ತುಗಳು',
+  'modules.log': 'ಚಲನೆ ಲಾಗ್',
+  'modules.reports': 'ವರದಿಗಳು',
+  'modules.spot-checks': 'ಸ್ಪಾಟ್ ಚೆಕ್‌ಗಳು',
+  'modules.attendance-off': '{outlet} ಗೆ ಹಾಜರಾತಿ ಆನ್ ಆಗಿಲ್ಲ.',
+  'modules.inventory-off': 'ದಾಸ್ತಾನು ಆನ್ ಆಗಿಲ್ಲ.',
 } satisfies Partial<Catalogue>;

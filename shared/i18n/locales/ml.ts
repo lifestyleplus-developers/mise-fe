@@ -528,4 +528,19 @@ export const ml = {
   'att.mark-absent-for': '{name}-നെ ഹാജരില്ലെന്ന് രേഖപ്പെടുത്തുക',
   'att.change': '{from} → {to}',
   'att.change-by': '{name} വഴി',
+
+  // Week 8 (stand-in wording, unverified).
+  'modules.empty': 'ഇവിടെ തുറക്കാൻ ഒന്നുമില്ല',
+  'modules.attendance': 'ഹാജർ',
+  'modules.inventory': 'ഇൻവെന്ററി',
+  'modules.marking': 'ഹാജർ രേഖപ്പെടുത്തുക',
+  'modules.history': 'ചരിത്രം',
+  'modules.roster': 'ജീവനക്കാരുടെ പട്ടിക',
+  'modules.configs': 'കോൺഫിഗറേഷനുകൾ',
+  'modules.items': 'ഇനങ്ങൾ',
+  'modules.log': 'ചലന രേഖ',
+  'modules.reports': 'റിപ്പോർട്ടുകൾ',
+  'modules.spot-checks': 'സ്പോട്ട് ചെക്കുകൾ',
+  'modules.attendance-off': '{outlet}-ൽ ഹാജർ ഓണാക്കിയിട്ടില്ല.',
+  'modules.inventory-off': 'ഇൻവെന്ററി ഓണാക്കിയിട്ടില്ല.',
 } satisfies Partial<Catalogue>;
