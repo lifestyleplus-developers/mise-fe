@@ -1,3 +1,4 @@
+import { moduleGroups } from '@/features/shell/modules';
 import type { MeResponse } from '@/shared/api/types';
 import { canAdminister } from '@/shared/constants/roles';
 import type { MessageKey } from '@/shared/i18n';
@@ -45,19 +46,6 @@ export const TAB_LABEL: Record<TabId, MessageKey> = {
   more: 'tab.more',
 };
 
-/** Whether the person has a module to open. */
-function hasVisibleModule({ modules, memberships, user }: MeResponse) {
-  const admin = canAdminister(user.tenant_role);
-  return (
-    (modules.attendance_outlets.length > 0 &&
-      (memberships.attendance_configs.length > 0 || admin)) ||
-    (modules.inventory &&
-      (memberships.inventory_outlets.length > 0 || admin)) ||
-    (modules.spot_check_outlets.length > 0 &&
-      (memberships.spot_check_outlets.length > 0 || admin))
-  );
-}
-
 /** Which tabs this person sees. */
 export function visibleTabs(me: MeResponse): TabId[] {
   const visible: Record<TabId, boolean> = {
@@ -66,7 +54,7 @@ export function visibleTabs(me: MeResponse): TabId[] {
     issues:
       me.memberships.cl_admin_assignments.length > 0 ||
       canAdminister(me.user.tenant_role),
-    modules: hasVisibleModule(me),
+    modules: moduleGroups(me).length > 0,
     more: true,
   };
   return TAB_ORDER.filter((id) => visible[id]);

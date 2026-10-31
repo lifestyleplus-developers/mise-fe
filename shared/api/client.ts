@@ -2,75 +2,126 @@
 import {
   mockAddMember,
   mockAnswerTask,
+  mockAppointAttendanceManager,
+  mockArchiveAttendanceConfig,
   mockArchiveChecklist,
   mockArchiveOutlet,
   mockArchiveTask,
   mockCreateAssignments,
+  mockCreateAttendanceConfig,
   mockCreateChecklist,
+  mockCreateInventoryItem,
   mockCreateOutlet,
+  mockCreateStaff,
   mockCreateTask,
   mockCreateUser,
   mockDeactivateAssignment,
+  mockEnrolStaff,
   mockFetchMe,
+  mockGetAttendanceSession,
   mockGetChecklist,
   mockGetOutlet,
   mockGetRun,
   mockGetUser,
   mockListAssignments,
+  mockListAttendanceConfigs,
+  mockListAttendanceSessions,
   mockListCandidates,
   mockListChecklists,
+  mockAppointInventoryManager,
+  mockListInventoryItems,
+  mockListInventoryManagers,
+  mockRemoveInventoryManager,
+  mockListInventoryMovements,
   mockListMembers,
   mockListOutlets,
   mockListRuns,
+  mockListStaff,
   mockListTasks,
   mockListUsers,
   mockLogin,
   mockLogout,
+  mockMarkPerson,
+  mockRecordInventoryMovement,
+  mockRemoveAttendanceManager,
   mockRemoveMember,
   mockReorderTasks,
   mockResetPassword,
   mockSignUpload,
+  mockStockOnHandReport,
+  mockStockSpendReport,
+  mockStockSummaryReport,
+  mockUpdateAttendanceConfig,
   mockUpdateChecklist,
+  mockUpdateInventoryItem,
   mockUpdateMe,
   mockUpdateOutlet,
+  mockUpdateStaff,
   mockUpdateTask,
   mockUpdateUser,
 } from '@/shared/mocks/mock-db';
 import type {
   AddMemberRequest,
   AnswerTaskRequest,
+  AppointManagerRequest,
+  AttendanceConfig,
+  AttendanceConfigsQuery,
+  AttendanceMark,
+  AttendanceSession,
+  AttendanceSessionDetail,
+  AttendanceSessionsQuery,
   Candidate,
   CandidatesQuery,
   Checklist,
   ChecklistDetail,
   ChecklistListItem,
   CreateAssignmentsRequest,
+  CreateAttendanceConfigRequest,
   CreateChecklistRequest,
+  CreateInventoryItemRequest,
   CreateOutletRequest,
+  CreateStaffRequest,
   CreateTaskRequest,
   CreateUserRequest,
+  EnrolStaffRequest,
+  InventoryItem,
+  InventoryItemsQuery,
+  InventoryManager,
+  InventoryMovement,
+  InventoryMovementsQuery,
   LoginRequest,
   LoginResponse,
+  MarkPersonRequest,
   MeResponse,
   Outlet,
   OutletAssignment,
   Page,
+  RecordMovementRequest,
   ReorderTasksRequest,
   ResetPasswordRequest,
   Run,
   RunDetail,
   RunTask,
-  Team,
+  Staff,
+  StaffQuery,
+  StockOnHandReport,
+  StockReportQuery,
+  StockSpendReport,
+  StockSummaryReport,
   Task,
+  Team,
+  UpdateAttendanceConfigRequest,
   UpdateChecklistRequest,
+  UpdateInventoryItemRequest,
   UpdateMeRequest,
   UpdateOutletRequest,
+  UpdateStaffRequest,
   UpdateTaskRequest,
   UpdateUserRequest,
-  User,
-  UsersQuery,
   UploadSignRequest,
   UploadSignResponse,
+  User,
+  UsersQuery,
 } from './types';
 
 import { loginRequest, logoutRequest } from './auth-api';
@@ -84,9 +135,17 @@ export { ApiError };
  * endpoints on the platform yet (Lamax, weeks 6 to 8): Home is empty and the rest
  * fail until they land.
  */
+export class NotBuiltError extends Error {}
+
+/**
+ * Whether the platform can list the movements of a whole outlet. API Contract §12
+ * has the ledger per item only, so against the real platform the log is per item.
+ */
+export const OUTLET_MOVEMENT_LOG = !USE_REAL_API;
+
 function notBuilt(endpoint: string): Promise<never> {
   return Promise.reject(
-    new Error(`${endpoint} is not on the platform yet. Use the mock.`),
+    new NotBuiltError(`${endpoint} is not on the platform yet. Use the mock.`),
   );
 }
 
@@ -403,6 +462,281 @@ export const api = {
             body: request,
           })
         : mockResetPassword(id, request);
+    },
+  },
+  staff: {
+    /** GET /staff?outlet_id=&search=&include_archived= */
+    list(query: StaffQuery): Promise<Page<Staff>> {
+      return USE_REAL_API
+        ? call<Page<Staff>>('/staff', {
+            query: {
+              outlet_id: query.outletId,
+              search: query.search,
+              include_archived: query.includeArchived,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListStaff(query);
+    },
+
+    /** POST /staff */
+    create(request: CreateStaffRequest): Promise<Staff> {
+      return USE_REAL_API
+        ? call<Staff>('/staff', { method: 'POST', body: request })
+        : mockCreateStaff(request);
+    },
+
+    /** PATCH /staff/{id} — name, code, archive. */
+    update(id: number, request: UpdateStaffRequest): Promise<Staff> {
+      return USE_REAL_API
+        ? call<Staff>(`/staff/${id}`, { method: 'PATCH', body: request })
+        : mockUpdateStaff(id, request);
+    },
+
+    /** POST /staff/{id}/outlets — enrol, or set whether they are active there. */
+    enrol(id: number, request: EnrolStaffRequest): Promise<Staff> {
+      return USE_REAL_API
+        ? call<Staff>(`/staff/${id}/outlets`, { method: 'POST', body: request })
+        : mockEnrolStaff(id, request);
+    },
+  },
+  attendance: {
+    /** GET /attendance/configs?outlet_id=&include_archived= */
+    configs(query: AttendanceConfigsQuery): Promise<Page<AttendanceConfig>> {
+      return USE_REAL_API
+        ? call<Page<AttendanceConfig>>('/attendance/configs', {
+            query: {
+              outlet_id: query.outletId,
+              include_archived: query.includeArchived,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListAttendanceConfigs(query);
+    },
+
+    /** POST /attendance/configs */
+    createConfig(
+      request: CreateAttendanceConfigRequest,
+    ): Promise<AttendanceConfig> {
+      return USE_REAL_API
+        ? call<AttendanceConfig>('/attendance/configs', {
+            method: 'POST',
+            body: request,
+          })
+        : mockCreateAttendanceConfig(request);
+    },
+
+    /** PATCH /attendance/configs/{id} */
+    updateConfig(
+      id: number,
+      request: UpdateAttendanceConfigRequest,
+    ): Promise<AttendanceConfig> {
+      return USE_REAL_API
+        ? call<AttendanceConfig>(`/attendance/configs/${id}`, {
+            method: 'PATCH',
+            body: request,
+          })
+        : mockUpdateAttendanceConfig(id, request);
+    },
+
+    /** POST /attendance/configs/{id}/archive */
+    archiveConfig(id: number): Promise<AttendanceConfig> {
+      return USE_REAL_API
+        ? call<AttendanceConfig>(`/attendance/configs/${id}/archive`, {
+            method: 'POST',
+          })
+        : mockArchiveAttendanceConfig(id);
+    },
+
+    /** POST /attendance/configs/{id}/managers */
+    appointManager(
+      id: number,
+      request: AppointManagerRequest,
+    ): Promise<AttendanceConfig> {
+      return USE_REAL_API
+        ? call<AttendanceConfig>(`/attendance/configs/${id}/managers`, {
+            method: 'POST',
+            body: request,
+          })
+        : mockAppointAttendanceManager(id, request);
+    },
+
+    /** DELETE /attendance/configs/{id}/managers/{user_id} */
+    removeManager(id: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? call<void>(`/attendance/configs/${id}/managers/${userId}`, {
+            method: 'DELETE',
+          })
+        : mockRemoveAttendanceManager(id, userId);
+    },
+
+    /** GET /attendance/sessions?outlet_id=&state=&from=&to= */
+    sessions(query: AttendanceSessionsQuery): Promise<Page<AttendanceSession>> {
+      return USE_REAL_API
+        ? call<Page<AttendanceSession>>('/attendance/sessions', {
+            query: {
+              outlet_id: query.outletId,
+              state: query.state,
+              from: query.from,
+              to: query.to,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListAttendanceSessions(query);
+    },
+
+    /** GET /attendance/sessions/{id} — with the roster snapshot. */
+    session(id: number): Promise<AttendanceSessionDetail> {
+      return USE_REAL_API
+        ? call<AttendanceSessionDetail>(`/attendance/sessions/${id}`)
+        : mockGetAttendanceSession(id);
+    },
+
+    /** PATCH /attendance/marks/{id} */
+    mark(id: number, request: MarkPersonRequest): Promise<AttendanceMark> {
+      return USE_REAL_API
+        ? call<AttendanceMark>(`/attendance/marks/${id}`, {
+            method: 'PATCH',
+            body: request,
+          })
+        : mockMarkPerson(id, request);
+    },
+  },
+  inventory: {
+    /** GET /inventory/items?outlet_id=&search=&include_archived= */
+    items(query: InventoryItemsQuery): Promise<Page<InventoryItem>> {
+      return USE_REAL_API
+        ? call<Page<InventoryItem>>('/inventory/items', {
+            query: {
+              outlet_id: query.outletId,
+              search: query.search,
+              include_archived: query.includeArchived,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListInventoryItems(query);
+    },
+
+    /** POST /inventory/items */
+    createItem(request: CreateInventoryItemRequest): Promise<InventoryItem> {
+      return USE_REAL_API
+        ? call<InventoryItem>('/inventory/items', {
+            method: 'POST',
+            body: request,
+          })
+        : mockCreateInventoryItem(request);
+    },
+
+    /** PATCH /inventory/items/{id} */
+    updateItem(
+      id: number,
+      request: UpdateInventoryItemRequest,
+    ): Promise<InventoryItem> {
+      return USE_REAL_API
+        ? call<InventoryItem>(`/inventory/items/${id}`, {
+            method: 'PATCH',
+            body: request,
+          })
+        : mockUpdateInventoryItem(id, request);
+    },
+
+    /**
+     * GET /inventory/items/{id}/movements. The outlet-wide log (no `itemId`) has
+     * no endpoint in the contract yet, so against the platform it is not built.
+     */
+    movements(
+      query: InventoryMovementsQuery,
+    ): Promise<Page<InventoryMovement>> {
+      if (!USE_REAL_API) return mockListInventoryMovements(query);
+      if (query.itemId === undefined) {
+        return notBuilt('GET /inventory/movements');
+      }
+      return call<Page<InventoryMovement>>(
+        `/inventory/items/${query.itemId}/movements`,
+        {
+          query: {
+            from: query.from,
+            to: query.to,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        },
+      );
+    },
+
+    /** POST /inventory/items/{id}/movements — append-only. */
+    record(
+      itemId: number,
+      request: RecordMovementRequest,
+    ): Promise<InventoryMovement> {
+      return USE_REAL_API
+        ? call<InventoryMovement>(`/inventory/items/${itemId}/movements`, {
+            method: 'POST',
+            body: request,
+          })
+        : mockRecordInventoryMovement(itemId, request);
+    },
+
+    /** Inventory Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    managers(outletId: number): Promise<InventoryManager[]> {
+      return USE_REAL_API
+        ? notBuilt('GET /inventory/managers')
+        : mockListInventoryManagers(outletId);
+    },
+
+    /** Appoint an Inventory Manager. No endpoint yet. */
+    appointManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('POST /inventory/managers')
+        : mockAppointInventoryManager(outletId, userId);
+    },
+
+    /** Remove an Inventory Manager. No endpoint yet. */
+    removeManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /inventory/managers')
+        : mockRemoveInventoryManager(outletId, userId);
+    },
+
+    /** GET /inventory/reports/stock-on-hand?outlet_id= */
+    stockOnHand(
+      query: Pick<StockReportQuery, 'outletId'>,
+    ): Promise<StockOnHandReport> {
+      return USE_REAL_API
+        ? call<StockOnHandReport>('/inventory/reports/stock-on-hand', {
+            query: { outlet_id: query.outletId },
+          })
+        : mockStockOnHandReport(query);
+    },
+
+    /** GET /inventory/reports/summary?outlet_id=&from=&to= */
+    summary(query: StockReportQuery): Promise<StockSummaryReport> {
+      return USE_REAL_API
+        ? call<StockSummaryReport>('/inventory/reports/summary', {
+            query: {
+              outlet_id: query.outletId,
+              from: query.from,
+              to: query.to,
+            },
+          })
+        : mockStockSummaryReport(query);
+    },
+
+    /** GET /inventory/reports/spend?outlet_id=&from=&to= */
+    spend(query: StockReportQuery): Promise<StockSpendReport> {
+      return USE_REAL_API
+        ? call<StockSpendReport>('/inventory/reports/spend', {
+            query: {
+              outlet_id: query.outletId,
+              from: query.from,
+              to: query.to,
+            },
+          })
+        : mockStockSpendReport(query);
     },
   },
 } as const;

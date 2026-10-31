@@ -112,7 +112,7 @@
     "memberships": {
       "cl_admin_assignments": [],
       "cl_imp_assignments": [],
-      "attendance_configs": [],
+      "attendance_configs": [3],
       "inventory_outlets": [],
       "spot_check_outlets": []
     },

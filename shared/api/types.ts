@@ -24,6 +24,8 @@ export const API_ERROR_CODE = {
   NOT_FOUND: 'not_found',
   ROLE_CONFLICT: 'role_conflict',
   WINDOW_OVERLAPS_NEXT_PERIOD: 'window_overlaps_next_period',
+  PERMISSION_DENIED: 'permission_denied',
+  UNIT_LOCKED: 'unit_locked',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -359,11 +361,6 @@ export type RunTask = {
   image_url: string | null;
   comment: string | null;
   outcome: 'PASS' | 'FAIL' | 'MISSED' | 'PENDING_JUDGEMENT' | null;
-  /**
-   * The AI's reason for an image verdict. Not in API Contract §7 yet: the mock
-   * sends it, and the real platform must be asked to before this is relied on.
-   */
-  ai_comment?: string | null;
   answered_by: { id: number; full_name: string } | null;
   answered_at: string | null;
 };
@@ -402,4 +399,320 @@ export type UploadSignResponse = {
   method: 'PUT';
   headers: Record<string, string>;
   key: string;
+};
+
+/** API Contract §11 — where a person on the roster is enrolled. */
+export type StaffOutlet = {
+  outlet_id: number;
+  /** False once they have been taken off that outlet's list; the row stays. */
+  is_active: boolean;
+};
+
+/**
+ * A person who needs attendance recorded. Not a user: no login, never in /users.
+ * `outlets` holds only the outlets the caller may see.
+ */
+export type Staff = {
+  id: number;
+  full_name: string;
+  staff_code: string | null;
+  is_archived: boolean;
+  outlets: StaffOutlet[];
+};
+
+/** GET /staff filters. `outletId` lists people active there; archived ones are opt-in. */
+export type StaffQuery = {
+  page: number;
+  pageSize: number;
+  outletId?: number;
+  search?: string;
+  includeArchived?: boolean;
+};
+
+/** POST /staff. A manager must give `outlet_ids`; an ADMIN or OWNER may enrol later. */
+export type CreateStaffRequest = {
+  full_name: string;
+  staff_code?: string | null;
+  outlet_ids?: number[];
+};
+
+/** PATCH /staff/{id} — name, code, archive. */
+export type UpdateStaffRequest = Partial<
+  Pick<Staff, 'full_name' | 'staff_code' | 'is_archived'>
+>;
+
+/** POST /staff/{id}/outlets — enrol, or set whether they are active there. */
+export type EnrolStaffRequest = { outlet_id: number; is_active?: boolean };
+
+/** Someone appointed to mark a configuration. */
+export type AttendanceManager = {
+  id: number;
+  username: string;
+  full_name: string;
+};
+
+/**
+ * API Contract §11 — one attendance schedule at an outlet. An outlet may have
+ * several (shifts). Never HOURLY: the platform refuses it (400 on `recurrence`).
+ */
+export type AttendanceConfig = {
+  id: number;
+  outlet_id: number;
+  name: string;
+  /** Phase 1 offers MANUAL only. */
+  method: 'MANUAL';
+  recurrence: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  /** HH:MM, business-local. */
+  st_time: string;
+  deadline_minutes: number;
+  /** WEEKLY only; 1 = Monday … 7 = Sunday. */
+  weekdays: number[] | null;
+  /** MONTHLY only. */
+  day_of_month: number | null;
+  is_archived: boolean;
+  managers: AttendanceManager[];
+};
+
+/** GET /attendance/configs filters. */
+export type AttendanceConfigsQuery = {
+  page: number;
+  pageSize: number;
+  outletId?: number;
+  includeArchived?: boolean;
+};
+
+/** POST /attendance/configs. `weekdays` is WEEKLY only, `day_of_month` MONTHLY only. */
+export type CreateAttendanceConfigRequest = Pick<
+  AttendanceConfig,
+  'outlet_id' | 'name' | 'recurrence' | 'st_time' | 'deadline_minutes'
+> &
+  Partial<Pick<AttendanceConfig, 'method' | 'weekdays' | 'day_of_month'>>;
+
+/** PATCH /attendance/configs/{id} — everything but the outlet. */
+export type UpdateAttendanceConfigRequest = Partial<
+  Omit<CreateAttendanceConfigRequest, 'outlet_id'>
+>;
+
+/** POST /attendance/configs/{id}/managers. */
+export type AppointManagerRequest = { user_id: number };
+
+export type AttendanceMarkStatus =
+  'UNMARKED' | 'PRESENT' | 'NOT_PRESENT' | 'NEEDS_REVIEW';
+
+/** One kept correction on a mark, oldest first. */
+export type AttendanceMarkChange = {
+  from_status: AttendanceMarkStatus;
+  to_status: AttendanceMarkStatus;
+  changed_by: number;
+  changed_at: string;
+};
+
+/**
+ * API Contract §11 — one person's mark in one session, with its history.
+ * NOT_PRESENT from `SYSTEM` means nobody marked them; from `MANUAL`, a manager
+ * said they were absent. UNMARKED exists only while the session is OPEN.
+ */
+export type AttendanceMark = {
+  id: number;
+  staff: { id: number; full_name: string; staff_code: string | null };
+  status: AttendanceMarkStatus;
+  source: 'MANUAL' | 'RECOGNISED' | 'SYSTEM';
+  confidence: number | null;
+  note: string | null;
+  marked_by: { id: number; full_name: string } | null;
+  marked_at: string | null;
+  changes: AttendanceMarkChange[];
+};
+
+/** `not_present` is a manager saying absent; `not_marked` is nobody checking. */
+export type AttendanceCounts = {
+  total: number;
+  present: number;
+  not_present: number;
+  not_marked: number;
+  needs_review: number;
+  /** Open sessions only. */
+  unmarked: number;
+};
+
+/** A session in a list: where, when, and how far marking has got. */
+export type AttendanceSession = {
+  id: number;
+  config_id: number;
+  config_name: string;
+  outlet_id: number;
+  outlet_name: string;
+  method: 'MANUAL';
+  status: 'OPEN' | 'FINALIZED';
+  window_open: string;
+  window_close: string;
+  finalized_at: string | null;
+  counts: AttendanceCounts;
+};
+
+/** GET /attendance/sessions/{id} — with the roster snapshot, by name. */
+export type AttendanceSessionDetail = AttendanceSession & {
+  marks: AttendanceMark[];
+};
+
+/** GET /attendance/sessions filters. `from`/`to` are dates (YYYY-MM-DD), both inclusive. */
+export type AttendanceSessionsQuery = {
+  page: number;
+  pageSize: number;
+  outletId?: number;
+  state?: 'open' | 'upcoming' | 'closed';
+  from?: string;
+  to?: string;
+};
+
+/**
+ * PATCH /attendance/marks/{id}. A manager sets PRESENT or NOT_PRESENT only; a mark
+ * cannot be put back to unmarked. `note` left out stays, null clears it.
+ */
+export type MarkPersonRequest = {
+  status: 'PRESENT' | 'NOT_PRESENT';
+  note?: string | null;
+};
+
+export type InventoryUnit = 'KG' | 'G' | 'L' | 'ML' | 'COUNT';
+
+/** API Contract §12. `balance` can go below zero. */
+export type InventoryItem = {
+  id: number;
+  outlet_id: number;
+  name: string;
+  /** Exactly one; immutable once movements exist (409 `unit_locked`). */
+  unit: InventoryUnit;
+  reference_price: number | null;
+  balance: number;
+  is_archived: boolean;
+};
+
+/** GET /inventory/items filters. */
+export type InventoryItemsQuery = {
+  page: number;
+  pageSize: number;
+  outletId?: number;
+  search?: string;
+  includeArchived?: boolean;
+};
+
+/** POST /inventory/items. */
+export type CreateInventoryItemRequest = {
+  outlet_id: number;
+  name: string;
+  unit: InventoryUnit;
+  reference_price?: number | null;
+};
+
+/** PATCH /inventory/items/{id} — name, reference price, archive; the unit until movements exist. */
+export type UpdateInventoryItemRequest = Partial<
+  Pick<InventoryItem, 'name' | 'unit' | 'reference_price' | 'is_archived'>
+>;
+
+export type InventoryMovementKind = 'ADD' | 'REMOVE' | 'COUNT';
+
+/**
+ * API Contract §12 — one append-only entry. On a COUNT, `quantity` is the observed
+ * total, not a delta: below the balance sets `derived_out`, above it `derived_in`
+ * (stock that arrived unrecorded — information, not an error).
+ */
+export type InventoryMovement = {
+  id: number;
+  item_id: number;
+  kind: InventoryMovementKind;
+  quantity: number;
+  /** ADD only. */
+  unit_price: number | null;
+  note: string | null;
+  derived_out: number | null;
+  derived_in: number | null;
+  balance_after: number;
+  recorded_by: { id: number; full_name: string };
+  recorded_at: string;
+};
+
+/** POST /inventory/items/{id}/movements. `unit_price` is for an ADD. */
+export type RecordMovementRequest = {
+  kind: InventoryMovementKind;
+  quantity: number;
+  unit_price?: number | null;
+  note?: string | null;
+};
+
+/**
+ * The movement log across an outlet's items, newest first. The contract has the
+ * ledger per item only; INV-03 filters by item, so `itemId` is optional here and
+ * the real endpoint will need an outlet-wide form. `from`/`to` are dates.
+ */
+export type InventoryMovementsQuery = {
+  page: number;
+  pageSize: number;
+  outletId?: number;
+  itemId?: number;
+  from?: string;
+  to?: string;
+};
+
+/**
+ * The three report shapes are not in the API Contract yet; they follow the
+ * mockup (INV-04) and move when Lifestyle's endpoints land.
+ */
+export type StockOnHandReport = {
+  outlet_id: number;
+  as_of: string;
+  items: {
+    item_id: number;
+    name: string;
+    unit: InventoryUnit;
+    balance: number;
+  }[];
+};
+
+/** `in` includes stock that arrived unrecorded (a COUNT above the balance). */
+export type StockSummaryReport = {
+  outlet_id: number;
+  from: string;
+  to: string;
+  items: {
+    item_id: number;
+    name: string;
+    unit: InventoryUnit;
+    opening: number;
+    in: number;
+    out: number;
+    closing: number;
+  }[];
+};
+
+/** Spend in rupees: only deliveries (ADD) that carried a unit price count. */
+export type StockSpendReport = {
+  outlet_id: number;
+  from: string;
+  to: string;
+  total: number;
+  items: {
+    item_id: number;
+    name: string;
+    unit: InventoryUnit;
+    quantity: number;
+    amount: number;
+  }[];
+};
+
+/** GET /inventory/reports/* filters. */
+export type StockReportQuery = {
+  outletId: number;
+  from?: string;
+  to?: string;
+};
+
+/**
+ * Someone who records stock at an outlet. API Contract §12 has no endpoint for
+ * appointing them yet, so this shape belongs to the mock until Lifestyle adds one.
+ */
+export type InventoryManager = {
+  id: number;
+  username: string;
+  full_name: string;
 };

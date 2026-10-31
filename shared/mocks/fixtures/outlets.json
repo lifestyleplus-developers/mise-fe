@@ -43,7 +43,7 @@
     "id": 12,
     "tenant_id": 7,
     "name": "Central Kitchen",
-    "attendance_enabled": false,
+    "attendance_enabled": true,
     "spot_checks_enabled": false,
     "is_archived": false
   }

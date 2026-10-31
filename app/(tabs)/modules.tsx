@@ -1,6 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'tab.modules',
-  frame: 'tab',
-});
+export { ModulesScreen as default } from '@/features/shell/modules-screen';

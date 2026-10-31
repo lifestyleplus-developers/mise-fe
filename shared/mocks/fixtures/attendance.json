@@ -1,0 +1,319 @@
+{
+  "staff": [
+    {
+      "id": 101,
+      "full_name": "Joseph",
+      "staff_code": "IN-014",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        },
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 102,
+      "full_name": "Lakshmi",
+      "staff_code": "IN-003",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 103,
+      "full_name": "Imran",
+      "staff_code": "IN-021",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 104,
+      "full_name": "Rekha",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 105,
+      "full_name": "Dev",
+      "staff_code": "IN-009",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 106,
+      "full_name": "Salma",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 107,
+      "full_name": "Arjun",
+      "staff_code": "IN-017",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 108,
+      "full_name": "Tara",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 109,
+      "full_name": "Kavya",
+      "staff_code": "IN-025",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 110,
+      "full_name": "Nikhil",
+      "staff_code": "IN-006",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 111,
+      "full_name": "Zara",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 112,
+      "full_name": "ശ്രീലക്ഷ്മി",
+      "staff_code": "IN-030",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 114,
+      "full_name": "Ravi",
+      "staff_code": "IN-002",
+      "outlets": [
+        {
+          "outlet_id": 3,
+          "is_active": false
+        }
+      ],
+      "is_archived": true
+    },
+    {
+      "id": 115,
+      "full_name": "Farid",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        },
+        {
+          "outlet_id": 3,
+          "is_active": false
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 116,
+      "full_name": "Mahesh",
+      "staff_code": "KO-004",
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 117,
+      "full_name": "Bhavna",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 118,
+      "full_name": "Sunil",
+      "staff_code": "KO-011",
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 119,
+      "full_name": "Deepa",
+      "staff_code": null,
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 120,
+      "full_name": "Ganesh",
+      "staff_code": "KO-019",
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    },
+    {
+      "id": 121,
+      "full_name": "Venkatasubramanian Raghunathan Iyer Kumar",
+      "staff_code": "IN-041",
+      "outlets": [
+        {
+          "outlet_id": 5,
+          "is_active": true
+        }
+      ],
+      "is_archived": false
+    }
+  ],
+  "configs": [
+    {
+      "id": 4,
+      "outlet_id": 3,
+      "name": "Early shift",
+      "method": "MANUAL",
+      "recurrence": "DAILY",
+      "st_time": "07:00",
+      "deadline_minutes": 90,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false,
+      "manager_ids": []
+    },
+    {
+      "id": 2,
+      "outlet_id": 3,
+      "name": "Morning",
+      "method": "MANUAL",
+      "recurrence": "DAILY",
+      "st_time": "08:00",
+      "deadline_minutes": 60,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false,
+      "manager_ids": [4]
+    },
+    {
+      "id": 1,
+      "outlet_id": 3,
+      "name": "Evening",
+      "method": "MANUAL",
+      "recurrence": "DAILY",
+      "st_time": "16:00",
+      "deadline_minutes": 60,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false,
+      "manager_ids": []
+    },
+    {
+      "id": 3,
+      "outlet_id": 5,
+      "name": "Morning",
+      "method": "MANUAL",
+      "recurrence": "DAILY",
+      "st_time": "09:00",
+      "deadline_minutes": 60,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false,
+      "manager_ids": [11]
+    },
+    {
+      "id": 5,
+      "outlet_id": 12,
+      "name": "Kitchen roll call",
+      "method": "MANUAL",
+      "recurrence": "DAILY",
+      "st_time": "06:00",
+      "deadline_minutes": 60,
+      "weekdays": null,
+      "day_of_month": null,
+      "is_archived": false,
+      "manager_ids": []
+    }
+  ]
+}

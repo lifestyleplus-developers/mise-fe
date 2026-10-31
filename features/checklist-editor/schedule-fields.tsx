@@ -35,8 +35,18 @@ const FREQUENCIES = ['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY'] as const;
 
 type Picker = 'time' | 'duration' | 'day' | 'last' | null;
 
+type Recurrence = ScheduleForm['recurrence'];
+
 type ScheduleFieldsProps = {
   form: ScheduleForm;
+  /** Which frequencies to offer. Attendance has no Hourly (API Contract §11). */
+  frequencies?: readonly Recurrence[];
+  /** Overrides the example under the name field. */
+  namePlaceholder?: string;
+  /** Overrides the line under the frequency choice. */
+  rhythmHint?: string;
+  /** Drawn between the name and the frequency, e.g. attendance's Method. */
+  afterName?: React.ReactNode;
   onChange: (patch: Partial<ScheduleForm>) => void;
   /** Save was tapped: required fields now say so. */
   submitted: boolean;
@@ -76,6 +86,10 @@ function useClosesText() {
 /** The editor's form card: name, how often, when it opens, how long it stays open. */
 function ScheduleFields({
   form,
+  frequencies = FREQUENCIES,
+  namePlaceholder,
+  rhythmHint,
+  afterName,
   onChange,
   submitted,
   conflict,
@@ -109,7 +123,7 @@ function ScheduleFields({
       <View className="gap-1">
         <TextField
           label={t('sched.name')}
-          placeholder={t('sched.name-placeholder')}
+          placeholder={namePlaceholder ?? t('sched.name-placeholder')}
           value={form.name}
           editable={!disabled}
           multiline
@@ -124,6 +138,8 @@ function ScheduleFields({
         ) : null}
       </View>
 
+      {afterName}
+
       <View className="gap-2">
         <Text className="font-sans-semibold text-[13px]">
           {t('sched.how-often')}
@@ -131,14 +147,14 @@ function ScheduleFields({
         <SegmentedControl
           label={t('sched.how-often')}
           value={form.recurrence}
-          options={FREQUENCIES.map((value) => ({
+          options={frequencies.map((value) => ({
             value,
             label: t(`sched.freq.${value}` as MessageKey),
           }))}
           onChange={(recurrence) => !disabled && onChange({ recurrence })}
         />
         <Text className="text-muted-foreground px-1 text-[12px] leading-snug">
-          {t('sched.rhythm-hint')}
+          {rhythmHint ?? t('sched.rhythm-hint')}
         </Text>
       </View>
 

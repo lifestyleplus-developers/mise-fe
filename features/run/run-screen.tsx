@@ -421,10 +421,7 @@ export function RunScreen() {
                   onLayout={(y) => rowY.current.set(task.id, y)}
                 >
                   {isImage && !open ? (
-                    <AiVerdict
-                      outcome={task.outcome}
-                      comment={task.ai_comment}
-                    />
+                    <AiVerdict outcome={task.outcome} />
                   ) : null}
                   {isAnswering && !open && !editing ? (
                     <Pressable
