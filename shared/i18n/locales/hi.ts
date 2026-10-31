@@ -616,4 +616,10 @@ export const hi = {
   'att.no-match-session': "इस सत्र में '{q}' नाम का कोई नहीं।",
   'att.tomorrow': 'कल',
   'att.today': 'आज',
+
+  // ATT-02 (mockup wording, pending Lifestyle's review).
+  'att.zero-present': '0 उपस्थित · {n} चिह्नित नहीं',
+  'att.empty-range': '{a} और {b} के बीच कोई सत्र नहीं।',
+  'att.all': 'सभी',
+  'att.no-match-filter': 'इस सत्र में इस तरह कोई चिह्नित नहीं है।',
 } satisfies Partial<Catalogue>;

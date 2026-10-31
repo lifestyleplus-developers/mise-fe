@@ -643,6 +643,12 @@ export const en = {
   'att.no-match-session': "No one called '{q}' on this session.",
   'att.tomorrow': 'tomorrow',
   'att.today': 'today',
+
+  // ATT-02: session history.
+  'att.zero-present': '0 present · {n} not marked',
+  'att.empty-range': 'No sessions between {a} and {b}.',
+  'att.all': 'All',
+  'att.no-match-filter': 'No one is marked this way on this session.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

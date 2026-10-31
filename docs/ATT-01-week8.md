@@ -28,7 +28,7 @@ Exactly 27, in mockup order. "Reach it with" names the sign-in that shows the st
 11. **rowFailed** — "Couldn't record this. Tap to try again." _Save a note reading "fault"._
 12. **lateWrite** — "Not recorded: the window closed at {time}. {name} will show as not marked." _Mark while offline, wait for the window to close, go online._
 13. **closed** — rows as text with a word each ("Not marked"), "Closed at {time}. This record can't be changed." _Leave the screen open until the window closes._
-14. **viewOnly** — "Viewing only. Marking is for Attendance Managers." _raheem, opening a session from History (2.5). Not yet reachable: Modules gives administrators no Marking row._
+14. **viewOnly** — "Viewing only. Marking is for Attendance Managers." _raheem: History, tap a session that is open now._
 15. **picker** — two open sessions listed by name, outlet and closing time. _In Configurations appoint meera to Elegance's Morning, then open Marking._
 16. **empty** — "No session open." with "Next: {name}, {time} {day}." _After every window has closed._
 17. **emptyFallback** — the same, the time worked out on the phone. The platform has no "next session" to ask for, so this is the only form built.

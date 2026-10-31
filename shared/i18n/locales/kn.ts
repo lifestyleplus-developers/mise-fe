@@ -623,4 +623,10 @@ export const kn = {
   'att.no-match-session': "ಈ ಸೆಷನ್‌ನಲ್ಲಿ '{q}' ಹೆಸರಿನವರು ಯಾರೂ ಇಲ್ಲ.",
   'att.tomorrow': 'ನಾಳೆ',
   'att.today': 'ಇಂದು',
+
+  // ATT-02 (mockup wording, pending Lifestyle's review).
+  'att.zero-present': '0 ಹಾಜರು · {n} ಗುರುತಿಸಿಲ್ಲ',
+  'att.empty-range': '{a} ಮತ್ತು {b} ನಡುವೆ ಸೆಷನ್‌ಗಳಿಲ್ಲ.',
+  'att.all': 'ಎಲ್ಲಾ',
+  'att.no-match-filter': 'ಈ ಸೆಷನ್‌ನಲ್ಲಿ ಹೀಗೆ ಯಾರನ್ನೂ ಗುರುತಿಸಿಲ್ಲ.',
 } satisfies Partial<Catalogue>;

@@ -92,3 +92,20 @@ export function monthName(month: number, language: InterfaceLanguage): string {
     return String(month);
   }
 }
+
+/** "Sat 17 Oct": a day with its weekday, for a session's heading. */
+export function formatDayWithWeekday(
+  moment: Date | string,
+  language: InterfaceLanguage,
+): string {
+  const date = typeof moment === 'string' ? new Date(moment) : moment;
+  try {
+    return new Intl.DateTimeFormat(LOCALE[language], {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }).format(date);
+  } catch {
+    return toDay(date);
+  }
+}

@@ -635,4 +635,10 @@ export const ml = {
   'att.no-match-session': "ഈ സെഷനിൽ '{q}' എന്ന പേരിൽ ആരുമില്ല.",
   'att.tomorrow': 'നാളെ',
   'att.today': 'ഇന്ന്',
+
+  // ATT-02 (mockup wording, pending Lifestyle's review).
+  'att.zero-present': '0 ഹാജർ · {n} അടയാളപ്പെടുത്തിയില്ല',
+  'att.empty-range': '{a}-നും {b}-നും ഇടയിൽ സെഷനുകളില്ല.',
+  'att.all': 'എല്ലാം',
+  'att.no-match-filter': 'ഈ സെഷനിൽ ഇങ്ങനെ ആരും അടയാളപ്പെടുത്തിയിട്ടില്ല.',
 } satisfies Partial<Catalogue>;
