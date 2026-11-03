@@ -811,4 +811,62 @@ export const ml = {
   'spot.archive': 'ആർക്കൈവ് ചെയ്യുക',
   'modules.spot-checks-off': '{outlet}-ൽ സ്പോട്ട് ചെക്കുകൾ ഓണാക്കിയിട്ടില്ല.',
   'spot.cached': 'അവസാന പട്ടിക കാണിക്കുന്നു',
+
+  // SPT-05: checks list and check editor.
+  'spot.no-managers':
+    'ചെക്ക് വെളിപ്പെടുമ്പോൾ ആരെയും അറിയിക്കില്ല. ഒരു സ്പോട്ട്-ചെക്ക് മാനേജറെ ചേർക്കുക.',
+  'spot.row-line': '{subject} · {freq} · {time} · {n} മിനിറ്റ്',
+  'spot.counts': '{p} ഫോട്ടോ · {i} ചെക്ക് ഇനങ്ങൾ',
+  'spot.staff': 'ജീവനക്കാർ',
+  'spot.area': 'ഇടം',
+  'spot.managers': 'സ്പോട്ട്-ചെക്ക് മാനേജർമാർ',
+  'spot.add-manager': 'മാനേജറെ ചേർക്കുക',
+  'spot.already-manager': 'ഇവിടെ ഇതിനകം സ്പോട്ട്-ചെക്ക് മാനേജർ',
+  'spot.not-wired': 'ഇത് ഇപ്പോൾ സേവ് ചെയ്യാനാവില്ല.',
+  'spot.remove': 'നീക്കുക',
+  'spot.empty-checks': 'ഇതുവരെ സ്പോട്ട് ചെക്കുകൾ ഇല്ല.',
+  'spot.apply-next':
+    'മാറ്റങ്ങൾ അടുത്ത ചെക്ക് മുതൽ. പഴയ ഫലങ്ങൾ അവ വിലയിരുത്തിയത് നിലനിർത്തും.',
+  'spot.name-ph': 'ഉദാ: ഗ്രൂമിംഗ് — അടുക്കള',
+  'spot.subject': 'വിഷയം',
+  'spot.subject-staff':
+    '{outlet} പട്ടികയിൽ നിന്ന് ആരെയെങ്കിലും തിരഞ്ഞെടുക്കും.',
+  'spot.subject-area':
+    'തിരഞ്ഞെടുക്കാവുന്ന ഇടങ്ങളിൽ നിന്ന് ഒന്ന് തിരഞ്ഞെടുക്കും.',
+  'spot.sel-time': 'തിരഞ്ഞെടുക്കുന്ന സമയം',
+  'spot.sel-hint': 'തിരഞ്ഞെടുക്കുന്ന സമയം.',
+  'spot.window': 'സമയപരിധി',
+  'spot.minutes': '{n} മിനിറ്റ്',
+  'spot.shorter': 'കുറഞ്ഞ സമയം',
+  'spot.longer': 'കൂടുതൽ സമയം',
+  'spot.window-hint': 'ഔട്ട്‌ലെറ്റിൽ നടന്നെത്താൻ മതി, ആരും ഒരുങ്ങാൻ പോരാ.',
+  'spot.prompts': 'എന്തിന്റെ ഫോട്ടോ',
+  'spot.prompts-hint':
+    'ഓരോ നിർദ്ദേശവും ഒരു ഫോട്ടോ. ഓരോ ഫോട്ടോയും വിലയിരുത്താനും സൂക്ഷിക്കാനും പണം ചെലവാകും.',
+  'spot.add-prompt': 'നിർദ്ദേശം ചേർക്കുക',
+  'spot.items': 'എന്ത് വിലയിരുത്തും',
+  'spot.items-hint': 'ഓരോ ഇനവും എല്ലാ ഫോട്ടോകളിലും വിലയിരുത്തും.',
+  'spot.add-item': 'ചെക്ക് ഇനം ചേർക്കുക',
+  'spot.item-hint': 'ഒരു ഫോട്ടോയ്ക്ക് കാണിക്കാവുന്ന ഒരു കാര്യം.',
+  'spot.weight': 'ഭാരം {n}',
+  'spot.weight-label': 'ഭാരം',
+  'spot.less-weight': 'കുറഞ്ഞ ഭാരം',
+  'spot.more-weight': 'കൂടുതൽ ഭാരം',
+  'spot.edit': 'തിരുത്തുക',
+  'spot.move-up': 'മുകളിലേക്ക്',
+  'spot.move-down': 'താഴേക്ക്',
+  'spot.menu-for': '{name} കൂടുതൽ',
+  'spot.archive-check': 'ചെക്ക് ആർക്കൈവ് ചെയ്യുക',
+  'spot.archive-title': '{name} ആർക്കൈവ് ചെയ്യണോ?',
+  'spot.archive-body':
+    "പുതിയ ചെക്കുകൾ വെളിപ്പെടില്ല. പഴയ ഫലങ്ങൾ 'ഫലങ്ങൾ' എന്നതിൽ തുടരും.",
+  'spot.archive-item-title': '“{name}” ആർക്കൈവ് ചെയ്യണോ?',
+  'spot.archive-item-body':
+    'ഇത് ഇനിയുള്ള ചെക്കുകളിൽ നിന്ന് പോകും. പഴയ ഫലങ്ങളിൽ തുടരും.',
+  'spot.forbidden-edit': 'സ്പോട്ട് ചെക്കുകൾ ഹെഡ് ഓഫീസിന് മാത്രമേ മാറ്റാനാകൂ.',
+  'spot.prompt-field': 'നിർദ്ദേശം',
+  'spot.item-field': 'ചെക്ക് ഇനം',
+  'spot.placeholder-title': 'മാതൃകാ ചെക്കുകൾ.',
+  'spot.placeholder-body':
+    'ഒരു ഫോട്ടോയിൽ നിന്ന് എന്ത് വിലയിരുത്താമെന്ന് AI വിലയിരുത്തൽ തീരുമാനിക്കും. അതുവരെ ഇവ ഉദാഹരണങ്ങൾ മാത്രം.',
 } satisfies Partial<Catalogue>;

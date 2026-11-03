@@ -48,6 +48,8 @@ import {
   ImageOff,
   Image as ImageIcon,
   RefreshCw,
+  Pencil,
+  UserPlus,
 } from 'lucide-react-native';
 
 /**
@@ -104,6 +106,8 @@ const ICONS = [
   ImageOff,
   ImageIcon,
   RefreshCw,
+  Pencil,
+  UserPlus,
 ];
 
 for (const Icon of ICONS) {

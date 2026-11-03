@@ -815,6 +815,63 @@ export const en = {
   'spot.archive': 'Archive',
   'modules.spot-checks-off': "Spot checks aren't turned on for {outlet}.",
   'spot.cached': 'Showing the last list',
+
+  // SPT-05: checks list and check editor.
+  'spot.no-managers':
+    'Nobody will be told when a check is revealed. Add a Spot-check Manager.',
+  'spot.row-line': '{subject} · {freq} · {time} · {n} min window',
+  'spot.counts': '{p} photos · {i} check items',
+  'spot.staff': 'Staff',
+  'spot.area': 'Area',
+  'spot.managers': 'Spot-check Managers',
+  'spot.add-manager': 'Add manager',
+  'spot.already-manager': 'Already a Spot-check Manager here',
+  'spot.not-wired': "This can't be saved yet.",
+  'spot.remove': 'Remove',
+  'spot.empty-checks': 'No spot checks yet.',
+  'spot.apply-next':
+    'Changes apply from the next check. Past results keep what they were judged against.',
+  'spot.name-ph': 'e.g. Grooming — kitchen',
+  'spot.subject': 'Subject',
+  'spot.subject-staff': 'Picked at random from the {outlet} roster.',
+  'spot.subject-area': 'Picked at random from the areas that can be picked.',
+  'spot.sel-time': 'Selection time',
+  'spot.sel-hint': 'When the subject is picked.',
+  'spot.window': 'Window',
+  'spot.minutes': '{n} min',
+  'spot.shorter': 'Shorter window',
+  'spot.longer': 'Longer window',
+  'spot.window-hint':
+    'Long enough to walk across the outlet, short enough that nobody gets prepared.',
+  'spot.prompts': 'What to photograph',
+  'spot.prompts-hint':
+    'Each prompt is one photo. Every photo costs money to assess and store.',
+  'spot.add-prompt': 'Add prompt',
+  'spot.items': 'What gets judged',
+  'spot.items-hint': 'Each item is judged against all the photos.',
+  'spot.add-item': 'Add check item',
+  'spot.item-hint': 'One thing a photo can show.',
+  'spot.weight': 'Weight {n}',
+  'spot.weight-label': 'Weight',
+  'spot.less-weight': 'Less weight',
+  'spot.more-weight': 'More weight',
+  'spot.edit': 'Edit',
+  'spot.move-up': 'Move up',
+  'spot.move-down': 'Move down',
+  'spot.menu-for': 'More for {name}',
+  'spot.archive-check': 'Archive check',
+  'spot.archive-title': 'Archive {name}?',
+  'spot.archive-body':
+    'No new checks will be revealed. Past results stay in Results.',
+  'spot.archive-item-title': 'Archive “{name}”?',
+  'spot.archive-item-body':
+    'It leaves every future check. Past results keep it.',
+  'spot.forbidden-edit': 'Only head office can change spot checks.',
+  'spot.prompt-field': 'Prompt',
+  'spot.item-field': 'Check item',
+  'spot.placeholder-title': 'Placeholder checks.',
+  'spot.placeholder-body':
+    'What a photo can be judged on is set by the AI evaluation. Until then these prompts and checks are examples.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

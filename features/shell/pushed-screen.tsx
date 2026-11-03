@@ -31,6 +31,7 @@ type PushedScreenProps = {
     | '/attendance/history'
     | '/inventory'
     | '/spot-checks'
+    | '/spot-checks/checks'
     | '/home';
   /** Wires pull to refresh. */
   onRefresh?: () => void;

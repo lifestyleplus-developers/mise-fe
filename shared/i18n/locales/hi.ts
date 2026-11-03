@@ -788,4 +788,62 @@ export const hi = {
   'spot.archive': 'संग्रहीत करें',
   'modules.spot-checks-off': '{outlet} के लिए स्पॉट चेक चालू नहीं हैं।',
   'spot.cached': 'पिछली सूची दिखाई जा रही है',
+
+  // SPT-05: checks list and check editor.
+  'spot.no-managers':
+    'चेक खुलने पर किसी को नहीं बताया जाएगा। स्पॉट-चेक मैनेजर जोड़ें।',
+  'spot.row-line': '{subject} · {freq} · {time} · {n} मिनट',
+  'spot.counts': '{p} फ़ोटो · {i} चेक बिंदु',
+  'spot.staff': 'स्टाफ़',
+  'spot.area': 'जगह',
+  'spot.managers': 'स्पॉट-चेक मैनेजर',
+  'spot.add-manager': 'मैनेजर जोड़ें',
+  'spot.already-manager': 'यहाँ पहले से स्पॉट-चेक मैनेजर',
+  'spot.not-wired': 'यह अभी सेव नहीं हो सकता।',
+  'spot.remove': 'हटाएँ',
+  'spot.empty-checks': 'अभी कोई स्पॉट चेक नहीं।',
+  'spot.apply-next':
+    'बदलाव अगले चेक से लागू होंगे। पुराने नतीजे वही रखेंगे जिस पर आँके गए थे।',
+  'spot.name-ph': 'जैसे: ग्रूमिंग — किचन',
+  'spot.subject': 'किसका चेक',
+  'spot.subject-staff': '{outlet} की सूची से किसी एक को चुना जाता है।',
+  'spot.subject-area':
+    'चुनी जा सकने वाली जगहों में से किसी एक को चुना जाता है।',
+  'spot.sel-time': 'चुनने का समय',
+  'spot.sel-hint': 'जब चुना जाता है।',
+  'spot.window': 'समय',
+  'spot.minutes': '{n} मिनट',
+  'spot.shorter': 'कम समय',
+  'spot.longer': 'ज़्यादा समय',
+  'spot.window-hint':
+    'आउटलेट में चलकर पहुँचने लायक, पर इतना कम कि कोई तैयार न हो पाए।',
+  'spot.prompts': 'क्या फ़ोटो लें',
+  'spot.prompts-hint':
+    'हर संकेत एक फ़ोटो है। हर फ़ोटो को आँकने और रखने में पैसा लगता है।',
+  'spot.add-prompt': 'संकेत जोड़ें',
+  'spot.items': 'क्या आँका जाएगा',
+  'spot.items-hint': 'हर बिंदु सभी फ़ोटो पर आँका जाता है।',
+  'spot.add-item': 'चेक बिंदु जोड़ें',
+  'spot.item-hint': 'एक बात जो फ़ोटो दिखा सके।',
+  'spot.weight': 'भार {n}',
+  'spot.weight-label': 'भार',
+  'spot.less-weight': 'कम भार',
+  'spot.more-weight': 'ज़्यादा भार',
+  'spot.edit': 'बदलें',
+  'spot.move-up': 'ऊपर ले जाएँ',
+  'spot.move-down': 'नीचे ले जाएँ',
+  'spot.menu-for': '{name} के लिए और',
+  'spot.archive-check': 'चेक संग्रहीत करें',
+  'spot.archive-title': '{name} संग्रहीत करें?',
+  'spot.archive-body':
+    "कोई नया चेक नहीं खुलेगा। पुराने नतीजे 'नतीजे' में रहेंगे।",
+  'spot.archive-item-title': '“{name}” संग्रहीत करें?',
+  'spot.archive-item-body':
+    'यह आगे के हर चेक से हट जाएगा। पुराने नतीजों में रहेगा।',
+  'spot.forbidden-edit': 'स्पॉट चेक सिर्फ़ हेड ऑफ़िस बदल सकता है।',
+  'spot.prompt-field': 'संकेत',
+  'spot.item-field': 'चेक बिंदु',
+  'spot.placeholder-title': 'नमूना चेक।',
+  'spot.placeholder-body':
+    'फ़ोटो से क्या आँका जा सकता है, यह AI मूल्यांकन तय करेगा। तब तक ये संकेत और चेक उदाहरण हैं।',
 } satisfies Partial<Catalogue>;

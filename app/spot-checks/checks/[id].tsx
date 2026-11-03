@@ -1,8 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'spot.checks',
-  frame: 'pushed',
-  adminOnly: true,
-  backHref: '/spot-checks',
-});
+export { CheckEditorScreen as default } from '@/features/spot-checks/check-editor-screen';

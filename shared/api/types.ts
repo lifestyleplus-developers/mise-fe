@@ -805,7 +805,23 @@ export type SpotChecksQuery = {
   pageSize: number;
 };
 
-/** POST /spot-checks. Prompts and items go in with their own calls. */
+/** One item as the editor sends it: wording, weight, and whether it is archived. */
+export type SpotCheckAssertionInput = Pick<
+  SpotCheckAssertion,
+  'text' | 'weight' | 'is_archived'
+>;
+
+/**
+ * The prompts and items of a whole editor, in order, written together. Mock only:
+ * API Contract §13 adds one prompt or one item at a time, and has no way to reorder
+ * or to save an editor in one call. Positions are numbered 1 to n in the order given.
+ */
+export type SpotCheckLists = {
+  captures?: SpotCheckCaptureRequest[];
+  assertions?: SpotCheckAssertionInput[];
+};
+
+/** POST /spot-checks. `captures` and `assertions` are mock only (see `SpotCheckLists`). */
 export type CreateSpotCheckRequest = Pick<
   SpotCheck,
   | 'outlet_id'
@@ -816,9 +832,10 @@ export type CreateSpotCheckRequest = Pick<
   | 'weekdays'
   | 'day_of_month'
   | 'reveal_window_minutes'
->;
+> &
+  SpotCheckLists;
 
-/** PATCH /spot-checks/{id}: everything but the outlet; archive. */
+/** PATCH /spot-checks/{id}: everything but the outlet; archive. Lists are mock only. */
 export type UpdateSpotCheckRequest = Partial<
   Omit<CreateSpotCheckRequest, 'outlet_id'> & Pick<SpotCheck, 'is_archived'>
 >;

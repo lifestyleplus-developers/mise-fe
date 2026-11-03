@@ -32,6 +32,7 @@ import type {
   SpotCheck,
   SpotCheckAssertion,
   SpotCheckAssertionRequest,
+  SpotCheckLists,
   SpotCheckCapture,
   SpotCheckCaptureRequest,
   SpotCheckCompletion,
@@ -4674,6 +4675,42 @@ function assertValidSpotCheck(
   });
 }
 
+/**
+ * Prompts and items written together, in order (mock only). Checked in full before
+ * anything is changed, so a refused save leaves the check as it was.
+ */
+function checkedLists(lists: SpotCheckLists) {
+  const out: {
+    captures?: SpotCheckCapture[];
+    assertions?: SpotCheckAssertion[];
+  } = {};
+  if (lists.captures !== undefined) {
+    if (lists.captures.length === 0) {
+      throw invalid('A spot check needs at least one prompt.', 'captures');
+    }
+    out.captures = lists.captures.map((capture, index) => {
+      const prompt = capture.prompt.trim();
+      if (!prompt) throw invalid('Prompt is required.', 'captures');
+      if (prompt.length > 200) {
+        throw invalid('Use 200 characters or fewer.', 'captures');
+      }
+      return { position: index + 1, prompt };
+    });
+  }
+  if (lists.assertions !== undefined) {
+    out.assertions = lists.assertions.map((item, index) => {
+      assertValidItem({ text: item.text, weight: item.weight });
+      return {
+        position: index + 1,
+        text: item.text.trim(),
+        weight: item.weight,
+        is_archived: item.is_archived,
+      };
+    });
+  }
+  return out;
+}
+
 /** GET /spot-checks — by name, across the outlets the caller can read. */
 export async function mockListSpotChecks(
   query: SpotChecksQuery,
@@ -4715,16 +4752,18 @@ export async function mockCreateSpotCheck(
   triggerFault(request.name);
   const outletId = readableSpotOutlet(actor, request.outlet_id);
   assertValidSpotCheck(request);
+  const lists = checkedLists(request);
   const state = spotCheckState();
+  const { captures: _captures, assertions: _assertions, ...fields } = request;
   const check: DbSpotCheck = {
-    ...request,
+    ...fields,
     id: state.nextCheckId++,
     tenant_id: actor.me.business.id,
     outlet_id: outletId,
     name: request.name.trim(),
     is_archived: false,
-    captures: [],
-    assertions: [],
+    captures: lists.captures ?? [],
+    assertions: lists.assertions ?? [],
   };
   state.checks.push(check);
   return toCheck(check);
@@ -4758,7 +4797,10 @@ export async function mockUpdateSpotCheck(
       request.reveal_window_minutes ?? check.reveal_window_minutes,
   };
   assertValidSpotCheck(next);
+  const lists = checkedLists(request);
   Object.assign(check, next);
+  if (lists.captures) check.captures = lists.captures;
+  if (lists.assertions) check.assertions = lists.assertions;
   if (request.is_archived !== undefined)
     check.is_archived = request.is_archived;
   return toCheck(check);
