@@ -738,4 +738,33 @@ export const kn = {
   'inv.spend-total': 'ಒಟ್ಟು ವೆಚ್ಚ',
   'inv.no-items': 'ಇನ್ನೂ ವಸ್ತುಗಳಿಲ್ಲ.',
   'inv.showing-last': 'ಕೊನೆಯ ಅಂಕಿಅಂಶಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ',
+
+  // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
+  'spot.left': 'ಉಳಿದಿದೆ',
+  'spot.final': '5 ನಿಮಿಷ ಉಳಿದಿದೆ',
+  'spot.runs-out':
+    "ಸಮಯ ಮುಗಿದರೆ ಈ ಚೆಕ್ 'ಆಗಿಲ್ಲ' ಎಂದು ದಾಖಲಾಗುತ್ತದೆ. ಮತ್ತೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ.",
+  'spot.to-take': 'ತೆಗೆಯಬೇಕು',
+  'spot.uploading': 'ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ',
+  'spot.sent': 'ಕಳುಹಿಸಲಾಗಿದೆ',
+  'spot.waiting': 'ಕಳುಹಿಸಲು ಕಾಯುತ್ತಿದೆ',
+  'spot.upload-failed': 'ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ',
+  'spot.retry': 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
+  'spot.not-taken': 'ತೆಗೆದಿಲ್ಲ',
+  'spot.send-now': 'ಈಗ ಕಳುಹಿಸಿ',
+  'spot.by-at': '{name} {time}',
+  'spot.new-photo': 'ಹೊಸ ಫೋಟೋ · {name} {time}',
+  'spot.replaced': 'ಬದಲಾಯಿಸಲಾಗಿದೆ · {name} {time}',
+  'spot.retake': 'ಮತ್ತೆ ತೆಗೆಯಿರಿ',
+  'spot.photo-n': 'ಫೋಟೋ {n}',
+  'spot.late-refused':
+    'ಸಮಯ ಮುಚ್ಚಿತು. ಈ ಫೋಟೋ ದಾಖಲಾಗಲಿಲ್ಲ. ಇದು ತಪ್ಪಿದ್ದು ಎಂದು ಕಾಣುತ್ತದೆ.',
+  'spot.purged': 'ಫೋಟೋ ಸಂಗ್ರಹ ನೀತಿಯಂತೆ ತೆಗೆದುಹಾಕಲಾಗಿದೆ',
+  'spot.passed': 'ಪಾಸ್',
+  'spot.failed': 'ಫೇಲ್',
+  'spot.review': 'ಪರಿಶೀಲನೆ ಬೇಕು',
+  'spot.assessing': 'ಮೌಲ್ಯಮಾಪನವಾಗುತ್ತಿದೆ',
+  'spot.not-done': 'ಆಗಿಲ್ಲ',
+  'spot.overridden-by': 'ಬದಲಾಯಿಸಲಾಗಿದೆ: {to}, {name} ಅವರಿಂದ',
+  'spot.overridden-at': 'ಬದಲಾಯಿಸಲಾಗಿದೆ: {to}, {name} ಅವರಿಂದ · {time}',
 } satisfies Partial<Catalogue>;

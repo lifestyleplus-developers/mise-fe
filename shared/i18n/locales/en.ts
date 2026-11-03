@@ -757,6 +757,35 @@ export const en = {
   'inv.spend-total': 'Total spend',
   'inv.no-items': 'No items yet.',
   'inv.showing-last': 'Showing the last figures',
+
+  // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
+  'spot.left': 'left',
+  'spot.final': '5 min left',
+  'spot.runs-out':
+    "If time runs out, this check is recorded as not done. It can't be redone.",
+  'spot.to-take': 'To take',
+  'spot.uploading': 'Uploading',
+  'spot.sent': 'Sent',
+  'spot.waiting': 'Waiting to send',
+  'spot.upload-failed': 'Upload failed',
+  'spot.retry': 'Retry',
+  'spot.not-taken': 'Not taken',
+  'spot.send-now': 'Send now',
+  'spot.by-at': '{name} {time}',
+  'spot.new-photo': 'New photo · {name} {time}',
+  'spot.replaced': 'Replaced · {name} {time}',
+  'spot.retake': 'Retake',
+  'spot.photo-n': 'Photo {n}',
+  'spot.late-refused':
+    'Window closed. This photo was not recorded. It will show as missed.',
+  'spot.purged': 'Photo removed under the photo retention policy',
+  'spot.passed': 'Passed',
+  'spot.failed': 'Failed',
+  'spot.review': 'Needs review',
+  'spot.assessing': 'Being assessed',
+  'spot.not-done': 'Not done',
+  'spot.overridden-by': 'Overridden: {to}, by {name}',
+  'spot.overridden-at': 'Overridden: {to}, by {name} · {time}',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

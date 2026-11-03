@@ -83,6 +83,10 @@ module.exports = {
           soft: 'hsl(var(--pending-soft))',
           'soft-foreground': 'hsl(var(--pending-soft-foreground))',
         },
+        review: {
+          soft: 'hsl(var(--review-soft))',
+          'soft-foreground': 'hsl(var(--review-soft-foreground))',
+        },
 
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

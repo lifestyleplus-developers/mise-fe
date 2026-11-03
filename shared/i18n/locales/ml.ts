@@ -754,4 +754,33 @@ export const ml = {
   'inv.spend-total': 'ആകെ ചെലവ്',
   'inv.no-items': 'ഇതുവരെ ഇനങ്ങളില്ല.',
   'inv.showing-last': 'അവസാന കണക്കുകൾ കാണിക്കുന്നു',
+
+  // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
+  'spot.left': 'ಉಳಿದಿದೆ',
+  'spot.final': '5 മിനിറ്റ് ബാക്കി',
+  'spot.runs-out':
+    "സമയം തീർന്നാൽ ഈ ചെക്ക് 'ചെയ്തില്ല' എന്ന് രേഖപ്പെടുത്തും. വീണ്ടും ചെയ്യാനാവില്ല.",
+  'spot.to-take': 'എടുക്കാനുണ്ട്',
+  'spot.uploading': 'അയയ്ക്കുന്നു',
+  'spot.sent': 'അയച്ചു',
+  'spot.waiting': 'അയയ്ക്കാൻ കാത്തിരിക്കുന്നു',
+  'spot.upload-failed': 'അയയ്ക്കാനായില്ല',
+  'spot.retry': 'വീണ്ടും ശ്രമിക്കുക',
+  'spot.not-taken': 'എടുത്തില്ല',
+  'spot.send-now': 'ഇപ്പോൾ അയയ്ക്കുക',
+  'spot.by-at': '{name} {time}',
+  'spot.new-photo': 'പുതിയ ഫോട്ടോ · {name} {time}',
+  'spot.replaced': 'മാറ്റിയത് · {name} {time}',
+  'spot.retake': 'വീണ്ടും എടുക്കുക',
+  'spot.photo-n': 'ഫോട്ടോ {n}',
+  'spot.late-refused':
+    'സമയം അടച്ചു. ഈ ഫോട്ടോ രേഖപ്പെടുത്തിയില്ല. ഇത് നഷ്ടമായതായി കാണിക്കും.',
+  'spot.purged': 'ഫോട്ടോ സൂക്ഷിക്കൽ നയപ്രകാരം നീക്കം ചെയ്തു',
+  'spot.passed': 'പാസ്',
+  'spot.failed': 'ഫെയിൽ',
+  'spot.review': 'പരിശോധന വേണം',
+  'spot.assessing': 'വിലയിരുത്തുന്നു',
+  'spot.not-done': 'ചെയ്തില്ല',
+  'spot.overridden-by': 'മാറ്റി: {to}, {name}',
+  'spot.overridden-at': 'മാറ്റി: {to}, {name} · {time}',
 } satisfies Partial<Catalogue>;

@@ -44,6 +44,10 @@ import {
   Gauge,
   Minus,
   Trash,
+  CircleDashed,
+  ImageOff,
+  Image as ImageIcon,
+  RefreshCw,
 } from 'lucide-react-native';
 
 /**
@@ -96,6 +100,10 @@ const ICONS = [
   Gauge,
   Minus,
   Trash,
+  CircleDashed,
+  ImageOff,
+  ImageIcon,
+  RefreshCw,
 ];
 
 for (const Icon of ICONS) {
