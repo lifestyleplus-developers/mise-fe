@@ -4067,7 +4067,10 @@ function seedSpotCheckState(): SpotCheckState {
     is_archived: false,
     captures: Array.from({ length: prompts }, (_, index) => ({
       position: index + 1,
-      prompt: `photograph ${index + 1} of the ${id % 2 === 0 ? 'area' : 'person'}`,
+      prompt:
+        longItem && index === 0
+          ? LONG_ITEM
+          : `photograph ${index + 1} of the ${id % 2 === 0 ? 'area' : 'person'}`,
     })),
     assertions: Array.from({ length: items }, (_, index) => ({
       position: index + 1,
@@ -4378,6 +4381,27 @@ function seedSpotCheckState(): SpotCheckState {
     run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
     state.runs.push(run);
   }
+
+  // Two open at Elegance for Arun at the start: the long text, and the eight prompts.
+  const kitchen5 = state.areas.find(
+    (area) => area.outlet_id === 5 && area.name === 'Kitchen',
+  )!;
+  state.runs.push(
+    makeRun({
+      id: 80,
+      check: 21,
+      subject: frontStaff[0].id,
+      manager: ARUN,
+      reveal: at(-3),
+    }),
+    makeRun({
+      id: 81,
+      check: 22,
+      subject: kitchen5.id,
+      manager: ARUN,
+      reveal: at(-2),
+    }),
+  );
 
   return state;
 }

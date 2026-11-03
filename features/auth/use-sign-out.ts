@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 
+import { usePhotoOutbox } from '@/features/spot-checks/photo-outbox';
 import { api } from '@/shared/api/client';
 import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 
@@ -15,5 +16,7 @@ export function useSignOut() {
     // clear() also drops queued writes, which do not survive sign-out (§6).
     queryClient.clear();
     dropSessionCache();
+    // Spot-check photographs not yet in storage do not outlive the session either.
+    usePhotoOutbox.setState({ drafts: [] });
   };
 }

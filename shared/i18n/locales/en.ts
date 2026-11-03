@@ -872,6 +872,48 @@ export const en = {
   'spot.placeholder-title': 'Placeholder checks.',
   'spot.placeholder-body':
     'What a photo can be judged on is set by the AI evaluation. Until then these prompts and checks are examples.',
+
+  // SPT-01: capture flow and the camera steps.
+  'spot.take-photo': 'Take photo · {prompt}',
+  'spot.all-taken': 'All photos taken. Results will appear in Results.',
+  'spot.cant-find':
+    "Can't find {name}? If no photo is taken, this check is recorded as not done.",
+  'spot.closed-at': 'Closed at {time}',
+  'spot.closed-done': 'Done. Results will appear in Results.',
+  'spot.closed-none': 'Not done. The window closed before any photo was taken.',
+  'spot.closed-partial': '{n} of {total} photos · assessed on these',
+  'spot.scheduled': '{name} · scheduled',
+  'spot.nothing': 'No spot check right now.',
+  'spot.no-checks': 'No spot checks are set up at this outlet yet.',
+  'spot.view-only':
+    'Viewing only. Only a Spot-check Manager can take these photos.',
+  'spot.role-lost': "You can't take photos for this check.",
+  'spot.n-waiting-one': '1 photo waiting to send',
+  'spot.n-waiting': '{n} photos waiting to send',
+  'spot.closes-at': 'Closes {time}',
+  'spot.sign-out-title': "A photo hasn't been sent",
+  'spot.sign-out-body':
+    "1 photo hasn't been sent yet. If you sign out now it will be lost.",
+  'spot.placeholder-prompts': 'Placeholder prompts until the AI evaluation',
+  'spot.why': 'mise needs the camera to take the photos for this spot check.',
+  'spot.sign-out-body-n':
+    "{n} photos haven't been sent yet. If you sign out now they will be lost.",
+  'cam.name': 'Camera',
+  'cam.continue': 'Continue',
+  'cam.not-now': 'Not now',
+  'cam.off-title': 'Camera access is off',
+  'cam.off-body':
+    "mise needs the camera to take the photo for this task. Turn it on in your phone's settings.",
+  'cam.open-settings': 'Open settings',
+  'cam.failed': "Camera couldn't start.",
+  'cam.failed-again':
+    "Camera still couldn't start. Close other apps that use the camera and try again.",
+  'cam.try-again': 'Try again',
+  'cam.preview': 'Photo preview',
+  'cam.use-photo': 'Use photo',
+  'cam.save-failed': "Couldn't save the photo. Free up space and try again.",
+  'cam.save-failed-again':
+    "Still couldn't save the photo. Free up space on the phone, then tap Use photo.",
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

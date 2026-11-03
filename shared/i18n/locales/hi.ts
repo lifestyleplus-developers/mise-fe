@@ -846,4 +846,42 @@ export const hi = {
   'spot.placeholder-title': 'नमूना चेक।',
   'spot.placeholder-body':
     'फ़ोटो से क्या आँका जा सकता है, यह AI मूल्यांकन तय करेगा। तब तक ये संकेत और चेक उदाहरण हैं।',
+
+  // SPT-01: capture flow and the camera steps.
+  'spot.take-photo': 'फ़ोटो लें · {prompt}',
+  'spot.all-taken': "सारी फ़ोटो ले ली गईं। नतीजे 'नतीजे' में दिखेंगे।",
+  'spot.cant-find':
+    "{name} नहीं मिल रहे? कोई फ़ोटो न ली गई तो यह चेक 'नहीं हुआ' दर्ज होगा।",
+  'spot.closed-at': '{time} पर बंद',
+  'spot.closed-done': "हो गया। नतीजे 'नतीजे' में दिखेंगे।",
+  'spot.closed-none': 'नहीं हुआ। कोई फ़ोटो लेने से पहले समय बंद हो गया।',
+  'spot.closed-partial': '{total} में से {n} फ़ोटो · इन्हीं पर आँका गया',
+  'spot.scheduled': '{name} · तय',
+  'spot.nothing': 'अभी कोई स्पॉट चेक नहीं।',
+  'spot.no-checks': 'इस आउटलेट पर अभी कोई स्पॉट चेक तय नहीं है।',
+  'spot.view-only':
+    'सिर्फ़ देख सकते हैं। ये फ़ोटो सिर्फ़ स्पॉट-चेक मैनेजर ले सकते हैं।',
+  'spot.role-lost': 'आप इस चेक के लिए फ़ोटो नहीं ले सकते।',
+  'spot.n-waiting-one': '1 फ़ोटो भेजने के इंतज़ार में',
+  'spot.n-waiting': '{n} फ़ोटो भेजने के इंतज़ार में',
+  'spot.closes-at': '{time} पर बंद',
+  'spot.sign-out-title': 'एक फ़ोटो भेजी नहीं गई',
+  'spot.sign-out-body':
+    '1 फ़ोटो अभी भेजी नहीं गई। अभी साइन आउट किया तो यह खो जाएगी।',
+  'spot.placeholder-prompts': 'AI मूल्यांकन तक नमूना संकेत',
+  'spot.why': 'इस स्पॉट चेक की फ़ोटो लेने के लिए mise को कैमरा चाहिए।',
+  'spot.sign-out-body-n':
+    '{n} फ़ोटो अभी भेजी नहीं गईं। अभी साइन आउट किया तो ये खो जाएँगी।',
+  'cam.name': 'कैमरा',
+  'cam.continue': 'आगे बढ़ें',
+  'cam.not-now': 'अभी नहीं',
+  'cam.off-title': 'कैमरा की अनुमति बंद है',
+  'cam.off-body':
+    'इस काम की फ़ोटो लेने के लिए mise को कैमरा चाहिए। इसे अपने फ़ोन की सेटिंग में चालू करें।',
+  'cam.open-settings': 'सेटिंग खोलें',
+  'cam.failed': 'कैमरा शुरू नहीं हो सका।',
+  'cam.try-again': 'फिर कोशिश करें',
+  'cam.preview': 'फ़ोटो की झलक',
+  'cam.use-photo': 'यह फ़ोटो रखें',
+  'cam.save-failed': 'फ़ोटो सेव नहीं हो सकी। जगह खाली करें और फिर कोशिश करें।',
 } satisfies Partial<Catalogue>;

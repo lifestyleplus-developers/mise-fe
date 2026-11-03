@@ -1,7 +1,7 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
+import { RunPage } from '@/features/spot-checks/run-page';
+import { useLocalSearchParams } from 'expo-router';
 
-export default createPlaceholder({
-  title: 'modules.spot-checks',
-  frame: 'pushed',
-  backHref: '/spot-checks',
-});
+export default function CaptureRoute() {
+  const { runId } = useLocalSearchParams<{ runId: string }>();
+  return <RunPage runId={Number(runId)} backHref="/spot-checks" />;
+}

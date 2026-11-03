@@ -50,6 +50,7 @@ import {
   RefreshCw,
   Pencil,
   UserPlus,
+  CameraOff,
 } from 'lucide-react-native';
 
 /**
@@ -108,6 +109,7 @@ const ICONS = [
   RefreshCw,
   Pencil,
   UserPlus,
+  CameraOff,
 ];
 
 for (const Icon of ICONS) {
