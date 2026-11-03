@@ -12,7 +12,7 @@
     "tenant_id": 7,
     "name": "Elegance",
     "attendance_enabled": true,
-    "spot_checks_enabled": false,
+    "spot_checks_enabled": true,
     "is_archived": false
   },
   {

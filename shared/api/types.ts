@@ -26,6 +26,8 @@ export const API_ERROR_CODE = {
   WINDOW_OVERLAPS_NEXT_PERIOD: 'window_overlaps_next_period',
   PERMISSION_DENIED: 'permission_denied',
   UNIT_LOCKED: 'unit_locked',
+  OVERRIDE_NOTE_REQUIRED: 'override_note_required',
+  WINDOW_NOT_OPEN: 'window_not_open',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -715,4 +717,217 @@ export type InventoryManager = {
   id: number;
   username: string;
   full_name: string;
+};
+
+// ---------------------------------------------------------------------------
+// Week 9 — spot checks (API Contract §13). Marked "mock only" where the contract
+// has no endpoint or field yet; those move when Lamax's platform lands.
+// ---------------------------------------------------------------------------
+
+/** An inspectable part of an outlet (Schema `area`). Mock only: API Contract §13 has no endpoint for areas. */
+export type Area = {
+  id: number;
+  outlet_id: number;
+  name: string;
+  /** Whether it may be picked for a spot check. */
+  is_eligible: boolean;
+  is_archived: boolean;
+};
+
+/** GET areas filters. */
+export type AreasQuery = {
+  outletId?: number;
+  includeArchived?: boolean;
+  page: number;
+  pageSize: number;
+};
+
+/** POST an area. A name already used at the outlet is a 400 `validation_error` on `name` (Schema: `unique(outlet_id, name)`). */
+export type CreateAreaRequest = {
+  outlet_id: number;
+  name: string;
+  is_eligible?: boolean;
+};
+
+/** PATCH an area: rename, switch eligibility, archive. */
+export type UpdateAreaRequest = Partial<
+  Pick<Area, 'name' | 'is_eligible' | 'is_archived'>
+>;
+
+export type SpotCheckSubjectType = 'STAFF' | 'AREA';
+
+/** As `checklist.recurrence`, never HOURLY for a spot check. */
+export type SpotCheckRecurrence = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+
+/** What the manager is told to photograph, in order. */
+export type SpotCheckCapture = {
+  position: number;
+  prompt: string;
+};
+
+/**
+ * What gets judged. 🔒 Never mapped to a capture: every assertion is judged against
+ * the whole set. `is_archived` is mock only.
+ */
+export type SpotCheckAssertion = {
+  position: number;
+  text: string;
+  /** 1–10, default 5. */
+  weight: number;
+  is_archived: boolean;
+};
+
+/** The template (Schema `spot_check`), with its prompts and items. */
+export type SpotCheck = {
+  id: number;
+  outlet_id: number;
+  name: string;
+  subject_type: SpotCheckSubjectType;
+  recurrence: SpotCheckRecurrence;
+  /** `HH:MM`: when selection happens. */
+  st_time: string;
+  /** ISO weekdays 1–7, for WEEKLY; null otherwise. */
+  weekdays: number[] | null;
+  day_of_month: number | null;
+  /** 15–30: reveal to deadline. */
+  reveal_window_minutes: number;
+  is_archived: boolean;
+  captures: SpotCheckCapture[];
+  assertions: SpotCheckAssertion[];
+};
+
+/** GET /spot-checks filters. */
+export type SpotChecksQuery = {
+  outletId?: number;
+  includeArchived?: boolean;
+  page: number;
+  pageSize: number;
+};
+
+/** POST /spot-checks. Prompts and items go in with their own calls. */
+export type CreateSpotCheckRequest = Pick<
+  SpotCheck,
+  | 'outlet_id'
+  | 'name'
+  | 'subject_type'
+  | 'recurrence'
+  | 'st_time'
+  | 'weekdays'
+  | 'day_of_month'
+  | 'reveal_window_minutes'
+>;
+
+/** PATCH /spot-checks/{id}: everything but the outlet; archive. */
+export type UpdateSpotCheckRequest = Partial<
+  Omit<CreateSpotCheckRequest, 'outlet_id'> & Pick<SpotCheck, 'is_archived'>
+>;
+
+/** POST /spot-checks/{id}/captures. Editing or removing a prompt is mock only. */
+export type SpotCheckCaptureRequest = { prompt: string };
+
+/** POST /spot-checks/{id}/assertions. Editing or archiving an item is mock only. */
+export type SpotCheckAssertionRequest = {
+  text?: string;
+  weight?: number;
+  is_archived?: boolean;
+};
+
+/** Who takes spot checks at an outlet. Mock only: no table or endpoint yet (Known Inconsistency #7). */
+export type SpotCheckManager = {
+  id: number;
+  username: string;
+  full_name: string;
+};
+
+/** A captured photograph; `captured_at` is set by the server. */
+export type SpotCheckPhoto = {
+  captured_at: string;
+  /** Null once purged under the retention policy. */
+  image_url: string | null;
+  purged_at: string | null;
+  captured_by: { id: number; full_name: string };
+};
+
+/** One prompt of a revealed run and its photograph, if sent. */
+export type SpotCheckRunCapture = SpotCheckCapture & {
+  photo: SpotCheckPhoto | null;
+  /** Mock only: photos this one replaced on a retake, oldest first, each kept with its time. */
+  earlier_photos: SpotCheckPhoto[];
+};
+
+export type SpotCheckOutcome =
+  'PASS' | 'FAIL' | 'NEEDS_REVIEW' | 'PENDING_JUDGEMENT';
+
+/** One row per assertion. 🔒 The original `outcome` is never overwritten by an override. */
+export type SpotCheckResult = {
+  id: number;
+  assertion_position: number;
+  /** Copied at creation: the snapshot. */
+  assertion_text: string;
+  outcome: SpotCheckOutcome;
+  confidence: number | null;
+  overridden_to: SpotCheckOutcome | null;
+  override_note: string | null;
+  overridden_by: { id: number; full_name: string } | null;
+  /** Mock only: the Schema has no override time. */
+  overridden_at: string | null;
+};
+
+/**
+ * `SCHEDULED` is a run before reveal; `FINALIZED` is closed. The contract returns
+ * the first two; the Schema has `OPEN | FINALIZED` (Known Inconsistency #5).
+ */
+export type SpotCheckRunStatus = 'SCHEDULED' | 'OPEN' | 'FINALIZED';
+
+/** How a closed run ended. Mock only: the Schema has no missed status (Known Inconsistency #5). */
+export type SpotCheckCompletion = 'DONE' | 'PARTIAL' | 'NOT_DONE';
+
+/**
+ * 🔒 `subject`, `revealed_at` and `window_close` are null until the reveal: nothing
+ * else in the payload may give the subject away.
+ */
+export type SpotCheckRun = {
+  id: number;
+  spot_check_id: number;
+  spot_check_name: string;
+  outlet_id: number;
+  status: SpotCheckRunStatus;
+  subject:
+    | { type: 'STAFF'; id: number; full_name: string }
+    | { type: 'AREA'; id: number; name: string }
+    | null;
+  revealed_at: string | null;
+  window_close: string | null;
+  /** Mock only: when the check is selected, shown before reveal without the subject. */
+  scheduled_for: string;
+  /** The manager the subject was revealed to. */
+  manager: { id: number; full_name: string } | null;
+  captures: SpotCheckRunCapture[] | null;
+  /** Null while the run is open or scheduled. */
+  completion: SpotCheckCompletion | null;
+  /** Null when the caller may not see this run's outcomes (another manager's). */
+  results: SpotCheckResult[] | null;
+  /** Mock only: the issue a failure raised (Known Inconsistency #6). */
+  issue_id: number | null;
+};
+
+/** GET /spot-check-runs filters. `closed` and `outcome` are mock only. */
+export type SpotCheckRunsQuery = {
+  state?: 'revealed' | 'scheduled' | 'closed';
+  outletId?: number;
+  outcome?: SpotCheckOutcome;
+  page: number;
+  pageSize: number;
+};
+
+/** POST /spot-check-runs/{id}/photos. A late photo is a 409 `window_closed`; a retake replaces the photo for that prompt. */
+export type SubmitSpotCheckPhotoRequest = {
+  capture_position: number;
+  image_key: string;
+};
+
+/** PATCH /spot-check-results/{id}. `override_note` is required (400 without). */
+export type OverrideSpotCheckResultRequest = {
+  overridden_to: Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'>;
+  override_note: string;
 };
