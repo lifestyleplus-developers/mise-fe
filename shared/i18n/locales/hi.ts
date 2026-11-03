@@ -759,4 +759,10 @@ export const hi = {
   'spot.not-done': 'नहीं हुआ',
   'spot.overridden-by': 'बदला गया: {to}, {name} द्वारा',
   'spot.overridden-at': 'बदला गया: {to}, {name} द्वारा · {time}',
+
+  // Week 9 navigation: the Spot checks screens' titles and links.
+  'spot.results': 'ഫലങ്ങൾ',
+  'spot.checks': 'ചെക്കുകൾ',
+  'spot.areas': 'ഇടങ്ങൾ',
+  'spot.new-check': 'नया चेक',
 } satisfies Partial<Catalogue>;

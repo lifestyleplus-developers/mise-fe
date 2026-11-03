@@ -786,6 +786,12 @@ export const en = {
   'spot.not-done': 'Not done',
   'spot.overridden-by': 'Overridden: {to}, by {name}',
   'spot.overridden-at': 'Overridden: {to}, by {name} · {time}',
+
+  // Week 9 navigation: the Spot checks screens' titles and links.
+  'spot.results': 'Results',
+  'spot.checks': 'Checks',
+  'spot.areas': 'Areas',
+  'spot.new-check': 'New check',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

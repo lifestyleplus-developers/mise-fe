@@ -783,4 +783,10 @@ export const ml = {
   'spot.not-done': 'ചെയ്തില്ല',
   'spot.overridden-by': 'മാറ്റി: {to}, {name}',
   'spot.overridden-at': 'മാറ്റി: {to}, {name} · {time}',
+
+  // Week 9 navigation: the Spot checks screens' titles and links.
+  'spot.results': 'ಫಲಿತಾಂಶಗಳು',
+  'spot.checks': 'ಚೆಕ್‌ಗಳು',
+  'spot.areas': 'ಸ್ಥಳಗಳು',
+  'spot.new-check': 'പുതിയ ചെക്ക്',
 } satisfies Partial<Catalogue>;

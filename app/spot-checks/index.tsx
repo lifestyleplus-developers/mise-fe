@@ -1,7 +1,1 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
-
-export default createPlaceholder({
-  title: 'modules.spot-checks',
-  frame: 'pushed',
-  backHref: '/modules',
-});
+export { SpotChecksLandingScreen as default } from '@/features/spot-checks/landing-screen';

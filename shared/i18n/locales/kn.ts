@@ -767,4 +767,10 @@ export const kn = {
   'spot.not-done': 'ಆಗಿಲ್ಲ',
   'spot.overridden-by': 'ಬದಲಾಯಿಸಲಾಗಿದೆ: {to}, {name} ಅವರಿಂದ',
   'spot.overridden-at': 'ಬದಲಾಯಿಸಲಾಗಿದೆ: {to}, {name} ಅವರಿಂದ · {time}',
+
+  // Week 9 navigation: the Spot checks screens' titles and links.
+  'spot.results': 'ಫಲಿತಾಂಶಗಳು',
+  'spot.checks': 'ಚೆಕ್‌ಗಳು',
+  'spot.areas': 'ಸ್ಥಳಗಳು',
+  'spot.new-check': 'ಹೊಸ ಚೆಕ್',
 } satisfies Partial<Catalogue>;
