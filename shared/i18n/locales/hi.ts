@@ -765,4 +765,27 @@ export const hi = {
   'spot.checks': 'ചെക്കുകൾ',
   'spot.areas': 'ഇടങ്ങൾ',
   'spot.new-check': 'नया चेक',
+
+  // SPT-06: areas list and area sheet.
+  'spot.eyebrow': 'സ്പോട്ട് ചെക്ക് · {outlet}',
+  'spot.add-area': 'जगह जोड़ें',
+  'spot.new-area': 'नई जगह',
+  'spot.name': 'नाम',
+  'spot.can-pick': 'चुनी जा सकती है',
+  'spot.not-picked': 'नहीं चुनी जाती',
+  'spot.none-eligible':
+    'कोई जगह चुनी नहीं जा सकती। इस आउटलेट के जगह-चेक का कोई विषय नहीं होगा।',
+  'spot.name-taken': '{outlet} में {name} नाम की जगह पहले से है।',
+  'spot.archive-area': 'जगह संग्रहीत करें',
+  'spot.archive-area-title': '{name} संग्रहीत करें?',
+  'spot.archive-area-body':
+    'यह नए चेक के लिए नहीं चुनी जाएगी। पुराने नतीजों में रहेगी।',
+  'spot.empty-areas':
+    'अभी कोई जगह नहीं। इस आउटलेट के वे हिस्से जोड़ें जिनकी जाँच करनी है।',
+  'spot.forbidden-areas': 'जगहें सिर्फ़ हेड ऑफ़िस बदल सकता है।',
+  'spot.show-archived': 'संग्रहीत दिखाएँ',
+  'spot.archived': 'संग्रहीत',
+  'spot.archive': 'संग्रहीत करें',
+  'modules.spot-checks-off': '{outlet} के लिए स्पॉट चेक चालू नहीं हैं।',
+  'spot.cached': 'पिछली सूची दिखाई जा रही है',
 } satisfies Partial<Catalogue>;

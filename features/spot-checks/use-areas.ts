@@ -98,34 +98,50 @@ export function useUpdateArea(id: number) {
 
 type EligibleVariables = { id: number; is_eligible: boolean };
 
+/** A cached list of areas: paged (the screen's list) or whole (the count of live ones). */
+export type CachedAreas = InfiniteData<Page<Area>> | Area[];
+
+/**
+ * The cached lists with one area's switch moved. Both shapes sit under the same
+ * key, so the update has to know each.
+ */
+export function withEligible(
+  data: CachedAreas | undefined,
+  id: number,
+  is_eligible: boolean,
+): CachedAreas | undefined {
+  if (!data) return data;
+  const set = (area: Area): Area =>
+    area.id === id ? { ...area, is_eligible } : area;
+  if (Array.isArray(data)) return data.map(set);
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      results: page.results.map(set),
+    })),
+  };
+}
+
 /**
  * The switch on a row: it moves at once, and if the save fails it is put back
  * (SPT-06 `switchFailed`). The mutation's `error` stays set for the line under the row.
  */
 export function useSetAreaEligible() {
   const queryClient = useQueryClient();
-  type Lists = [readonly unknown[], InfiniteData<Page<Area>> | undefined][];
+  type Lists = [readonly unknown[], CachedAreas | undefined][];
   return useMutation<Area, Error, EligibleVariables, { previous: Lists }>({
     mutationFn: ({ id, is_eligible }) =>
       api.spotChecks.updateArea(id, { is_eligible }),
     networkMode: 'always',
     onMutate: async ({ id, is_eligible }) => {
       await queryClient.cancelQueries({ queryKey: spotCheckKeys.areaLists });
-      const previous = queryClient.getQueriesData<InfiniteData<Page<Area>>>({
+      const previous = queryClient.getQueriesData<CachedAreas>({
         queryKey: spotCheckKeys.areaLists,
       });
-      queryClient.setQueriesData<InfiniteData<Page<Area>>>(
+      queryClient.setQueriesData<CachedAreas>(
         { queryKey: spotCheckKeys.areaLists },
-        (data) =>
-          data && {
-            ...data,
-            pages: data.pages.map((page) => ({
-              ...page,
-              results: page.results.map((area) =>
-                area.id === id ? { ...area, is_eligible } : area,
-              ),
-            })),
-          },
+        (data) => withEligible(data, id, is_eligible),
       );
       return { previous };
     },

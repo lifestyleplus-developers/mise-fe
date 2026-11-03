@@ -792,6 +792,29 @@ export const en = {
   'spot.checks': 'Checks',
   'spot.areas': 'Areas',
   'spot.new-check': 'New check',
+
+  // SPT-06: areas list and area sheet.
+  'spot.eyebrow': 'Spot checks · {outlet}',
+  'spot.add-area': 'Add area',
+  'spot.new-area': 'New area',
+  'spot.name': 'Name',
+  'spot.can-pick': 'Can be picked',
+  'spot.not-picked': 'Not picked',
+  'spot.none-eligible':
+    'No area can be picked. Area checks at this outlet will have no subject.',
+  'spot.name-taken': '{outlet} already has an area called {name}.',
+  'spot.archive-area': 'Archive area',
+  'spot.archive-area-title': 'Archive {name}?',
+  'spot.archive-area-body':
+    "It won't be picked for new checks. Past results keep it.",
+  'spot.empty-areas':
+    'No areas yet. Add the parts of this outlet you want inspected.',
+  'spot.forbidden-areas': 'Only head office can change areas.',
+  'spot.show-archived': 'Show archived',
+  'spot.archived': 'Archived',
+  'spot.archive': 'Archive',
+  'modules.spot-checks-off': "Spot checks aren't turned on for {outlet}.",
+  'spot.cached': 'Showing the last list',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

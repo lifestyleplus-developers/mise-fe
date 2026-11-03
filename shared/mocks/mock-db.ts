@@ -4016,7 +4016,7 @@ function seedSpotCheckState(): SpotCheckState {
     'Packing station',
     'Delivery shelf',
     'Office',
-    'Prayer room',
+    'offline',
     LONG_AREA,
     MALAYALAM_AREA,
   ];
@@ -4583,6 +4583,9 @@ export async function mockUpdateArea(
   const actor = spotActor();
   requireSpotAuthor(actor);
   const area = findSpotArea(actor, id);
+  // An area called "offline" or "fault" fails whatever is changed on it, so the
+  // switch and the sheet can be seen failing (SPT-06 `switchFailed`).
+  triggerFault(area.name);
   triggerFault(request.name);
   if (
     area.is_archived &&

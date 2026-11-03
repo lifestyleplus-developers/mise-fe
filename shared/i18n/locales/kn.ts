@@ -773,4 +773,26 @@ export const kn = {
   'spot.checks': 'ಚೆಕ್‌ಗಳು',
   'spot.areas': 'ಸ್ಥಳಗಳು',
   'spot.new-check': 'ಹೊಸ ಚೆಕ್',
+
+  // SPT-06: areas list and area sheet.
+  'spot.eyebrow': 'ಸ್ಪಾಟ್ ಚೆಕ್ · {outlet}',
+  'spot.add-area': 'ಸ್ಥಳ ಸೇರಿಸಿ',
+  'spot.new-area': 'ಹೊಸ ಸ್ಥಳ',
+  'spot.name': 'ಹೆಸರು',
+  'spot.can-pick': 'ಆಯ್ಕೆ ಮಾಡಬಹುದು',
+  'spot.not-picked': 'ಆಯ್ಕೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ',
+  'spot.none-eligible':
+    'ಯಾವ ಸ್ಥಳವನ್ನೂ ಆಯ್ಕೆ ಮಾಡಲಾಗದು. ಈ ಔಟ್‌ಲೆಟ್‌ನ ಸ್ಥಳ ಚೆಕ್‌ಗಳಿಗೆ ವಿಷಯ ಇರುವುದಿಲ್ಲ.',
+  'spot.name-taken': '{outlet}ನಲ್ಲಿ {name} ಎಂಬ ಸ್ಥಳ ಈಗಾಗಲೇ ಇದೆ.',
+  'spot.archive-area': 'ಸ್ಥಳ ಆರ್ಕೈವ್ ಮಾಡಿ',
+  'spot.archive-area-title': '{name} ಆರ್ಕೈವ್ ಮಾಡಬೇಕೇ?',
+  'spot.archive-area-body':
+    'ಹೊಸ ಚೆಕ್‌ಗಳಿಗೆ ಇದನ್ನು ಆಯ್ಕೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ. ಹಳೆಯ ಫಲಿತಾಂಶಗಳಲ್ಲಿ ಉಳಿಯುತ್ತದೆ.',
+  'spot.empty-areas': 'ಇನ್ನೂ ಸ್ಥಳಗಳಿಲ್ಲ. ಪರಿಶೀಲಿಸಬೇಕಾದ ಭಾಗಗಳನ್ನು ಸೇರಿಸಿ.',
+  'spot.forbidden-areas': 'ಸ್ಥಳಗಳನ್ನು ಮುಖ್ಯ ಕಚೇರಿ ಮಾತ್ರ ಬದಲಿಸಬಹುದು.',
+  'spot.show-archived': 'ಆರ್ಕೈವ್ ಮಾಡಿದವು ತೋರಿಸಿ',
+  'spot.archived': 'ಆರ್ಕೈವ್ ಮಾಡಲಾಗಿದೆ',
+  'spot.archive': 'ಆರ್ಕೈವ್ ಮಾಡಿ',
+  'modules.spot-checks-off': '{outlet}ಗೆ ಸ್ಪಾಟ್ ಚೆಕ್‌ಗಳನ್ನು ಆನ್ ಮಾಡಿಲ್ಲ.',
+  'spot.cached': 'ಕೊನೆಯ ಪಟ್ಟಿ ತೋರಿಸಲಾಗುತ್ತಿದೆ',
 } satisfies Partial<Catalogue>;

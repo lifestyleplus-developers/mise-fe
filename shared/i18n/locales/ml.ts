@@ -789,4 +789,26 @@ export const ml = {
   'spot.checks': 'ಚೆಕ್‌ಗಳು',
   'spot.areas': 'ಸ್ಥಳಗಳು',
   'spot.new-check': 'പുതിയ ചെക്ക്',
+
+  // SPT-06: areas list and area sheet.
+  'spot.eyebrow': 'ಸ್ಪಾಟ್ ಚೆಕ್ · {outlet}',
+  'spot.add-area': 'ഇടം ചേർക്കുക',
+  'spot.new-area': 'പുതിയ ഇടം',
+  'spot.name': 'പേര്',
+  'spot.can-pick': 'തിരഞ്ഞെടുക്കാം',
+  'spot.not-picked': 'തിരഞ്ഞെടുക്കില്ല',
+  'spot.none-eligible':
+    'ഒരിടവും തിരഞ്ഞെടുക്കാനാവില്ല. ഇവിടത്തെ ഇട ചെക്കുകൾക്ക് വിഷയമുണ്ടാകില്ല.',
+  'spot.name-taken': '{outlet}-ൽ {name} എന്ന ഇടം ഇതിനകമുണ്ട്.',
+  'spot.archive-area': 'ഇടം ആർക്കൈവ് ചെയ്യുക',
+  'spot.archive-area-title': '{name} ആർക്കൈവ് ചെയ്യണോ?',
+  'spot.archive-area-body':
+    'പുതിയ ചെക്കുകൾക്ക് ഇത് തിരഞ്ഞെടുക്കില്ല. പഴയ ഫലങ്ങളിൽ തുടരും.',
+  'spot.empty-areas': 'ഇതുവരെ ഇടങ്ങളില്ല. പരിശോധിക്കേണ്ട ഭാഗങ്ങൾ ചേർക്കുക.',
+  'spot.forbidden-areas': 'ഇടങ്ങൾ ഹെഡ് ഓഫീസിന് മാത്രമേ മാറ്റാനാകൂ.',
+  'spot.show-archived': 'ആർക്കൈവ് ചെയ്തവ കാണിക്കുക',
+  'spot.archived': 'ആർക്കൈവ് ചെയ്തു',
+  'spot.archive': 'ആർക്കൈവ് ചെയ്യുക',
+  'modules.spot-checks-off': '{outlet}-ൽ സ്പോട്ട് ചെക്കുകൾ ഓണാക്കിയിട്ടില്ല.',
+  'spot.cached': 'അവസാന പട്ടിക കാണിക്കുന്നു',
 } satisfies Partial<Catalogue>;
