@@ -22,6 +22,7 @@
  *   The sign-in business picker needs the same username in two businesses; with one
  *   business the mock can no longer show it.
  */
+import { onlineManager } from '@tanstack/react-query';
 import type {
   Area,
   AreasQuery,
@@ -2102,6 +2103,11 @@ export async function mockSignUpload(
   request: UploadSignRequest,
 ): Promise<UploadSignResponse> {
   await delay();
+  // A signature needs the network: with no signal there is no upload location
+  // (a spot-check photograph is then kept on the phone, SPT-01 `noUploadUrl`).
+  if (request.purpose === 'spot_check_run' && !onlineManager.isOnline()) {
+    throw new Error('Network request failed');
+  }
   const me = resolveMe();
   const key = `t${me.business.id}/mock/${request.target_id}-${Date.now()}.jpg`;
   db.signedUploadKeys.set(request.target_id, key);

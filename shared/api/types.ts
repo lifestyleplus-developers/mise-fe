@@ -390,7 +390,8 @@ export type AnswerTaskRequest = {
  * sign, PUT the bytes to object storage, then PATCH the run task with the key.
  */
 export type UploadSignRequest = {
-  purpose: 'run_task';
+  /** `spot_check_run` is mock only: §8 signs run-task photographs. */
+  purpose: 'run_task' | 'spot_check_run';
   target_id: number;
   content_type: 'image/jpeg';
 };

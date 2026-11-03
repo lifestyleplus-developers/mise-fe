@@ -59,6 +59,25 @@ import {
   mockUpdateStaff,
   mockUpdateTask,
   mockUpdateUser,
+  mockListAreas,
+  mockCreateArea,
+  mockUpdateArea,
+  mockListSpotChecks,
+  mockGetSpotCheck,
+  mockCreateSpotCheck,
+  mockUpdateSpotCheck,
+  mockAddSpotCheckCapture,
+  mockUpdateSpotCheckCapture,
+  mockRemoveSpotCheckCapture,
+  mockAddSpotCheckAssertion,
+  mockUpdateSpotCheckAssertion,
+  mockListSpotCheckManagers,
+  mockAppointSpotCheckManager,
+  mockRemoveSpotCheckManager,
+  mockListSpotCheckRuns,
+  mockGetSpotCheckRun,
+  mockSubmitSpotCheckPhoto,
+  mockOverrideSpotCheckResult,
 } from '@/shared/mocks/mock-db';
 import type {
   AddMemberRequest,
@@ -122,6 +141,24 @@ import type {
   UploadSignResponse,
   User,
   UsersQuery,
+  Area,
+  AreasQuery,
+  CreateAreaRequest,
+  CreateSpotCheckRequest,
+  OverrideSpotCheckResultRequest,
+  SpotCheck,
+  SpotCheckAssertion,
+  SpotCheckAssertionRequest,
+  SpotCheckCapture,
+  SpotCheckCaptureRequest,
+  SpotCheckManager,
+  SpotCheckResult,
+  SpotCheckRun,
+  SpotCheckRunsQuery,
+  SpotChecksQuery,
+  SubmitSpotCheckPhotoRequest,
+  UpdateAreaRequest,
+  UpdateSpotCheckRequest,
 } from './types';
 
 import { loginRequest, logoutRequest } from './auth-api';
@@ -737,6 +774,155 @@ export const api = {
             },
           })
         : mockStockSpendReport(query);
+    },
+  },
+  spotChecks: {
+    /** Areas of an outlet. Mock only: API Contract §13 has no endpoint for them. */
+    areas(query: AreasQuery): Promise<Page<Area>> {
+      return USE_REAL_API ? notBuilt('GET /areas') : mockListAreas(query);
+    },
+
+    createArea(request: CreateAreaRequest): Promise<Area> {
+      return USE_REAL_API ? notBuilt('POST /areas') : mockCreateArea(request);
+    },
+
+    updateArea(id: number, request: UpdateAreaRequest): Promise<Area> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /areas/{id}')
+        : mockUpdateArea(id, request);
+    },
+
+    /** GET /spot-checks?outlet_id= */
+    checks(query: SpotChecksQuery): Promise<Page<SpotCheck>> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks')
+        : mockListSpotChecks(query);
+    },
+
+    /** One check with its prompts and items. */
+    check(id: number): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks/{id}')
+        : mockGetSpotCheck(id);
+    },
+
+    /** POST /spot-checks */
+    createCheck(request: CreateSpotCheckRequest): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks')
+        : mockCreateSpotCheck(request);
+    },
+
+    /** PATCH /spot-checks/{id} */
+    updateCheck(
+      id: number,
+      request: UpdateSpotCheckRequest,
+    ): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}')
+        : mockUpdateSpotCheck(id, request);
+    },
+
+    /** POST /spot-checks/{id}/captures */
+    addCapture(
+      id: number,
+      request: SpotCheckCaptureRequest,
+    ): Promise<SpotCheckCapture> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/{id}/captures')
+        : mockAddSpotCheckCapture(id, request);
+    },
+
+    /** Edit a prompt. Mock only. */
+    updateCapture(
+      id: number,
+      position: number,
+      request: SpotCheckCaptureRequest,
+    ): Promise<SpotCheckCapture> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}/captures/{position}')
+        : mockUpdateSpotCheckCapture(id, position, request);
+    },
+
+    /** Remove a prompt. Mock only. */
+    removeCapture(id: number, position: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /spot-checks/{id}/captures/{position}')
+        : mockRemoveSpotCheckCapture(id, position);
+    },
+
+    /** POST /spot-checks/{id}/assertions */
+    addAssertion(
+      id: number,
+      request: SpotCheckAssertionRequest,
+    ): Promise<SpotCheckAssertion> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/{id}/assertions')
+        : mockAddSpotCheckAssertion(id, request);
+    },
+
+    /** Edit or archive an item. Mock only. */
+    updateAssertion(
+      id: number,
+      position: number,
+      request: SpotCheckAssertionRequest,
+    ): Promise<SpotCheckAssertion> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}/assertions/{position}')
+        : mockUpdateSpotCheckAssertion(id, position, request);
+    },
+
+    /** Spot-check Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    managers(outletId: number): Promise<SpotCheckManager[]> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks/managers')
+        : mockListSpotCheckManagers(outletId);
+    },
+
+    appointManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/managers')
+        : mockAppointSpotCheckManager(outletId, userId);
+    },
+
+    removeManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /spot-checks/managers')
+        : mockRemoveSpotCheckManager(outletId, userId);
+    },
+
+    /** GET /spot-check-runs?state=&outlet_id= */
+    runs(query: SpotCheckRunsQuery): Promise<Page<SpotCheckRun>> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-check-runs')
+        : mockListSpotCheckRuns(query);
+    },
+
+    /** GET /spot-check-runs/{id} */
+    run(id: number): Promise<SpotCheckRun> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-check-runs/{id}')
+        : mockGetSpotCheckRun(id);
+    },
+
+    /** POST /spot-check-runs/{id}/photos — 409 `window_closed` after the close. */
+    submitPhoto(
+      id: number,
+      request: SubmitSpotCheckPhotoRequest,
+    ): Promise<SpotCheckRun> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-check-runs/{id}/photos')
+        : mockSubmitSpotCheckPhoto(id, request);
+    },
+
+    /** PATCH /spot-check-results/{id} — the note is required. */
+    overrideResult(
+      id: number,
+      request: OverrideSpotCheckResultRequest,
+    ): Promise<SpotCheckResult> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-check-results/{id}')
+        : mockOverrideSpotCheckResult(id, request);
     },
   },
 } as const;
