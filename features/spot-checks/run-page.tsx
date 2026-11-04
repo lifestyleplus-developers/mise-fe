@@ -32,6 +32,7 @@ import { CountdownRing } from './countdown-ring';
 import { PromptRow } from './prompt-row';
 import { promptState, type PromptState } from './prompt-state';
 import { SpotCheckLinks } from './spot-check-links';
+import { subjectName } from './spot-outcome';
 import { useCaptureFlow } from './use-capture-flow';
 import { useSpotCountdown } from './use-spot-countdown';
 import { useSpotCheckRun } from './use-spot-check-runs';
@@ -43,14 +44,6 @@ type RunPageProps = {
   /** Where Back goes when nothing is behind this screen. */
   backHref?: '/modules' | '/spot-checks';
 };
-
-/** The name of a run's subject: authored content, shown as stored. */
-function subjectName(run: SpotCheckRun): string | null {
-  if (!run.subject) return null;
-  return run.subject.type === 'STAFF'
-    ? run.subject.full_name
-    : run.subject.name;
-}
 
 /**
  * One revealed (or just closed) spot check (SPT-01): the subject, the countdown, and
@@ -189,7 +182,7 @@ function RunBody({
   const next = nextToTake(captures, states);
   const sent = sentCount(captures);
 
-  const name = subjectName(run) ?? '';
+  const name = subjectName(run);
 
   const lineText = {
     byAt: (who: string, when: string) =>

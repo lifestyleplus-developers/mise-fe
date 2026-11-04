@@ -785,13 +785,13 @@ export const ml = {
   'spot.overridden-at': 'മാറ്റി: {to}, {name} · {time}',
 
   // Week 9 navigation: the Spot checks screens' titles and links.
-  'spot.results': 'ಫಲಿತಾಂಶಗಳು',
-  'spot.checks': 'ಚೆಕ್‌ಗಳು',
-  'spot.areas': 'ಸ್ಥಳಗಳು',
+  'spot.results': 'ഫലങ്ങൾ',
+  'spot.checks': 'ചെക്കുകൾ',
+  'spot.areas': 'ഇടങ്ങൾ',
   'spot.new-check': 'പുതിയ ചെക്ക്',
 
   // SPT-06: areas list and area sheet.
-  'spot.eyebrow': 'ಸ್ಪಾಟ್ ಚೆಕ್ · {outlet}',
+  'spot.eyebrow': 'സ്പോട്ട് ചെക്ക് · {outlet}',
   'spot.add-area': 'ഇടം ചേർക്കുക',
   'spot.new-area': 'പുതിയ ഇടം',
   'spot.name': 'പേര്',
@@ -909,4 +909,18 @@ export const ml = {
   'cam.use-photo': 'ഈ ഫോട്ടോ ഉപയോഗിക്കുക',
   'cam.save-failed':
     'ഫോട്ടോ സേവ് ചെയ്യാനായില്ല. സ്ഥലം ഒഴിവാക്കി വീണ്ടും ശ്രമിക്കുക.',
+
+  'spot.filter-all': 'എല്ലാം',
+  'spot.filter-empty': 'ഈ ഫിൽട്ടറിൽ ഒന്നും പൊരുത്തപ്പെടുന്നില്ല.',
+  'spot.clear-filter': 'ഫിൽട്ടർ ഒഴിവാക്കുക',
+  'spot.results-empty': 'ഇതുവരെ ഒരു സ്പോട്ട് ചെക്കും അടഞ്ഞിട്ടില്ല.',
+  'spot.tally': '{passed} പാസ് · {failed} ഫെയിൽ · {review} പരിശോധന വേണം',
+  'spot.own-only': 'മറ്റൊരാൾക്ക് നൽകിയ ചെക്കിന്റെ ഫലങ്ങൾ കാണിക്കില്ല.',
+  'spot.issue-raised': 'പ്രശ്നം രേഖപ്പെടുത്തി',
+  'spot.photos': 'ഫോട്ടോകൾ',
+  'spot.override': 'മാറ്റുക',
+  'spot.override-to': 'ഇതിലേക്ക് മാറ്റുക',
+  'spot.note-label': 'കുറിപ്പ്',
+  'spot.note-placeholder': 'ഇത് എന്തുകൊണ്ട് മാറ്റുന്നു എന്ന് എഴുതുക.',
+  'spot.note-missing': 'കുറിപ്പ് ആവശ്യമാണ്.',
 } satisfies Partial<Catalogue>;

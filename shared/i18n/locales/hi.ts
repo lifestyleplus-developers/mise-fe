@@ -761,9 +761,9 @@ export const hi = {
   'spot.overridden-at': 'बदला गया: {to}, {name} द्वारा · {time}',
 
   // Week 9 navigation: the Spot checks screens' titles and links.
-  'spot.results': 'ഫലങ്ങൾ',
-  'spot.checks': 'ചെക്കുകൾ',
-  'spot.areas': 'ഇടങ്ങൾ',
+  'spot.results': 'परिणाम',
+  'spot.checks': 'चेक',
+  'spot.areas': 'क्षेत्र',
   'spot.new-check': 'नया चेक',
 
   // SPT-06: areas list and area sheet.
@@ -884,4 +884,18 @@ export const hi = {
   'cam.preview': 'फ़ोटो की झलक',
   'cam.use-photo': 'यह फ़ोटो रखें',
   'cam.save-failed': 'फ़ोटो सेव नहीं हो सकी। जगह खाली करें और फिर कोशिश करें।',
+
+  'spot.filter-all': 'सभी',
+  'spot.filter-empty': 'इस फ़िल्टर से कोई नतीजा नहीं मिला।',
+  'spot.clear-filter': 'फ़िल्टर हटाएँ',
+  'spot.results-empty': 'अभी तक कोई स्पॉट चेक बंद नहीं हुआ।',
+  'spot.tally': '{passed} पास · {failed} फ़ेल · {review} जाँच ज़रूरी',
+  'spot.own-only': 'किसी और को सौंपे गए चेक के नतीजे नहीं दिखाए जाते।',
+  'spot.issue-raised': 'समस्या दर्ज हुई',
+  'spot.photos': 'फ़ोटो',
+  'spot.override': 'बदलें',
+  'spot.override-to': 'इसमें बदलें',
+  'spot.note-label': 'नोट',
+  'spot.note-placeholder': 'बताएं कि आप इसे क्यों बदल रहे हैं।',
+  'spot.note-missing': 'नोट ज़रूरी है।',
 } satisfies Partial<Catalogue>;

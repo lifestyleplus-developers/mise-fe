@@ -914,6 +914,21 @@ export const en = {
   'cam.save-failed': "Couldn't save the photo. Free up space and try again.",
   'cam.save-failed-again':
     "Still couldn't save the photo. Free up space on the phone, then tap Use photo.",
+
+  // SPT-03: results list and run review.
+  'spot.filter-all': 'All',
+  'spot.filter-empty': 'No results match this filter.',
+  'spot.clear-filter': 'Clear filter',
+  'spot.results-empty': 'No spot checks have closed yet.',
+  'spot.tally': '{passed} passed · {failed} failed · {review} review',
+  'spot.own-only': "Results aren't shown for a check assigned to someone else.",
+  'spot.issue-raised': 'Issue raised',
+  'spot.photos': 'Photos',
+  'spot.override': 'Override',
+  'spot.override-to': 'Change to',
+  'spot.note-label': 'Note',
+  'spot.note-placeholder': "Say why you're changing this.",
+  'spot.note-missing': 'A note is required.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

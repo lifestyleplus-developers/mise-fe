@@ -1,7 +1,3 @@
-import { createPlaceholder } from '@/features/shell/placeholder';
+import { ResultsScreen } from '@/features/spot-checks/results-screen';
 
-export default createPlaceholder({
-  title: 'spot.results',
-  frame: 'pushed',
-  backHref: '/spot-checks',
-});
+export default ResultsScreen;

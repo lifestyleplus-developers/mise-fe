@@ -2,7 +2,16 @@ import type {
   SpotCheckCompletion,
   SpotCheckOutcome,
   SpotCheckResult,
+  SpotCheckRun,
 } from '@/shared/api/types';
+
+/** The name of a run's subject: authored content, shown as stored. */
+export function subjectName(run: SpotCheckRun): string {
+  if (!run.subject) return '';
+  return run.subject.type === 'STAFF'
+    ? run.subject.full_name
+    : run.subject.name;
+}
 
 /** What the badge can say: the four outcomes, and "Not done" for a run that never got photos. */
 export type OutcomeKind = SpotCheckOutcome | 'NOT_DONE';

@@ -890,4 +890,18 @@ export const kn = {
   'cam.preview': 'ಫೋಟೋ ಮುನ್ನೋಟ',
   'cam.use-photo': 'ಈ ಫೋಟೋ ಬಳಸಿ',
   'cam.save-failed': 'ಫೋಟೋ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಜಾಗ ಖಾಲಿ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+
+  'spot.filter-all': 'ಎಲ್ಲಾ',
+  'spot.filter-empty': 'ಈ ಫಿಲ್ಟರ್‌ಗೆ ಯಾವುದೇ ಫಲಿತಾಂಶ ಹೊಂದಿಕೆಯಾಗುವುದಿಲ್ಲ.',
+  'spot.clear-filter': 'ಫಿಲ್ಟರ್ ತೆರವುಗೊಳಿಸಿ',
+  'spot.results-empty': 'ಇನ್ನೂ ಯಾವುದೇ ಸ್ಪಾಟ್ ಚೆಕ್ ಮುಗಿದಿಲ್ಲ.',
+  'spot.tally': '{passed} ಪಾಸ್ · {failed} ಫೇಲ್ · {review} ಪರಿಶೀಲನೆ ಬೇಕು',
+  'spot.own-only': 'ಬೇರೊಬ್ಬರಿಗೆ ನೀಡಿದ ಚೆಕ್‌ನ ಫಲಿತಾಂಶಗಳನ್ನು ತೋರಿಸಲಾಗುವುದಿಲ್ಲ.',
+  'spot.issue-raised': 'ಸಮಸ್ಯೆ ದಾಖಲಾಗಿದೆ',
+  'spot.photos': 'ಫೋಟೋಗಳು',
+  'spot.override': 'ಬದಲಾಯಿಸಿ',
+  'spot.override-to': 'ಇದಕ್ಕೆ ಬದಲಾಯಿಸಿ',
+  'spot.note-label': 'ಟಿಪ್ಪಣಿ',
+  'spot.note-placeholder': 'ಇದನ್ನು ಏಕೆ ಬದಲಾಯಿಸುತ್ತಿದ್ದೀರಿ ಎಂದು ಬರೆಯಿರಿ.',
+  'spot.note-missing': 'ಟಿಪ್ಪಣಿ ಅಗತ್ಯ.',
 } satisfies Partial<Catalogue>;
