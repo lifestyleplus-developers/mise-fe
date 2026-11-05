@@ -4296,6 +4296,12 @@ function seedSpotCheckState(): SpotCheckState {
 
   const byId = (id: number) => state.runs.find((run) => run.id === id)!;
 
+  // Dev convenience: keep run 1 open for a year, not just the first 15 minutes
+  // of the session, so there is always something revealed to look at.
+  byId(1).window_close = new Date(
+    db.startedAt + 365 * 24 * 60 * MINUTE_MS,
+  ).toISOString();
+
   // Run 4: the review item.
   const run4 = byId(4);
   run4.results[0] = {
