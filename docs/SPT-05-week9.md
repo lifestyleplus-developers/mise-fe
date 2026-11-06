@@ -34,7 +34,7 @@ Exactly 24, in mockup order. "Reach it with" names the sign-in that shows the st
 20. **roleLost** — "Only head office can change spot checks.", no New check, the editor read-only. _A 403 on a write does it; the mock cannot take the role away mid-session._
 21. **moduleOff** — back to Modules with "Spot checks aren't turned on for {business}." _A 404, or switch spot checks off for every outlet._
 22. **long** — a 41-character check name and a 120-character item wrap. _Elegance: "Grooming — front of house, evening service"._
-23. **many** — 12 checks in the list; an editor with 8 prompts and 12 items. _Elegance: the list, and "Full inspection"._
+23. **many** — 14 checks in the list; an editor with 8 prompts and 12 items. _Elegance: the list, and "Full inspection"._
 24. **clock12** — the time reads "2:00 PM" on a 12-hour phone and "14:00" on a 24-hour one. _Change the phone's clock._
 
 ## What the states pin down

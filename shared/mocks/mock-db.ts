@@ -2095,6 +2095,14 @@ export async function mockAnswerTask(
   return answered;
 }
 
+/** Runs whose first upload has been refused already, so the retry goes through. */
+const refusedUploadRuns = new Set<number>();
+
+/** A capture prompt written as a trigger word (`upload`, `slow`, `revoked`), as in Week 8. */
+function isPromptTrigger(prompt: string, word: string): boolean {
+  return prompt.trim().toLowerCase() === word;
+}
+
 /**
  * POST /uploads/sign — §8. Returns a location the client PUTs to. The mock
  * cannot accept real bytes; the key is recorded so the PATCH that follows
@@ -2112,6 +2120,23 @@ export async function mockSignUpload(
   const me = resolveMe();
   const key = `t${me.business.id}/mock/${request.target_id}-${Date.now()}.jpg`;
   db.signedUploadKeys.set(request.target_id, key);
+  // A run with a prompt of `upload`: the first photograph's bytes are refused, so
+  // the prompt shows Retry (SPT-01 `uploadFailed`); the retry goes through.
+  if (
+    request.purpose === 'spot_check_run' &&
+    !refusedUploadRuns.has(request.target_id) &&
+    spotCheckState()
+      .runs.find((run) => run.id === request.target_id)
+      ?.captures.some((capture) => isPromptTrigger(capture.prompt, 'upload'))
+  ) {
+    refusedUploadRuns.add(request.target_id);
+    return {
+      upload_url: `mock://refuse/${key}`,
+      method: 'PUT',
+      headers: { 'content-type': request.content_type },
+      key,
+    };
+  }
   return {
     upload_url: `mock://storage/${key}`,
     method: 'PUT',
@@ -3932,6 +3957,8 @@ type SpotCheckState = {
 const SPOT_ASSESS_MS = 2 * MINUTE_MS;
 /** Photographs older than this are removed under the retention policy. */
 const SPOT_RETENTION_DAYS = 30;
+/** How long a send for a `slow` prompt waits before it is answered. */
+const SLOW_SEND_MS = 8_000;
 
 const RESHMA = 16;
 const ARUN = 17;
@@ -4089,6 +4116,19 @@ function seedSpotCheckState(): SpotCheckState {
     ),
     filler(21, LONG_CHECK_NAME, 3, 5, true),
     filler(22, 'Full inspection', 8, 12),
+    // Two small checks for the photograph states that need a trigger prompt:
+    // `upload` (the first upload is refused) and `slow` (the send takes 8 seconds).
+    ...[
+      [23, 'Upload test', 'upload'],
+      [24, 'Slow send test', 'slow'],
+    ].map(([id, name, trigger]) => ({
+      ...filler(id as number, name as string, 2, 3),
+      reveal_window_minutes: 15,
+      captures: [
+        { position: 1, prompt: trigger as string },
+        { position: 2, prompt: 'a second photograph' },
+      ],
+    })),
   );
 
   // --- runs ------------------------------------------------------------------
@@ -4400,6 +4440,21 @@ function seedSpotCheckState(): SpotCheckState {
       subject: kitchen5.id,
       manager: ARUN,
       reveal: at(-2),
+    }),
+    // For `uploadFailed` and `pending`: see the trigger prompts on checks 23 and 24.
+    makeRun({
+      id: 82,
+      check: 23,
+      subject: frontStaff[1].id,
+      manager: ARUN,
+      reveal: at(-1),
+    }),
+    makeRun({
+      id: 83,
+      check: 24,
+      subject: kitchen5.id,
+      manager: ARUN,
+      reveal: at(-1),
     }),
   );
 
@@ -5240,6 +5295,14 @@ export async function mockSubmitSpotCheckPhoto(
       API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
       'This check was revealed to someone else.',
     );
+  }
+  // A prompt of `slow`: the send takes a while to be answered, so the prompt can
+  // be seen as "Waiting to send" (SPT-01 `pending`), and a lost signal leaves it queued.
+  const asked = run.captures.find(
+    (capture) => capture.position === request.capture_position,
+  );
+  if (asked && isPromptTrigger(asked.prompt, 'slow')) {
+    await new Promise((resolve) => setTimeout(resolve, SLOW_SEND_MS));
   }
   const now = Date.now();
   if (now < new Date(run.revealed_at).getTime()) {

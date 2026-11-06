@@ -23,8 +23,8 @@ Exactly 35, in mockup order. "Reach it with" names the sign-in that shows the st
 9. **torchOn** — the torch button shows "Torch on" with a stronger border and the torch lights. _On the live camera (3), tap Torch off._
 10. **twoRevealed** — two checks revealed at once: a card for each (name, "Closes {time}"), the one closing first at the top; tapping one opens it, and Back returns to the list. _reshma, 3 to 15 minutes after the start (run 2 reveals at 3 minutes), or arun at the start._
 11. **uploading** — a prompt shows "Uploading" while the photograph goes. _Use photo (brief)._
-12. **pending** — "Waiting to send", and "1 photo waiting to send" above the list: the picture is in storage and the send is queued. _Lose the signal in the second after tapping Use photo; hard to catch by hand._
-13. ~~uploadFailed~~ — **Not reachable on the mock.** The upload of the picture itself failing, with Retry; the mock's storage never refuses. Real devices only.
+12. **pending** — "Waiting to send", and "1 photo waiting to send" above the list: the picture is in storage and the send is queued. _arun, at the start: open "Slow send test" (Elegance), take photo 1. Its prompt is `slow`, so the send takes 8 seconds to be answered and shows "Waiting to send" for that long. Turn the signal off in that time and it stays queued until it returns._
+13. **uploadFailed** — the upload of the picture itself fails: the prompt shows the failed state with Retry. _arun, at the start: open "Upload test" (Elegance), take photo 1. Its prompt is `upload`, so the first upload of that run is refused. Tap Retry and it goes through._
 14. **noUploadUrl** — no signal to get an upload location: the photograph is kept on the phone, "Waiting to send" with Send now. _Take a photo with the phone offline; it sends when the signal returns, or on Send now._
 15. **retaken** — Retake on a sent prompt: the new photograph with its time and the replaced one, quieter, with its own. _Retake a prompt that shows Sent._
 16. **allSent** — every prompt taken: no Take photo, "All photos taken. Results will appear in Results." _Take them all._

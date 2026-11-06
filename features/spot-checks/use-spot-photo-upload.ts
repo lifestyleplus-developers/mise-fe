@@ -46,7 +46,11 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
     }
 
     try {
-      // The mock hands out `mock://` locations there is nothing to PUT to.
+      // The mock hands out `mock://` locations there is nothing to PUT to; one
+      // handed out as `mock://refuse` stands for storage turning the bytes away.
+      if (sign.upload_url.startsWith('mock://refuse')) {
+        throw new Error('Upload failed');
+      }
       if (!sign.upload_url.startsWith('mock://')) {
         const response = await fetch(sign.upload_url, {
           method: sign.method,
