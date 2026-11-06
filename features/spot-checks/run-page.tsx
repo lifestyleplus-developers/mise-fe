@@ -65,7 +65,14 @@ export function RunPage({ runId, backHref = '/modules' }: RunPageProps) {
   const pull = usePullToRefresh(refetch);
 
   const status = query.error instanceof ApiError ? query.error.status : null;
-  const moduleOff = status === 404;
+  // A 404 with spot checks still on is this one run: gone, or not this person's
+  // to see (a check revealed to another manager). Only with none on is the module off.
+  const spotChecksOn = (me?.modules.spot_check_outlets.length ?? 0) > 0;
+  const moduleOff = status === 404 && !spotChecksOn;
+  const runUnavailable = status === 404 && spotChecksOn;
+  React.useEffect(() => {
+    if (runUnavailable) router.replace('/spot-checks');
+  }, [runUnavailable, router]);
   React.useEffect(() => {
     if (!moduleOff) return;
     setModulesNotice(

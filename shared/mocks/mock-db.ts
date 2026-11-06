@@ -5377,7 +5377,17 @@ export async function mockListSpotCheckRuns(
 export async function mockGetSpotCheckRun(id: number): Promise<SpotCheckRun> {
   await delay();
   const actor = spotActor();
-  return toRun(actor, findSpotRun(actor, id));
+  const run = findSpotRun(actor, id);
+  // 🔒 An open check was revealed to its own manager and head office: to another
+  // manager at the outlet it does not exist, the same as the lists leave it out.
+  if (
+    !actor.admin &&
+    run.manager_id !== actor.me.user.id &&
+    runStatus(run, Date.now()) === 'OPEN'
+  ) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return toRun(actor, run);
 }
 
 /**
