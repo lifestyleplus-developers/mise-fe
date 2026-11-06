@@ -5345,7 +5345,10 @@ export async function mockListSpotCheckRuns(
         query.outcome &&
         !(
           outcomesVisible(actor, run, now) &&
-          run.results.some((result) => result.outcome === query.outcome)
+          // By what each result stands as now (an override counts), as the cards' tally does.
+          run.results.some(
+            (result) => effectiveOutcome(result) === query.outcome,
+          )
         )
       ) {
         return false;

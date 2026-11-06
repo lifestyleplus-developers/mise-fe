@@ -26,7 +26,7 @@ Exactly 26, in mockup order. "Reach it with" names the sign-in that shows the st
 12. **assessing** — the outcome badge spins; "Being assessed" instead of a result. _Run 6, read in the first two minutes of a mock session (it closed just before the app started and its `ready_at` is two minutes out)._
 13. **notDone** — "Not done. The window closed before any photo was taken.", no result rows. _Run 7 (Dev), nothing was sent._
 14. **purged** — the photograph's tile reads "Photo removed under the photo retention policy" instead of the picture. _Run 12 (Joseph), revealed 40 days ago — past the 30-day retention window._
-15. **filtered** — the chip row narrows the list to one outcome. _Pick Failed, Passed or Needs review above the list._
+15. **filtered** — the chip row narrows the list to one outcome. _Pick Failed, Passed or Needs review above the list. A result is matched on what it stands as now: an override counts, so a failure overridden to Passed is under Passed, not Failed, and the filter always agrees with the cards' tally._
 16. **filterEmpty** — "No results match this filter.", with Clear filter. _Pick a filter with nothing open under it (e.g. Needs review, once every review item at the outlet has been overridden)._
 17. **ownOnly** — "Results aren't shown for a check assigned to someone else.", no badges, no tally. _Run 11 (Arun's run), as reshma — she can read the outlet but the outcomes are his._
 18. **noIssueLink** — a failed result with no "Issue raised" link: the link is simply not drawn. _Sign in as `basic` and open a run that has the link for raheem (for example runs 23, 29 or 32 at ZamZam, found by their dates): none shows it, because that platform never returns an issue._
