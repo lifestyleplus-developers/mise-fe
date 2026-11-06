@@ -174,7 +174,10 @@ export function normalizeCheckForm(form: CheckForm) {
     name: form.name.trim(),
     subject: form.subject,
     recurrence: form.recurrence,
-    weekdays: form.recurrence === 'WEEKLY' ? [...form.weekdays].sort() : [],
+    weekdays:
+      form.recurrence === 'WEEKLY'
+        ? [...form.weekdays].sort((a, b) => a - b)
+        : [],
     day: form.recurrence === 'MONTHLY' ? form.day : 0,
     start: form.start,
     window: form.window,
