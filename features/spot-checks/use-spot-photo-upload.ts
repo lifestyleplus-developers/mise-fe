@@ -24,6 +24,10 @@ type Submit = (variables: SubmitPhotoVariables) => void;
 async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
   const { update, remove } = usePhotoOutbox.getState();
   if (inFlight.has(draft.id)) return;
+  // Signing out removes the draft; whatever is still awaited must then stop, so a
+  // photograph is never sent under whoever signs in next.
+  const gone = () =>
+    !usePhotoOutbox.getState().drafts.some((d) => d.id === draft.id);
   inFlight.add(draft.id);
   try {
     update(draft.id, { stage: 'uploading', error: null });
@@ -44,6 +48,8 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
       });
       return;
     }
+
+    if (gone()) return;
 
     try {
       // The mock hands out `mock://` locations there is nothing to PUT to; one
@@ -67,6 +73,7 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
       return;
     }
 
+    if (gone()) return;
     submit({
       runId: draft.runId,
       request: { capture_position: draft.position, image_key: sign.key },
