@@ -6,7 +6,7 @@
 - Build plan: `BUILD-PLAN-WEEK-9.md` §2.3. FE Spec §3.11, §6, §7, API Contract §13, Model §18, Spot Checks §3 and §4, Schema `spot_check_run`, `spot_check_photo`.
 - Routes: `/spot-checks` (the entry for everyone), `/spot-checks/capture/[runId]` (one run, opened from the list when two are revealed), and the `?run=ID` deep link for a "check revealed" notification.
 - Code: `features/spot-checks/capture-screen.tsx`, `run-page.tsx`, `capture-view.ts`, `use-capture-flow.ts`, `capture-sheet.tsx`, `use-unsent-photos.ts`, and the shared parts from step 1.3 (`countdown-ring.tsx`, `prompt-row.tsx`, `prompt-state.ts`, `use-spot-photo-upload.ts`).
-- **The camera is the phone's own.** The mockup draws its own in-app camera with the prompt and countdown over the picture and a torch. That needs `expo-camera`, which is not installed and means a new native build (BUILD-PLAN §4, undecided). This screen uses `expo-image-picker`, as the Week 5 photograph task does: the prompt and countdown are shown before the camera opens and again on the preview, and the phone's own camera takes the picture. Two states follow from it and are struck through below. Everything around the camera is the app's, so an in-app camera can replace the phone's without touching the rest.
+- **The camera is in the app** (`expo-camera`, decided and built after the first version, which used the phone's own camera). A live view with the prompt, `Photo n` and the time left over the picture, the torch on the left, the shutter in the middle and Cancel on the right (`capture-camera.tsx`). The preview, the first-use card, camera off, camera would not start and no picture are the app's own. Expo Go includes `expo-camera`; a standalone EAS build has to be remade after it was added. Use photo moves straight on to the next prompt without closing the screen.
 
 ## States defined by the mockup
 
@@ -14,13 +14,13 @@ Exactly 35, in mockup order. "Reach it with" names the sign-in that shows the st
 
 1. **default** — Revealed: the subject as the title, the check name under it, the countdown ring, the prompts with prompt 1 already sent, and Take photo for the next. _reshma, at the start: Lakshmi, Grooming — kitchen._
 2. **final** — the last 5 minutes: the ring turns heavy and a "5 min left" chip appears. _reshma, 10 minutes after the start._
-3. ~~camera~~ — **Not reachable.** The in-app camera with the prompt and countdown in a band over the picture. The phone's own camera cannot carry an overlay; the same band shows on the preview (state 4).
+3. **camera** — the live camera: the band over the picture (`Photo n`, the prompt, the time left), the torch on the left, the shutter in the middle and Cancel on the right. _Take photo, on a phone with a camera, in Expo Go or a build made after `expo-camera` was added._
 4. **preview** — "Photo preview": the picture just taken, the band (prompt and time left), Retake and Use photo. _Take photo._
 5. **firstUse** — "mise needs the camera to take the photos for this spot check.", Continue and Not now, before the phone has been asked. _The first Take photo on a phone that has never been asked._
 6. **cameraOff** — "Camera access is off", "Turn it on in your phone's settings.", Open settings. _Refuse the camera, or turn it off in the phone's settings._
 7. **cameraFailed** — "Camera couldn't start.", Try again; after a second failure "Camera still couldn't start. Close other apps that use the camera and try again." _A phone or emulator with no camera._
 8. **saveFailed** — "Couldn't save the photo. Free up space and try again.", then "Still couldn't save…" on a second failure. _The camera gives back no picture._
-9. ~~torchOn~~ — **Not reachable.** The torch is on the in-app camera. The phone's own camera has its own.
+9. **torchOn** — the torch button shows "Torch on" with a stronger border and the torch lights. _On the live camera (3), tap Torch off._
 10. **twoRevealed** — two checks revealed at once: a card for each (name, "Closes {time}"), the one closing first at the top; tapping one opens it, and Back returns to the list. _reshma, 3 to 15 minutes after the start (run 2 reveals at 3 minutes), or arun at the start._
 11. **uploading** — a prompt shows "Uploading" while the photograph goes. _Use photo (brief)._
 12. **pending** — "Waiting to send", and "1 photo waiting to send" above the list: the picture is in storage and the send is queued. _Lose the signal in the second after tapping Use photo; hard to catch by hand._

@@ -883,6 +883,8 @@ export const hi = {
   'cam.try-again': 'फिर कोशिश करें',
   'cam.preview': 'फ़ोटो की झलक',
   'cam.use-photo': 'यह फ़ोटो रखें',
+  'cam.torch-on': 'टॉर्च चालू',
+  'cam.torch-off': 'टॉर्च बंद',
   'cam.save-failed': 'फ़ोटो सेव नहीं हो सकी। जगह खाली करें और फिर कोशिश करें।',
 
   'spot.filter-all': 'सभी',

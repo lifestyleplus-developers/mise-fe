@@ -889,6 +889,8 @@ export const kn = {
   'cam.try-again': 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
   'cam.preview': 'ಫೋಟೋ ಮುನ್ನೋಟ',
   'cam.use-photo': 'ಈ ಫೋಟೋ ಬಳಸಿ',
+  'cam.torch-on': 'ಟಾರ್ಚ್ ಆನ್',
+  'cam.torch-off': 'ಟಾರ್ಚ್ ಆಫ್',
   'cam.save-failed': 'ಫೋಟೋ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಜಾಗ ಖಾಲಿ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
 
   'spot.filter-all': 'ಎಲ್ಲಾ',

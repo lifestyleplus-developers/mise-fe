@@ -154,6 +154,14 @@ function RunBody({
     if (closedByClock) refetch();
   }, [closedByClock, refetch]);
 
+  // The window ended while the camera or the preview was up: nothing taken now is
+  // accepted, so close it and show the closed card.
+  const captureStep = flow.state.step;
+  const closeFlow = flow.close;
+  React.useEffect(() => {
+    if (closed && captureStep !== 'idle') closeFlow();
+  }, [closed, captureStep, closeFlow]);
+
   const time = (iso: string) => formatClock(isoToClock(iso));
   const isManager = userId !== undefined && run.manager?.id === userId;
 
@@ -202,12 +210,13 @@ function RunBody({
     const { position, uri, retake } = flow.state;
     if (position === null || uri === null) return;
     upload.send(position, uri);
-    flow.close();
-    // On to the next prompt, but not after a retake.
+    // On to the next prompt, but not after a retake. The camera stays up and moves
+    // on, so nothing closes and reopens in between.
     const following = retake
       ? undefined
       : nextToTake(captures, states, position);
-    if (following) take(following.position);
+    if (following) flow.next(following.position);
+    else flow.close();
   }
 
   function sendNow(position: number) {
@@ -350,7 +359,11 @@ function RunBody({
         onContinue={() => void flow.ask()}
         onOpenSettings={flow.openSettings}
         onAgain={() => void flow.again()}
+        onRetake={flow.retake}
         onUse={useThisPhoto}
+        onPhoto={flow.captured}
+        onNoPhoto={flow.noPicture}
+        onMountError={flow.cameraFailed}
         onClose={flow.close}
       />
     </PushedScreen>

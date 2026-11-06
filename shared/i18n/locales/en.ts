@@ -914,6 +914,8 @@ export const en = {
   'cam.save-failed': "Couldn't save the photo. Free up space and try again.",
   'cam.save-failed-again':
     "Still couldn't save the photo. Free up space on the phone, then tap Use photo.",
+  'cam.torch-on': 'Torch on',
+  'cam.torch-off': 'Torch off',
 
   // SPT-03: results list and run review.
   'spot.filter-all': 'All',

@@ -51,6 +51,8 @@ import {
   Pencil,
   UserPlus,
   CameraOff,
+  Flashlight,
+  FlashlightOff,
 } from 'lucide-react-native';
 
 /**
@@ -110,6 +112,8 @@ const ICONS = [
   Pencil,
   UserPlus,
   CameraOff,
+  Flashlight,
+  FlashlightOff,
 ];
 
 for (const Icon of ICONS) {

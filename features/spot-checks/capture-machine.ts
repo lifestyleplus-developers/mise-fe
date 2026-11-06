@@ -1,9 +1,10 @@
 /**
- * Where taking one photograph has got to. The phone's own camera is the picture
- * part; everything around it is ours:
+ * Where taking one photograph has got to. The camera is ours (an in-app live view
+ * with the prompt and the time over the picture), and so is everything around it:
  * - `idle`: nothing going on.
  * - `firstUse`: the phone has not been asked yet, so say why before it asks.
- * - `launching`: asking, or the camera is opening.
+ * - `launching`: checking or asking the phone about the camera; nothing is drawn.
+ * - `live`: the live camera, with the band over it.
  * - `preview`: the picture just taken, with Retake and Use photo.
  * - `denied`: camera access is off.
  * - `failed`: the camera would not start.
@@ -13,6 +14,7 @@ export type CaptureStep =
   | 'idle'
   | 'firstUse'
   | 'launching'
+  | 'live'
   | 'preview'
   | 'denied'
   | 'failed'
@@ -40,8 +42,10 @@ export const CAPTURE_IDLE: CaptureState = {
 export type CaptureEvent =
   | { type: 'start'; position: number; retake: boolean }
   | { type: 'explain' } // the phone has not been asked: say why first
-  | { type: 'ask' } // first use: go on to the phone's own question
-  | { type: 'launch' }
+  | { type: 'ask' } // on to the phone's own question, or checking again
+  // The camera is allowed: show it. With a position it moves on to that prompt
+  // (Use photo, then the next one) without closing the screen in between.
+  | { type: 'live'; position?: number; retake?: boolean }
   | { type: 'photo'; uri: string }
   | { type: 'cancelled' }
   | { type: 'denied' }
@@ -66,8 +70,18 @@ export function captureReducer(
     case 'explain':
       return state.position === null ? state : { ...state, step: 'firstUse' };
     case 'ask':
-    case 'launch':
       return state.position === null ? state : { ...state, step: 'launching' };
+    case 'live': {
+      const position = event.position ?? state.position;
+      if (position === null) return state;
+      return {
+        step: 'live',
+        position,
+        retake: event.retake ?? state.retake,
+        uri: null,
+        failures: 0,
+      };
+    }
     case 'photo':
       return { ...state, step: 'preview', uri: event.uri, failures: 0 };
     case 'cancelled':

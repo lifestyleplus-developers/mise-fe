@@ -26,6 +26,14 @@
       "expo-router",
       "expo-status-bar",
       "expo-image-picker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Mise uses the camera to capture photos for checklist tasks and spot checks.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {

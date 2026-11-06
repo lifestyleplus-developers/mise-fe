@@ -7,6 +7,7 @@ import { Image, Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CaptureState } from './capture-machine';
+import { CaptureCamera } from './capture-camera';
 import { CountdownBand } from './countdown-ring';
 
 type CaptureSheetProps = {
@@ -16,15 +17,24 @@ type CaptureSheetProps = {
   windowClose: string;
   onContinue: () => void;
   onOpenSettings: () => void;
+  /** Try again, on a card (camera off, would not start, no picture). */
   onAgain: () => void;
+  /** Retake, on the preview. */
+  onRetake: () => void;
   onUse: () => void;
+  /** The live camera took a picture. */
+  onPhoto: (uri: string) => void;
+  onNoPhoto: () => void;
+  onMountError: () => void;
   onClose: () => void;
 };
 
 /**
- * The steps around the phone's camera: why we ask, camera off, camera would not
- * start, no picture came back, and the preview. Nothing is drawn while the camera
- * itself is open (`launching`): iOS will not open it under one of our sheets.
+ * Everything on the screen while a photograph is being taken: the live camera and
+ * the preview (one full-screen layer, so moving between them and on to the next
+ * prompt never closes and reopens it), and the cards around them: why we ask,
+ * camera off, camera would not start, no picture came back. Nothing is drawn while
+ * the phone is being asked (`launching`): its own question cannot show under ours.
  */
 export function CaptureSheet({
   state,
@@ -33,7 +43,11 @@ export function CaptureSheet({
   onContinue,
   onOpenSettings,
   onAgain,
+  onRetake,
   onUse,
+  onPhoto,
+  onNoPhoto,
+  onMountError,
   onClose,
 }: CaptureSheetProps) {
   const t = useT();
@@ -42,7 +56,7 @@ export function CaptureSheet({
   const visible = step !== 'idle' && step !== 'launching';
   if (!visible) return null;
 
-  if (step === 'preview' && state.uri) {
+  if (step === 'live' || (step === 'preview' && state.uri)) {
     return (
       <Modal
         visible
@@ -50,41 +64,54 @@ export function CaptureSheet({
         statusBarTranslucent
         onRequestClose={onClose}
       >
-        <View
-          className="flex-1 bg-black"
-          style={{
-            paddingTop: insets.top + 8,
-            paddingBottom: insets.bottom + 12,
-          }}
-        >
-          <View className="px-4">
-            <CountdownBand
-              windowClose={windowClose}
-              position={state.position ?? 1}
-              prompt={prompt}
-            />
+        {step === 'live' ? (
+          <CaptureCamera
+            key={`${state.position}-live`}
+            windowClose={windowClose}
+            position={state.position ?? 1}
+            prompt={prompt}
+            onPhoto={onPhoto}
+            onNoPhoto={onNoPhoto}
+            onMountError={onMountError}
+            onClose={onClose}
+          />
+        ) : (
+          <View
+            className="flex-1 bg-black"
+            style={{
+              paddingTop: insets.top + 8,
+              paddingBottom: insets.bottom + 12,
+            }}
+          >
+            <View className="px-4">
+              <CountdownBand
+                windowClose={windowClose}
+                position={state.position ?? 1}
+                prompt={prompt}
+              />
+            </View>
+            <View className="my-3 flex-1">
+              <Image
+                source={{ uri: state.uri ?? undefined }}
+                accessibilityLabel={t('cam.preview')}
+                className="size-full"
+                resizeMode="contain"
+              />
+            </View>
+            <View className="flex-row gap-3 px-4">
+              <Button
+                variant="outline"
+                className="min-h-12 flex-1 bg-white/10 border-white/40"
+                onPress={onRetake}
+              >
+                <Text className="text-white">{t('spot.retake')}</Text>
+              </Button>
+              <Button className="min-h-12 flex-1 bg-white" onPress={onUse}>
+                <Text className="text-black">{t('cam.use-photo')}</Text>
+              </Button>
+            </View>
           </View>
-          <View className="my-3 flex-1">
-            <Image
-              source={{ uri: state.uri }}
-              accessibilityLabel={t('cam.preview')}
-              className="size-full"
-              resizeMode="contain"
-            />
-          </View>
-          <View className="flex-row gap-3 px-4">
-            <Button
-              variant="outline"
-              className="min-h-12 flex-1 bg-white/10 border-white/40"
-              onPress={onAgain}
-            >
-              <Text className="text-white">{t('spot.retake')}</Text>
-            </Button>
-            <Button className="min-h-12 flex-1 bg-white" onPress={onUse}>
-              <Text className="text-black">{t('cam.use-photo')}</Text>
-            </Button>
-          </View>
-        </View>
+        )}
       </Modal>
     );
   }
