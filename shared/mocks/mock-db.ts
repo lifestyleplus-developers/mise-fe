@@ -2636,23 +2636,6 @@ function findVisibleStaff(actor: AttendanceActor, id: number): DbStaff {
   return person;
 }
 
-function assertCodeFree(
-  tenantId: number,
-  code: string | null | undefined,
-  exceptId?: number,
-) {
-  if (!code) return;
-  const taken = attendanceState().staff.some(
-    (person) =>
-      person.tenant_id === tenantId &&
-      person.id !== exceptId &&
-      person.staff_code?.toLowerCase() === code.toLowerCase(),
-  );
-  if (taken) {
-    throw invalid('That code is already used by someone else.', 'staff_code');
-  }
-}
-
 function cleanCode(code: string | null | undefined): string | null {
   const trimmed = code?.trim();
   return trimmed ? trimmed : null;
@@ -2698,7 +2681,6 @@ export async function mockCreateStaff(
   if (!fullName) throw invalid('Name is required.', 'full_name');
   triggerFault(fullName);
   const code = cleanCode(request.staff_code);
-  assertCodeFree(actor.me.business.id, code);
 
   const outletIds = [...new Set(request.outlet_ids ?? [])];
   if (!actor.admin && outletIds.length === 0) {
@@ -2736,7 +2718,6 @@ export async function mockUpdateStaff(
     request.staff_code === undefined
       ? undefined
       : cleanCode(request.staff_code);
-  assertCodeFree(actor.me.business.id, code, person.id);
 
   const next = {
     full_name: request.full_name?.trim() ?? person.full_name,
@@ -2823,7 +2804,7 @@ function assertConfigLive(config: DbAttendanceConfig) {
   }
 }
 
-/** §11 and §5: the schedule's shape, the window against the next period, and the name. */
+/** §11 and §5: the schedule's shape and the window against the next period. The platform has no rule on a repeated name (decision 24). */
 function assertValidConfig(
   config: Pick<
     AttendanceConfig,
@@ -2834,9 +2815,6 @@ function assertValidConfig(
     | 'weekdays'
     | 'day_of_month'
   >,
-  outletId: number,
-  tenantId: number,
-  exceptId?: number,
 ) {
   if ((config.recurrence as string) === 'HOURLY') {
     throw invalid('Attendance cannot repeat hourly.', 'recurrence');
@@ -2848,21 +2826,6 @@ function assertValidConfig(
     throw invalid('Use 150 characters or fewer.', 'name');
   }
   assertValidSchedule({ ...config, interval_hours: null, last_run_time: null });
-
-  const taken = attendanceState().configs.some(
-    (other) =>
-      other.tenant_id === tenantId &&
-      other.outlet_id === outletId &&
-      other.id !== exceptId &&
-      !other.is_archived &&
-      other.name.toLowerCase() === config.name.trim().toLowerCase(),
-  );
-  if (taken) {
-    throw invalid(
-      'This name is already used for another session at this outlet.',
-      'name',
-    );
-  }
 }
 
 /** GET /attendance/configs — ADMIN/OWNER see every outlet's; a manager the ones they manage. */
@@ -2903,7 +2866,7 @@ export async function mockCreateAttendanceConfig(
     weekdays: request.weekdays ?? null,
     day_of_month: request.day_of_month ?? null,
   };
-  assertValidConfig(schedule, request.outlet_id, actor.me.business.id);
+  assertValidConfig(schedule);
 
   const state = attendanceState();
   const config: DbAttendanceConfig = {
@@ -2955,7 +2918,7 @@ export async function mockUpdateAttendanceConfig(
     weekdays: weekdays && [...new Set(weekdays)].sort(),
     day_of_month: dayOfMonth,
   };
-  assertValidConfig(next, config.outlet_id, config.tenant_id, config.id);
+  assertValidConfig(next);
   Object.assign(config, next);
   return toConfig(config);
 }

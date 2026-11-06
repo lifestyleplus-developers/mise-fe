@@ -30,7 +30,7 @@ Exactly 28, in mockup order. "Reach it with" names the sign-in that shows the st
 17. ~~noRemove~~ — **Not reachable.** A fallback for an API with no way to remove a manager; the platform has one.
 18. **saving** — a spinner in Save, the form locked. _Save._
 19. **saveFailed** — "Couldn't save. Can't reach mise.", the form kept. _Name it "offline"._
-20. **serverError** — the platform's message above the fields. _Name it like another session at the outlet ("Morning")._
+20. **serverError** — the platform's message above the fields. _The platform has no rule on a repeated name, so this is for any other refusal, e.g. a window that overlaps the next period._
 21. **roleLost** — a save answered 403: "Only Owners and Administrators can change attendance sessions.", the editor read-only, no Save. _Save after being demoted._
 22. **discard** — Back with changes asks "Discard changes?". _Edit, then Back._
 23. **loading** — skeleton cards (list) or a skeleton form (editor).

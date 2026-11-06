@@ -164,6 +164,18 @@ import type {
 import { loginRequest, logoutRequest } from './auth-api';
 import { ApiError, request as call, requestAll, USE_REAL_API } from './http';
 
+/**
+ * The platform records the first mark as a change too (`UNMARKED` to a status).
+ * It is not a correction: the row would show "Not marked → Present" and lose its
+ * "who and when" line. Keep only real corrections, as the mock does.
+ */
+function withoutFirstMark(mark: AttendanceMark): AttendanceMark {
+  return {
+    ...mark,
+    changes: mark.changes.filter((change) => change.from_status !== 'UNMARKED'),
+  };
+}
+
 export { ApiError };
 
 /**
@@ -628,7 +640,12 @@ export const api = {
     /** GET /attendance/sessions/{id} — with the roster snapshot. */
     session(id: number): Promise<AttendanceSessionDetail> {
       return USE_REAL_API
-        ? call<AttendanceSessionDetail>(`/attendance/sessions/${id}`)
+        ? call<AttendanceSessionDetail>(`/attendance/sessions/${id}`).then(
+            (detail) => ({
+              ...detail,
+              marks: detail.marks.map(withoutFirstMark),
+            }),
+          )
         : mockGetAttendanceSession(id);
     },
 
@@ -638,7 +655,7 @@ export const api = {
         ? call<AttendanceMark>(`/attendance/marks/${id}`, {
             method: 'PATCH',
             body: request,
-          })
+          }).then(withoutFirstMark)
         : mockMarkPerson(id, request);
     },
   },
