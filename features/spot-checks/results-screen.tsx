@@ -122,11 +122,13 @@ export function ResultsScreen() {
                   }),
                   t,
                 )
-              : format(t('spot.tally'), {
-                  passed: String(tally!.passed),
-                  failed: String(tally!.failed),
-                  review: String(tally!.review),
-                })}
+              : tally!.pending > 0
+                ? t('spot.assessing')
+                : format(t('spot.tally'), {
+                    passed: String(tally!.passed),
+                    failed: String(tally!.failed),
+                    review: String(tally!.review),
+                  })}
         </Text>
       </Pressable>
     );

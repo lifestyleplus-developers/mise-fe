@@ -30,6 +30,19 @@ export type RunFilters = {
   outcome?: SpotCheckOutcome;
 };
 
+/** Whether any run on the pages read so far still has a result being assessed. */
+function listHasPending(data: InfiniteData<Page<SpotCheckRun>> | undefined) {
+  return (
+    data?.pages.some((page) =>
+      page.results.some((run) =>
+        (run.results ?? []).some(
+          (result) => result.outcome === 'PENDING_JUDGEMENT',
+        ),
+      ),
+    ) ?? false
+  );
+}
+
 /**
  * Runs, 25 at a time. Revealed and scheduled lists are read again every few seconds,
  * so a scheduled check turns into a revealed one without a pull to refresh.
@@ -47,7 +60,9 @@ export function useSpotCheckRuns(filters: RunFilters, enabled = true) {
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     placeholderData: keepPreviousData,
-    refetchInterval: watch ? WATCH_MS : false,
+    // A run waiting on its assessment is read again until the outcomes are in.
+    refetchInterval: (query) =>
+      watch || listHasPending(query.state.data) ? WATCH_MS : false,
     retry: retryTransient,
     enabled,
   });
