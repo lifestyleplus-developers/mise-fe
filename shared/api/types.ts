@@ -644,9 +644,8 @@ export type RecordMovementRequest = {
 };
 
 /**
- * The movement log across an outlet's items, newest first. The contract has the
- * ledger per item only; INV-03 filters by item, so `itemId` is optional here and
- * the real endpoint will need an outlet-wide form. `from`/`to` are dates.
+ * The movement log across an outlet's items, newest first: GET /inventory/movements
+ * (outlet-wide) or, with an `itemId`, the item's own ledger. `from`/`to` are dates.
  */
 export type InventoryMovementsQuery = {
   page: number;
@@ -659,7 +658,7 @@ export type InventoryMovementsQuery = {
 
 /**
  * The three report shapes are not in the API Contract yet; they follow the
- * mockup (INV-04) and move when Lifestyle's endpoints land.
+ * mockup (INV-04), and the platform returns them as written here.
  */
 export type StockOnHandReport = {
   outlet_id: number;
@@ -711,8 +710,8 @@ export type StockReportQuery = {
 };
 
 /**
- * Someone who records stock at an outlet. API Contract §12 has no endpoint for
- * appointing them yet, so this shape belongs to the mock until Lifestyle adds one.
+ * Someone who records stock at an outlet: GET, POST and DELETE /inventory/managers.
+ * Not in API Contract §12 yet; the platform returns this shape.
  */
 export type InventoryManager = {
   id: number;

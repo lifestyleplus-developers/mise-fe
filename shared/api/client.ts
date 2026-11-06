@@ -699,15 +699,23 @@ export const api = {
     },
 
     /**
-     * GET /inventory/items/{id}/movements. The outlet-wide log (no `itemId`) has
-     * no endpoint in the contract yet, so against the platform it is not built.
+     * GET /inventory/items/{id}/movements, or without an `itemId` the outlet-wide
+     * log, GET /inventory/movements?outlet_id=. Both newest first.
      */
     movements(
       query: InventoryMovementsQuery,
     ): Promise<Page<InventoryMovement>> {
       if (!USE_REAL_API) return mockListInventoryMovements(query);
       if (query.itemId === undefined) {
-        return notBuilt('GET /inventory/movements');
+        return call<Page<InventoryMovement>>('/inventory/movements', {
+          query: {
+            outlet_id: query.outletId,
+            from: query.from,
+            to: query.to,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        });
       }
       return call<Page<InventoryMovement>>(
         `/inventory/items/${query.itemId}/movements`,
@@ -735,24 +743,32 @@ export const api = {
         : mockRecordInventoryMovement(itemId, request);
     },
 
-    /** Inventory Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    /** GET /inventory/managers?outlet_id= — Inventory Managers of an outlet. */
     managers(outletId: number): Promise<InventoryManager[]> {
       return USE_REAL_API
-        ? notBuilt('GET /inventory/managers')
+        ? requestAll<InventoryManager>('/inventory/managers', {
+            outlet_id: outletId,
+          })
         : mockListInventoryManagers(outletId);
     },
 
-    /** Appoint an Inventory Manager. No endpoint yet. */
+    /** POST /inventory/managers — appoint an Inventory Manager. */
     appointManager(outletId: number, userId: number): Promise<void> {
       return USE_REAL_API
-        ? notBuilt('POST /inventory/managers')
+        ? call<InventoryManager>('/inventory/managers', {
+            method: 'POST',
+            body: { outlet_id: outletId, user_id: userId },
+          }).then(() => undefined)
         : mockAppointInventoryManager(outletId, userId);
     },
 
-    /** Remove an Inventory Manager. No endpoint yet. */
+    /** DELETE /inventory/managers/{user_id}?outlet_id= — remove one. */
     removeManager(outletId: number, userId: number): Promise<void> {
       return USE_REAL_API
-        ? notBuilt('DELETE /inventory/managers')
+        ? call<void>(`/inventory/managers/${userId}`, {
+            method: 'DELETE',
+            query: { outlet_id: outletId },
+          })
         : mockRemoveInventoryManager(outletId, userId);
     },
 
