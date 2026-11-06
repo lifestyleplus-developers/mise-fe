@@ -122,6 +122,7 @@ import type {
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
+import { DEFAULT_WEIGHT } from '@/shared/constants/weight';
 import {
   HOURLY_INTERVALS,
   MIN_WINDOW_MINUTES,
@@ -1000,7 +1001,7 @@ function buildTasks(
       unit: task.unit ?? null,
       min_value: task.min ?? null,
       max_value: task.max ?? null,
-      weight: 5,
+      weight: DEFAULT_WEIGHT,
       requires_comment_on_fail: task.type !== 'IMAGE',
       answer_number: answer?.n ?? null,
       answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
@@ -1140,7 +1141,7 @@ function seedChecklistState(): ChecklistState {
         min_value: template.min ?? null,
         max_value: template.max ?? null,
         requires_comment_on_fail: template.type !== 'IMAGE',
-        weight: 5,
+        weight: DEFAULT_WEIGHT,
         is_archived: false,
       });
     });
@@ -1582,7 +1583,7 @@ export async function mockCreateTask(
     unit: request.unit ?? null,
     min_value: request.min_value ?? null,
     max_value: request.max_value ?? null,
-    weight: request.weight ?? 5,
+    weight: request.weight ?? DEFAULT_WEIGHT,
     // A failed Yes/No or reading always needs a comment; a photograph takes none.
     requires_comment_on_fail: request.answer_type !== 'IMAGE',
   };
@@ -5028,7 +5029,7 @@ export async function mockAddSpotCheckAssertion(
   const assertion: SpotCheckAssertion = {
     position: check.assertions.length + 1,
     text: request.text.trim(),
-    weight: request.weight ?? 5,
+    weight: request.weight ?? DEFAULT_WEIGHT,
     is_archived: false,
   };
   check.assertions.push(assertion);

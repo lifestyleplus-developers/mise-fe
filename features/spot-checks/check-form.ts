@@ -4,6 +4,7 @@ import type {
   SpotCheckRecurrence,
   SpotCheckSubjectType,
 } from '@/shared/api/types';
+import { DEFAULT_WEIGHT } from '@/shared/constants/weight';
 
 /** The window a check can have, in minutes (Spot Checks §2), changed in steps of five. */
 export const MIN_REVEAL_WINDOW = 15;
@@ -39,7 +40,7 @@ export type CheckForm = {
   items: DraftRow[];
 };
 
-export const DEFAULT_WEIGHT = 5;
+export { DEFAULT_WEIGHT };
 
 export const EMPTY_CHECK_FORM: CheckForm = {
   name: '',
