@@ -54,10 +54,14 @@ export function RunPage({ runId, backHref = '/modules' }: RunPageProps) {
   const t = useT();
   const router = useRouter();
   const query = useSpotCheckRun(runId);
+  // The query's own function keeps its identity between renders; a new arrow each
+  // time would re-run any effect that depends on it.
+  const { refetch: refetchRun } = query;
+  const refetch = React.useCallback(() => void refetchRun(), [refetchRun]);
   const outlets = useSpotCheckOutlets();
   const setModulesNotice = useModulesNotice((state) => state.setNotice);
   const { data: me } = useMe();
-  const pull = usePullToRefresh(() => void query.refetch());
+  const pull = usePullToRefresh(refetch);
 
   const status = query.error instanceof ApiError ? query.error.status : null;
   const moduleOff = status === 404;
@@ -96,7 +100,7 @@ export function RunPage({ runId, backHref = '/modules' }: RunPageProps) {
             <RetryBanner
               message={t('common.offline')}
               retryLabel={t('common.retry')}
-              onRetry={() => void query.refetch()}
+              onRetry={refetch}
               retrying={query.isRefetching}
             />
           )
@@ -114,7 +118,7 @@ export function RunPage({ runId, backHref = '/modules' }: RunPageProps) {
       userId={me?.user.id}
       refetching={query.isRefetching}
       failed={query.isError}
-      refetch={() => void query.refetch()}
+      refetch={refetch}
       frame={frame}
     />
   );
@@ -150,9 +154,15 @@ function RunBody({
   // The clock reached the close before the platform said so: ask it.
   const closed = run.status === 'FINALIZED' || countdown.closed;
   const closedByClock = countdown.closed && run.status !== 'FINALIZED';
+  // Once per run: if the platform is a little late to say so, the run is re-read
+  // every 15 seconds anyway (`useSpotCheckRun`), so this only speeds up the usual
+  // case. Asking again on every reply would be a request loop.
+  const askedAboutClose = React.useRef<number | null>(null);
   React.useEffect(() => {
-    if (closedByClock) refetch();
-  }, [closedByClock, refetch]);
+    if (!closedByClock || askedAboutClose.current === run.id) return;
+    askedAboutClose.current = run.id;
+    refetch();
+  }, [closedByClock, run.id, refetch]);
 
   // The window ended while the camera or the preview was up: nothing taken now is
   // accepted, so close it and show the closed card.
