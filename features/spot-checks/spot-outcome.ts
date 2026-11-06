@@ -1,3 +1,4 @@
+import { effectiveOutcome } from '@/shared/lib/spot-outcome';
 import type {
   SpotCheckCompletion,
   SpotCheckOutcome,
@@ -16,16 +17,7 @@ export function subjectName(run: SpotCheckRun): string {
 /** What the badge can say: the four outcomes, and "Not done" for a run that never got photos. */
 export type OutcomeKind = SpotCheckOutcome | 'NOT_DONE';
 
-/**
- * Where a result stands for scoring and for "does this need a person": the override
- * if there is one, otherwise what the assessment said. The assessment's own answer
- * is never replaced; it stays on the row beside the override (FE Spec §3.11).
- */
-export function effectiveOutcome(
-  result: Pick<SpotCheckResult, 'outcome' | 'overridden_to'>,
-): SpotCheckOutcome {
-  return result.overridden_to ?? result.outcome;
-}
+export { effectiveOutcome };
 
 /** A result still waiting on a person: needs review and no override yet. */
 export function isReviewItem(

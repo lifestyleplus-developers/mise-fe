@@ -129,6 +129,7 @@ import {
   windowOverlapsNextRun,
 } from '@/shared/lib/schedule';
 import { ApiError } from '@/shared/api/http';
+import { effectiveOutcome } from '@/shared/lib/spot-outcome';
 
 import attendanceFixtures from './fixtures/attendance.json';
 import businesses from './fixtures/businesses.json';
@@ -4499,15 +4500,6 @@ function seedSpotCheckState(): SpotCheckState {
   );
 
   return state;
-}
-
-/** A result that is still a failure after any override. */
-function effectiveOutcome(
-  result: DbSpotResult,
-): Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'> {
-  return result.overridden_to && result.overridden_to !== 'PENDING_JUDGEMENT'
-    ? result.overridden_to
-    : result.outcome;
 }
 
 function hasLiveFail(run: DbSpotRun): boolean {
