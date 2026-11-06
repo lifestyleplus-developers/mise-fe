@@ -123,32 +123,48 @@ export function withEligible(
   };
 }
 
+/** What one area's switch reads in a cached list, if the list has the area. */
+export function eligibleIn(
+  data: CachedAreas | undefined,
+  id: number,
+): boolean | undefined {
+  if (!data) return undefined;
+  const areas = Array.isArray(data)
+    ? data
+    : data.pages.flatMap((page) => page.results);
+  return areas.find((area) => area.id === id)?.is_eligible;
+}
+
 /**
  * The switch on a row: it moves at once, and if the save fails it is put back
  * (SPT-06 `switchFailed`). The mutation's `error` stays set for the line under the row.
  */
 export function useSetAreaEligible() {
   const queryClient = useQueryClient();
-  type Lists = [readonly unknown[], CachedAreas | undefined][];
-  return useMutation<Area, Error, EligibleVariables, { previous: Lists }>({
+  return useMutation<Area, Error, EligibleVariables, { was?: boolean }>({
     mutationFn: ({ id, is_eligible }) =>
       api.spotChecks.updateArea(id, { is_eligible }),
     networkMode: 'always',
     onMutate: async ({ id, is_eligible }) => {
       await queryClient.cancelQueries({ queryKey: spotCheckKeys.areaLists });
-      const previous = queryClient.getQueriesData<CachedAreas>({
-        queryKey: spotCheckKeys.areaLists,
-      });
+      // What this one row read before, so a failure puts back this row alone.
+      const was = queryClient
+        .getQueriesData<CachedAreas>({ queryKey: spotCheckKeys.areaLists })
+        .map(([, data]) => eligibleIn(data, id))
+        .find((value) => value !== undefined);
       queryClient.setQueriesData<CachedAreas>(
         { queryKey: spotCheckKeys.areaLists },
         (data) => withEligible(data, id, is_eligible),
       );
-      return { previous };
+      return { was };
     },
-    onError: (_error, _variables, context) => {
-      for (const [key, data] of context?.previous ?? []) {
-        queryClient.setQueryData(key, data);
-      }
+    onError: (_error, { id }, context) => {
+      if (context?.was === undefined) return;
+      const was = context.was;
+      queryClient.setQueriesData<CachedAreas>(
+        { queryKey: spotCheckKeys.areaLists },
+        (data) => withEligible(data, id, was),
+      );
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: spotCheckKeys.areaLists });
