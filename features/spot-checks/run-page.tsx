@@ -28,6 +28,7 @@ import {
   waitingCount,
 } from './capture-view';
 import { CaptureSheet } from './capture-sheet';
+import { closedLine } from './closed-line';
 import { CountdownRing } from './countdown-ring';
 import { PromptRow } from './prompt-row';
 import { promptState, type PromptState } from './prompt-state';
@@ -309,14 +310,7 @@ function RunBody({
             })}
           </Text>
           <Text className="mt-1.5 text-[15px] leading-snug">
-            {summary.kind === 'none'
-              ? t('spot.closed-none')
-              : summary.kind === 'partial'
-                ? format(t('spot.closed-partial'), {
-                    n: String(summary.sent),
-                    total: String(summary.total),
-                  })
-                : t('spot.closed-done')}
+            {closedLine(summary, t)}
           </Text>
         </View>
       )}

@@ -219,5 +219,22 @@
       "spot_check_outlets": [3, 5]
     },
     "is_active": true
+  },
+  {
+    "id": 18,
+    "tenant_id": 7,
+    "username": "basic",
+    "password": "1234",
+    "full_name": "Basil Varghese",
+    "tenant_role": "ADMIN",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
   }
 ]

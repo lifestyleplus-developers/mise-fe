@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 
 import { usePhotoOutbox } from '@/features/spot-checks/photo-outbox';
+import { usePlatformLimits } from '@/features/spot-checks/platform-limits';
 import { api } from '@/shared/api/client';
 import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 
@@ -18,5 +19,7 @@ export function useSignOut() {
     dropSessionCache();
     // Spot-check photographs not yet in storage do not outlive the session either.
     usePhotoOutbox.setState({ drafts: [] });
+    // What this session learned about the platform does not carry to the next.
+    usePlatformLimits.getState().reset();
   };
 }

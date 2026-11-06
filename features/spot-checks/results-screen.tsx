@@ -21,6 +21,8 @@ import { ListChecks } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
+import { closedSummary, sentCount } from './capture-view';
+import { closedLine } from './closed-line';
 import { spotCheckResultsHref } from './links';
 import { SpotCheckLinks } from './spot-check-links';
 import { subjectName, tallyResults } from './spot-outcome';
@@ -112,7 +114,14 @@ export function ResultsScreen() {
           {ownOnly
             ? t('spot.own-only')
             : run.completion === 'NOT_DONE'
-              ? t('spot.closed-none')
+              ? closedLine(
+                  closedSummary({
+                    completion: run.completion,
+                    sent: sentCount(run.captures ?? []),
+                    total: run.captures?.length ?? 0,
+                  }),
+                  t,
+                )
               : format(t('spot.tally'), {
                   passed: String(tally!.passed),
                   failed: String(tally!.failed),

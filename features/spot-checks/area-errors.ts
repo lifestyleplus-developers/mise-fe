@@ -22,3 +22,15 @@ export function classifyAreaError(error: unknown): AreaFailure {
 export function areaMessage(error: unknown): string | null {
   return error instanceof ApiError ? error.body.error.message : null;
 }
+
+/**
+ * The platform will not list archived areas (SPT-06 `archivedFallback`): the answer
+ * to asking for them.
+ */
+export function isArchivedUnsupported(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 400 &&
+    error.body.error.code === 'archived_not_listed'
+  );
+}

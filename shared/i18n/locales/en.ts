@@ -827,6 +827,11 @@ export const en = {
   'spot.add-manager': 'Add manager',
   'spot.already-manager': 'Already a Spot-check Manager here',
   'spot.not-wired': "This can't be saved yet.",
+  'spot.partial-fallback':
+    'Closed · Not done. {n} of {total} photos were taken.',
+  'spot.item-fallback':
+    'To change this list, archive the check and create a new one.',
+  'spot.after-close': "Results can't be changed after the window closes.",
   'spot.remove': 'Remove',
   'spot.empty-checks': 'No spot checks yet.',
   'spot.apply-next':

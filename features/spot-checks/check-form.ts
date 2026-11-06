@@ -151,6 +151,14 @@ export function toCheckRequest(
   };
 }
 
+/** A save request without the prompts and items, for a platform that will not change them. */
+export function withoutLists(
+  request: Omit<CreateSpotCheckRequest, 'outlet_id'>,
+): Omit<CreateSpotCheckRequest, 'outlet_id' | 'captures' | 'assertions'> {
+  const { captures: _captures, assertions: _assertions, ...own } = request;
+  return own;
+}
+
 /**
  * The form with nothing that only identifies a row, for comparing "as loaded" with
  * "as it stands now" (`useUnsavedChanges`): same shape, same order, no keys.

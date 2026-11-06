@@ -885,6 +885,9 @@ export const hi = {
   'cam.use-photo': 'यह फ़ोटो रखें',
   'cam.torch-on': 'टॉर्च चालू',
   'cam.torch-off': 'टॉर्च बंद',
+  'spot.partial-fallback': 'बंद · नहीं हुआ। {total} में से {n} फ़ोटो ली गईं।',
+  'spot.item-fallback': 'यह सूची बदलने के लिए चेक संग्रहीत करें और नया बनाएँ।',
+  'spot.after-close': 'समय बंद होने के बाद नतीजे नहीं बदले जा सकते।',
   'cam.save-failed': 'फ़ोटो सेव नहीं हो सकी। जगह खाली करें और फिर कोशिश करें।',
 
   'spot.filter-all': 'सभी',

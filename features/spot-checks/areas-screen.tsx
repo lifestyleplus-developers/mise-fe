@@ -22,7 +22,8 @@ import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
 import { AreaSheet } from './area-sheet';
-import { classifyAreaError } from './area-errors';
+import { classifyAreaError, isArchivedUnsupported } from './area-errors';
+import { usePlatformLimit, usePlatformLimits } from './platform-limits';
 import { useAllAreas, useAreas, useSetAreaEligible } from './use-areas';
 import { useSpotCheckOutlets } from './use-spot-check-outlets';
 
@@ -102,10 +103,18 @@ export function AreasScreen() {
   // A write came back 403: read-only from here, as the platform now sees it.
   const [roleLost, setRoleLost] = React.useState(false);
 
+  // A platform that will not list archived areas (SPT-06 `archivedFallback`) is
+  // asked once, and not again: there is then nothing archived to show.
+  const noArchived = usePlatformLimit('archivedAreas');
+  const learn = usePlatformLimits((state) => state.learn);
   const query = useAreas(
-    { outletId: outlet?.id, includeArchived: true },
+    { outletId: outlet?.id, includeArchived: !noArchived },
     outlet !== undefined,
   );
+  const archivedRefused = isArchivedUnsupported(query.error);
+  React.useEffect(() => {
+    if (archivedRefused) learn('archivedAreas');
+  }, [archivedRefused, learn]);
   // Every live area, whatever has been scrolled to: "none can be picked" must be true.
   const live = useAllAreas(outlet?.id);
   const setEligible = useSetAreaEligible();
@@ -133,7 +142,11 @@ export function AreasScreen() {
   const archived = all.filter((area) => area.is_archived);
   const loading =
     outlets.isPending || (query.isPending && outlet !== undefined);
-  const failed = (query.isError || outlets.isError) && !forbidden && !moduleOff;
+  const failed =
+    (query.isError || outlets.isError) &&
+    !forbidden &&
+    !moduleOff &&
+    !archivedRefused;
   const multiOutlet = outlets.outlets.length > 1;
   const noneEligible =
     live.isSuccess &&

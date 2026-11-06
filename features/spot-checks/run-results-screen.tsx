@@ -22,6 +22,8 @@ import { PhotoTile } from './photo-tile';
 import { ResultRow } from './result-row';
 import { SpotCheckLinks } from './spot-check-links';
 import { closedSummary } from './capture-view';
+import { closedLine } from './closed-line';
+import { usePlatformLimit } from './platform-limits';
 import { subjectName } from './spot-outcome';
 import { useSpotCheckOutlets } from './use-spot-check-outlets';
 import { useSpotCheckRun } from './use-spot-check-runs';
@@ -103,6 +105,8 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
   const { data: me } = useMe();
   const pull = usePullToRefresh(() => void query.refetch());
   const [opening, setOpening] = React.useState<SpotCheckResult | null>(null);
+  // The platform has said it takes no override after the close: no row opens.
+  const noOverride = usePlatformLimit('overrideAfterClose');
 
   const status = query.error instanceof ApiError ? query.error.status : null;
   const moduleOff = status === 404;
@@ -180,14 +184,7 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
           {format(t('spot.closed-at'), { time: time(run.window_close) })}
         </Text>
         <Text className="mt-1.5 text-[15px] leading-snug">
-          {summary.kind === 'none'
-            ? t('spot.closed-none')
-            : summary.kind === 'partial'
-              ? format(t('spot.closed-partial'), {
-                  n: String(summary.sent),
-                  total: String(summary.total),
-                })
-              : t('spot.closed-done')}
+          {closedLine(summary, t)}
         </Text>
       </View>
 
@@ -219,7 +216,7 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
               result={result}
               first={index === 0}
               onOpen={
-                result.outcome === 'PENDING_JUDGEMENT'
+                result.outcome === 'PENDING_JUDGEMENT' || noOverride
                   ? undefined
                   : () => setOpening(result)
               }

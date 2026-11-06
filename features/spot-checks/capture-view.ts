@@ -40,7 +40,9 @@ export function landingKind({
 export type ClosedSummary =
   | { kind: 'done' }
   | { kind: 'none' }
-  | { kind: 'partial'; sent: number; total: number };
+  | { kind: 'partial'; sent: number; total: number }
+  // A platform that records a partial capture as not done (SPT-01 `partialFallback`).
+  | { kind: 'partialFallback'; sent: number; total: number };
 
 /**
  * How a closed run ended, in the card's words. The platform's own answer
@@ -55,7 +57,11 @@ export function closedSummary(input: {
   const { completion, sent, total } = input;
   const by =
     completion ?? (sent === 0 ? 'NOT_DONE' : sent < total ? 'PARTIAL' : 'DONE');
-  if (by === 'NOT_DONE') return { kind: 'none' };
+  if (by === 'NOT_DONE') {
+    return sent > 0
+      ? { kind: 'partialFallback', sent, total }
+      : { kind: 'none' };
+  }
   if (by === 'PARTIAL') return { kind: 'partial', sent, total };
   return { kind: 'done' };
 }

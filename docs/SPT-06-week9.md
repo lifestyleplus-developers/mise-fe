@@ -24,12 +24,12 @@ Exactly 18, in mockup order. "Reach it with" names the sign-in that shows the st
 10. **empty** — "No areas yet. Add the parts of this outlet you want inspected." with Add area. _Archive every area at an outlet, or switch spot checks on for an outlet with none (Outlets, then Central Kitchen)._
 11. **loading** — skeleton rows.
 12. **loadFailed** — Retry above; the areas already loaded stay, with "Showing the last list". _Open the screen offline; pull to refresh once loaded._
-13. **roleLost** — "Only head office can change areas." and no Add area, the switches off and the names not editable. _A 403 on any write does it; the mock has no way to take the role away mid-session._
+13. **roleLost** — "Only head office can change areas." and no Add area, the switches off and the names not editable. _raheem: Add area, name it `revoked` and Save (or rename an area to `revoked`). The write answers 403 and the screen turns read-only._
 14. **moduleOff** — back to Modules with "Spot checks aren't turned on for {business}." _A 404, or switch spot checks off for every outlet._
 15. **singleOutlet** — no outlet chip, the eyebrow reads just "Spot checks". _Switch spot checks off at Elegance in Outlets: ZamZam is then the only one._
 16. **long** — a 40-character name and a Malayalam name wrap. _Elegance._
 17. **many** — 30 areas, 25 at a time, the rest as the list scrolls. _Elegance._
-18. ~~archivedFallback~~ — **Not reachable.** Fallback for a platform that cannot list archived areas, with no Show archived link. The mock lists them, so the link is always there.
+18. **archivedFallback** — a platform that cannot list archived areas: no Show archived link, even where an area was archived. _Sign in as `basic` (password 1234, an Administrator on a platform with limits): Areas at ZamZam shows no Show archived link, where raheem sees it for Old bar. The app asks for archived areas once, is refused (400), and stops asking for the rest of the session._
 
 ## What the states pin down
 

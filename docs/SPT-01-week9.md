@@ -32,8 +32,8 @@ Exactly 35, in mockup order. "Reach it with" names the sign-in that shows the st
 18. **closedNone** — "Not done. The window closed before any photo was taken." _Let a window close with nothing taken. There is no retry._
 19. **closedPartial** — "{n} of {total} photos · assessed on these". _Let it close with some taken._
 20. **lateRefused** — a photograph sent after the close: "Window closed. This photo was not recorded. It will show as missed." on its prompt. _Take a photo offline (14), let the window close, go back online._
-21. ~~partialFallback~~ — **Not reachable.** Fallback for a platform that records a partial capture as not done. The mock assesses on the photographs sent (19).
-22. ~~retakeFallback~~ — **Not reachable.** Fallback for a platform that keeps only the latest photograph. The mock keeps both (15).
+21. **partialFallback** — a platform that records a partial capture as not done: "Closed · Not done. 2 of 3 photos were taken." instead of "assessed on these". _Sign in as `basic`, open its run "Grooming — kitchen", take photos 1 and 2, leave 3 and wait for the window to close (about 19 minutes; reload to restart the clock). In Results, the earlier two-of-three run (Imran) shows the same line, with no outcomes._
+22. **retakeFallback** — a platform that keeps only the latest photograph: the prompt shows the new photograph with its time and no "Replaced" line. _Sign in as `basic`, open its run "Grooming — kitchen", take photo 1, then Retake it. In Results, the retaken run (Lakshmi, run 10) shows one photograph on prompt 2._
 23. **scheduled** — before the reveal: "{check name} · scheduled" in a dashed card, with **no subject and no time**. _reshma, after the first two checks close (about 18 minutes in) and before the third reveals (at 60)._
 24. **empty** — "No spot check right now." _arun at 20 minutes in (nothing is open or scheduled for him), or anyone once the day's checks are done._
 25. **noChecks** — "No spot checks are set up at this outlet yet." with a Checks link. _Head office, after archiving every check (SPT-05)._
@@ -41,7 +41,7 @@ Exactly 35, in mockup order. "Reach it with" names the sign-in that shows the st
 27. **area** — an area check: the area's name as the title, two prompts. _reshma: Cold room (Food areas — hygiene), after it reveals at 3 minutes._
 28. **loading** — skeleton rows.
 29. **loadFailed** — Retry above; the prompts already loaded stay. _Open the screen offline; pull to refresh once loaded._
-30. **roleLost** — "You can't take photos for this check.", no Take photo. _A 403 on a photograph does it; the mock cannot take the role away mid-session._
+30. **roleLost** — "You can't take photos for this check.", no Take photo. _arun, at the start: open "Role lost test" (Elegance) and take photo 1. Its prompt is `revoked`, so the send answers 403 and the screen turns read-only._
 31. **moduleOff** — back to Modules with "Spot checks aren't turned on for {business}." _A 404, or switch spot checks off for every outlet._
 32. **signOutQueued** — signing out with a photograph not yet sent asks first: "A photo hasn't been sent. 1 photo hasn't been sent yet. If you sign out now it will be lost." Stay signed in / Sign out anyway. _Take a photo offline (14), then Settings → Sign out._
 33. **long** — a 41-character check name, a 120-character prompt. _arun, at the start: Grooming — front of house, evening service._

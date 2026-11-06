@@ -9,6 +9,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 
 import { classifyOverrideError, overrideMessage } from './results-errors';
+import { usePlatformLimits } from './platform-limits';
 import { useOverrideSpotCheckResult } from './use-spot-check-runs';
 
 type OverridableOutcome = Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'>;
@@ -43,6 +44,11 @@ export function OverrideSheet({ runId, result, onClose }: OverrideSheetProps) {
 
   const canSave = note.trim().length > 0 && !override.isPending;
   const failure = override.error ? classifyOverrideError(override.error) : null;
+  const learn = usePlatformLimits((state) => state.learn);
+  // Once told, the rows stop offering an override at all.
+  React.useEffect(() => {
+    if (failure === 'closed') learn('overrideAfterClose');
+  }, [failure, learn]);
 
   function close() {
     override.reset();
@@ -115,7 +121,9 @@ export function OverrideSheet({ runId, result, onClose }: OverrideSheetProps) {
         ) : null}
       </View>
 
-      {failure === 'refused' || failure === 'rejected' ? (
+      {failure === 'closed' ? (
+        <Banner tone="error" message={t('spot.after-close')} />
+      ) : failure === 'refused' || failure === 'rejected' ? (
         <Banner tone="error" message={overrideMessage(override.error) ?? ''} />
       ) : failure === 'failed' ? (
         <Banner

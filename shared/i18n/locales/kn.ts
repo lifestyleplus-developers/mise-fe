@@ -891,6 +891,10 @@ export const kn = {
   'cam.use-photo': 'ಈ ಫೋಟೋ ಬಳಸಿ',
   'cam.torch-on': 'ಟಾರ್ಚ್ ಆನ್',
   'cam.torch-off': 'ಟಾರ್ಚ್ ಆಫ್',
+  'spot.partial-fallback':
+    'ಮುಚ್ಚಲಾಗಿದೆ · ಆಗಿಲ್ಲ. {total}ರಲ್ಲಿ {n} ಫೋಟೋ ತೆಗೆಯಲಾಗಿದೆ.',
+  'spot.item-fallback': 'ಈ ಪಟ್ಟಿ ಬದಲಿಸಲು ಚೆಕ್ ಆರ್ಕೈವ್ ಮಾಡಿ ಹೊಸದು ರಚಿಸಿ.',
+  'spot.after-close': 'ಸಮಯ ಮುಚ್ಚಿದ ನಂತರ ಫಲಿತಾಂಶಗಳನ್ನು ಬದಲಿಸಲಾಗದು.',
   'cam.save-failed': 'ಫೋಟೋ ಉಳಿಸಲಾಗಲಿಲ್ಲ. ಜಾಗ ಖಾಲಿ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
 
   'spot.filter-all': 'ಎಲ್ಲಾ',

@@ -37,14 +37,17 @@ import {
   normalizeCheckForm,
   stepWindow,
   toCheckRequest,
+  withoutLists,
   type CheckForm,
   type DraftRow,
 } from './check-form';
 import {
   checkMessage,
   classifyCheckError,
+  isListLocked,
   type CheckFailure,
 } from './check-errors';
+import { usePlatformLimit, usePlatformLimits } from './platform-limits';
 import {
   CheckRowList,
   RowEditSheet,
@@ -184,6 +187,11 @@ function EditorForm({
 
   const create = useCreateSpotCheck();
   const update = useUpdateSpotCheck(check?.id ?? 0);
+  // A platform that will not change the prompts or items of a check that exists
+  // (SPT-05 `itemFallback`): they read as they are, and Save sends the rest.
+  const listEditLimited = usePlatformLimit('listEdit');
+  const learn = usePlatformLimits((state) => state.learn);
+  const listsLocked = !isNew && listEditLimited;
   const saving = create.isPending || update.isPending;
 
   const guard = useUnsavedChanges({
@@ -230,9 +238,24 @@ function EditorForm({
         { ...request, outlet_id: outletId },
         { onError, onSuccess: () => guard.leave(leave) },
       );
+    } else if (listsLocked) {
+      update.mutate(withoutLists(request), {
+        onError,
+        onSuccess: () => guard.leave(leave),
+      });
     } else {
       update.mutate(request, {
-        onError,
+        onError: (error) => {
+          if (!isListLocked(error)) return onError(error);
+          // Told the list cannot change: put it back as it was, keep every other
+          // edit, and say so. Save then sends only what the platform will take.
+          learn('listEdit');
+          setForm((current) => ({
+            ...current,
+            prompts: initial.prompts,
+            items: initial.items,
+          }));
+        },
         onSuccess: () => guard.leave(leave),
       });
     }
@@ -475,18 +498,22 @@ function EditorForm({
         </View>
       </View>
 
+      {listsLocked ? (
+        <Notice tone="notice" text={t('spot.item-fallback')} />
+      ) : null}
+
       <Section
         title={t('spot.prompts')}
         hint={t('spot.prompts-hint')}
         addLabel={t('spot.add-prompt')}
-        readOnly={disabled}
+        readOnly={disabled || listsLocked}
         onAdd={() => setSheet({ kind: 'prompt', step: 'edit' })}
       >
         <CheckRowList
           rows={prompts}
           kind="prompt"
           onMenu={
-            disabled
+            disabled || listsLocked
               ? undefined
               : (row) => setSheet({ kind: 'prompt', step: 'menu', row })
           }
@@ -497,14 +524,14 @@ function EditorForm({
         title={t('spot.items')}
         hint={t('spot.items-hint')}
         addLabel={t('spot.add-item')}
-        readOnly={disabled}
+        readOnly={disabled || listsLocked}
         onAdd={() => setSheet({ kind: 'item', step: 'edit' })}
       >
         <CheckRowList
           rows={items}
           kind="item"
           onMenu={
-            disabled
+            disabled || listsLocked
               ? undefined
               : (row) => setSheet({ kind: 'item', step: 'menu', row })
           }

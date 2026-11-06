@@ -2098,6 +2098,17 @@ export async function mockAnswerTask(
 /** Runs whose first upload has been refused already, so the retry goes through. */
 const refusedUploadRuns = new Set<number>();
 
+/** A name or prompt of `revoked` stands for the role having been taken away: a 403 on the write. */
+function triggerRevoked(text?: string | null) {
+  if (text !== undefined && text !== null && isPromptTrigger(text, 'revoked')) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Your role no longer allows this.',
+    );
+  }
+}
+
 /** A capture prompt written as a trigger word (`upload`, `slow`, `revoked`), as in Week 8. */
 function isPromptTrigger(prompt: string, word: string): boolean {
   return prompt.trim().toLowerCase() === word;
@@ -3962,6 +3973,17 @@ const SLOW_SEND_MS = 8_000;
 
 const RESHMA = 16;
 const ARUN = 17;
+/**
+ * Signs in as an Administrator on a platform that cannot do several things the
+ * mockup has a fallback for (SPT-01 `partialFallback` and `retakeFallback`, SPT-03
+ * `afterCloseFallback` and `noIssueLink`, SPT-05 `managerNotWired` and
+ * `itemFallback`, SPT-06 `archivedFallback`). Everyone else gets the full platform.
+ */
+const BASIC = 18;
+
+function onBasicPlatform(actor: SpotActor): boolean {
+  return actor.me.user.id === BASIC;
+}
 
 const SPOT_OUTCOMES: SpotCheckOutcome[] = ['PASS', 'FAIL', 'NEEDS_REVIEW'];
 
@@ -4116,11 +4138,13 @@ function seedSpotCheckState(): SpotCheckState {
     ),
     filler(21, LONG_CHECK_NAME, 3, 5, true),
     filler(22, 'Full inspection', 8, 12),
-    // Two small checks for the photograph states that need a trigger prompt:
-    // `upload` (the first upload is refused) and `slow` (the send takes 8 seconds).
+    // Small checks for the photograph states that need a trigger prompt: `upload`
+    // (the first upload is refused), `slow` (the send takes 8 seconds) and `revoked`
+    // (the role is gone: a 403).
     ...[
       [23, 'Upload test', 'upload'],
       [24, 'Slow send test', 'slow'],
+      [25, 'Role lost test', 'revoked'],
     ].map(([id, name, trigger]) => ({
       ...filler(id as number, name as string, 2, 3),
       reveal_window_minutes: 15,
@@ -4456,6 +4480,22 @@ function seedSpotCheckState(): SpotCheckState {
       manager: ARUN,
       reveal: at(-1),
     }),
+    makeRun({
+      id: 84,
+      check: 25,
+      subject: frontStaff[2].id,
+      manager: ARUN,
+      reveal: at(-1),
+    }),
+    // For the basic platform (sign in as `basic`): its own run to take photographs
+    // for, so a partial capture and a retake can be seen the way that platform keeps them.
+    makeRun({
+      id: 90,
+      check: 1,
+      subject: dev,
+      manager: BASIC,
+      reveal: at(-1),
+    }),
   );
 
   return state;
@@ -4612,6 +4652,14 @@ function assertAreaNameFree(area: DbArea, name: string, exceptId?: number) {
 export async function mockListAreas(query: AreasQuery): Promise<Page<Area>> {
   await delay();
   const actor = spotActor();
+  if (query.includeArchived && onBasicPlatform(actor)) {
+    throw apiError(
+      400,
+      'archived_not_listed',
+      'Archived areas cannot be listed.',
+      'include_archived',
+    );
+  }
   const readable = readableSpotOutlets(actor);
   const outletId =
     query.outletId === undefined
@@ -4638,6 +4686,7 @@ export async function mockCreateArea(
   const actor = spotActor();
   requireSpotAuthor(actor);
   triggerFault(request.name);
+  triggerRevoked(request.name);
   const outletId = readableSpotOutlet(actor, request.outlet_id);
   assertAreaName(request.name);
   const state = spotCheckState();
@@ -4667,6 +4716,8 @@ export async function mockUpdateArea(
   // switch and the sheet can be seen failing (SPT-06 `switchFailed`).
   triggerFault(area.name);
   triggerFault(request.name);
+  triggerRevoked(area.name);
+  triggerRevoked(request.name);
   if (
     area.is_archived &&
     (request.is_archived === undefined || request.is_archived)
@@ -4829,6 +4880,7 @@ export async function mockCreateSpotCheck(
   const actor = spotActor();
   requireSpotAuthor(actor);
   triggerFault(request.name);
+  triggerRevoked(request.name);
   const outletId = readableSpotOutlet(actor, request.outlet_id);
   assertValidSpotCheck(request);
   const lists = checkedLists(request);
@@ -4858,6 +4910,20 @@ export async function mockUpdateSpotCheck(
   requireSpotAuthor(actor);
   const check = findSpotCheck(actor, id);
   triggerFault(request.name);
+  triggerRevoked(check.name);
+  triggerRevoked(request.name);
+  // A platform that cannot change the list of a check that exists (SPT-05 `itemFallback`).
+  if (
+    onBasicPlatform(actor) &&
+    (request.captures !== undefined || request.assertions !== undefined)
+  ) {
+    throw apiError(
+      400,
+      'list_locked',
+      'The prompts and items of a check cannot be changed.',
+      'captures',
+    );
+  }
   if (check.is_archived && request.is_archived !== false) {
     throw invalid('An archived spot check cannot be changed.', 'is_archived');
   }
@@ -5010,6 +5076,13 @@ export async function mockListSpotCheckManagers(
 ): Promise<SpotCheckManager[]> {
   await delay();
   const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   return db.users
@@ -5034,6 +5107,13 @@ export async function mockAppointSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -5056,6 +5136,13 @@ export async function mockRemoveSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -5146,6 +5233,15 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
     subject = { type: 'AREA', id: run.subject.id, name: area?.name ?? '' };
   }
   const sees = actor.admin || run.manager_id === actor.me.user.id;
+  const basic = onBasicPlatform(actor);
+  // On the basic platform a partial capture is simply "not done" and is not assessed,
+  // a retake overwrites, and no failure raises an issue.
+  const completion =
+    status === 'FINALIZED'
+      ? basic && run.completion === 'PARTIAL'
+        ? 'NOT_DONE'
+        : run.completion
+      : null;
   return {
     ...base,
     subject,
@@ -5158,15 +5254,17 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
       return {
         ...capture,
         photo: sent ? toRunPhoto(sent.photo) : null,
-        earlier_photos: sent ? sent.earlier.map(toRunPhoto) : [],
+        earlier_photos: sent && !basic ? sent.earlier.map(toRunPhoto) : [],
       };
     }),
-    completion: status === 'FINALIZED' ? run.completion : null,
+    completion,
     results:
       sees && status === 'FINALIZED'
-        ? run.results.map((result) => toResult(run, result, now))
+        ? basic && run.completion === 'PARTIAL'
+          ? []
+          : run.results.map((result) => toResult(run, result, now))
         : null,
-    issue_id: sees ? run.issue_id : null,
+    issue_id: sees && !basic ? run.issue_id : null,
   };
 }
 
@@ -5301,6 +5399,8 @@ export async function mockSubmitSpotCheckPhoto(
   const asked = run.captures.find(
     (capture) => capture.position === request.capture_position,
   );
+  // A prompt of `revoked`: the role was taken away, so the photograph is refused (403).
+  if (asked) triggerRevoked(asked.prompt);
   if (asked && isPromptTrigger(asked.prompt, 'slow')) {
     await new Promise((resolve) => setTimeout(resolve, SLOW_SEND_MS));
   }
@@ -5329,7 +5429,8 @@ export async function mockSubmitSpotCheckPhoto(
     (entry) => entry.position === request.capture_position,
   );
   if (sent) {
-    sent.earlier.push(sent.photo);
+    // A platform that keeps only the latest photograph (SPT-01 `retakeFallback`).
+    if (!onBasicPlatform(actor)) sent.earlier.push(sent.photo);
     sent.photo = photo;
   } else {
     run.photos.push({ position: request.capture_position, photo, earlier: [] });
@@ -5367,6 +5468,15 @@ export async function mockOverrideSpotCheckResult(
       403,
       API_ERROR_CODE.PERMISSION_DENIED,
       "You can't change this result.",
+    );
+  }
+  // A platform that takes no override once the window has closed (SPT-03
+  // `afterCloseFallback`); results only exist after the close, so none is allowed.
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.WINDOW_CLOSED,
+      "Results can't be changed after the window closes.",
     );
   }
   if (!request.override_note.trim()) {

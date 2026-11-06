@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { api, NotBuiltError } from '@/shared/api/client';
+import { api } from '@/shared/api/client';
 import { retryTransient } from '@/shared/api/query-helpers';
 
+import { isManagerNotWired } from './check-errors';
 import { spotCheckKeys } from './spot-check-keys';
 
 /** Who takes spot checks at an outlet. Not on the platform yet, so only the mock answers. */
@@ -15,7 +16,7 @@ export function useSpotCheckManagers(
     queryFn: () => api.spotChecks.managers(outletId!),
     enabled: enabled && outletId !== undefined,
     retry: (count, error) =>
-      error instanceof NotBuiltError ? false : retryTransient(count, error),
+      isManagerNotWired(error) ? false : retryTransient(count, error),
   });
 }
 

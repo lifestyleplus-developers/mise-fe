@@ -1,5 +1,4 @@
 import { useUsers } from '@/features/users/use-users';
-import { NotBuiltError } from '@/shared/api/client';
 import type { SpotCheckManager } from '@/shared/api/types';
 import { Avatar } from '@/shared/components/avatar';
 import { PeoplePicker } from '@/shared/components/people-picker';
@@ -13,6 +12,7 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { classifyAreaError } from './area-errors';
+import { isManagerNotWired } from './check-errors';
 import {
   useAppointSpotCheckManager,
   useRemoveSpotCheckManager,
@@ -52,10 +52,10 @@ export function CheckManagers({
   }, [managers.data, onKnown]);
 
   const people = managers.data ?? [];
-  const unavailable = notWired || managers.error instanceof NotBuiltError;
+  const unavailable = notWired || isManagerNotWired(managers.error);
 
   function fail(error: unknown) {
-    if (error instanceof NotBuiltError) setNotWired(true);
+    if (isManagerNotWired(error)) setNotWired(true);
     else if (classifyAreaError(error) === 'forbidden') onLocked();
   }
 
@@ -204,7 +204,7 @@ function ManagerPicker({
             // A lost role or an endpoint the platform lacks ends the picking; any
             // other failure stays in the picker, with the people still listed.
             if (
-              cause instanceof NotBuiltError ||
+              isManagerNotWired(cause) ||
               classifyAreaError(cause) === 'forbidden'
             ) {
               onClose();
