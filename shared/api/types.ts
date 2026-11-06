@@ -916,8 +916,8 @@ export type SpotCheckRun = {
     | null;
   revealed_at: string | null;
   window_close: string | null;
-  /** Mock only: when the check is selected, shown before reveal without the subject. */
-  scheduled_for: string;
+  /** Mock only: when the check was selected. Null until the reveal: before it, no time that could give the moment away is sent. */
+  scheduled_for: string | null;
   /** The manager the subject was revealed to. */
   manager: { id: number; full_name: string } | null;
   captures: SpotCheckRunCapture[] | null;

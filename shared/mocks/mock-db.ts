@@ -5200,12 +5200,13 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
     spot_check_name: run.check_name,
     outlet_id: run.outlet_id,
     status,
-    scheduled_for: run.scheduled_for,
     manager: userRef(run.manager_id),
   };
   if (status === 'SCHEDULED') {
     return {
       ...base,
+      // 🔒 No subject, and no time that gives the moment of the reveal away.
+      scheduled_for: null,
       subject: null,
       revealed_at: null,
       window_close: null,
@@ -5244,6 +5245,7 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
       : null;
   return {
     ...base,
+    scheduled_for: run.scheduled_for,
     subject,
     revealed_at: run.revealed_at,
     window_close: run.window_close,
