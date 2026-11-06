@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, type QueryClient } from '@tanstack/react-query';
 
 import { api } from '@/shared/api/client';
 import { queryClient } from '@/shared/api/query-client';
@@ -61,4 +61,28 @@ export function useSpotPhotoQueue(runId: number | undefined) {
   return writes.filter(
     (write) => runId === undefined || write.variables.runId === runId,
   );
+}
+
+/**
+ * "Send now" on a photograph waiting in the retry queue: sends that one, and leaves
+ * every other paused write (answers, marks, other photographs) as it was.
+ */
+export function sendWaitingPhotoNow(
+  runId: number,
+  position: number,
+  client: QueryClient = queryClient,
+) {
+  for (const mutation of client
+    .getMutationCache()
+    .findAll({ mutationKey: SUBMIT_KEY })) {
+    const variables = mutation.state.variables as
+      SubmitPhotoVariables | undefined;
+    if (
+      mutation.state.isPaused &&
+      variables?.runId === runId &&
+      variables.request.capture_position === position
+    ) {
+      void mutation.continue().catch(() => undefined);
+    }
+  }
 }

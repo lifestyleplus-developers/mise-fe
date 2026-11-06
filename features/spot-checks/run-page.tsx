@@ -2,7 +2,6 @@ import { useMe } from '@/features/auth/use-me';
 import { useModulesNotice } from '@/features/shell/modules-notice';
 import { PushedScreen } from '@/features/shell/pushed-screen';
 import { ApiError } from '@/shared/api/client';
-import { queryClient } from '@/shared/api/query-client';
 import type { SpotCheckRun } from '@/shared/api/types';
 import { PendingPill } from '@/shared/components/pending-pill';
 import { RetryBanner } from '@/shared/components/retry-banner';
@@ -38,6 +37,7 @@ import { useCaptureFlow } from './use-capture-flow';
 import { useSpotCountdown } from './use-spot-countdown';
 import { useSpotCheckRun } from './use-spot-check-runs';
 import { useSpotCheckOutlets } from './use-spot-check-outlets';
+import { sendWaitingPhotoNow } from './use-spot-photo-queue';
 import { useSpotPhotoUpload } from './use-spot-photo-upload';
 
 type RunPageProps = {
@@ -234,8 +234,8 @@ function RunBody({
     if (upload.drafts.some((d) => d.position === position)) {
       upload.retry(position);
     } else {
-      // In storage and queued: send what is waiting, now.
-      void queryClient.resumePausedMutations();
+      // In storage and queued: send this one now, and nothing else.
+      sendWaitingPhotoNow(run.id, position);
     }
   }
 
