@@ -29,6 +29,17 @@ export const ml = {
   'checklists.team': 'ടീം',
   'checklists.removed': 'നിങ്ങൾ ഇനി {name}-ൽ ഇല്ല.',
   'run.answered': '{total}-ൽ {n} ഉത്തരം നൽകി',
+  'run.seconds-left': '{n} സെക്കൻഡ് ബാക്കി',
+  'run.minutes-left': '{n} മിനിറ്റ് ബാക്കി',
+  'run.closing-now': 'ഇപ്പോൾ അടയ്ക്കുന്നു',
+  'run.answer': 'ഉത്തരം നൽകുക',
+  'run.change': 'മാറ്റുക',
+  'run.keep': 'നിലനിർത്തുക',
+  'run.enter-number': 'ഒരു സംഖ്യ നൽകുക',
+  'run.comment-title': 'എന്തുകൊണ്ട്?',
+  'run.comment-placeholder': 'എന്താണ് സംഭവിച്ചതെന്ന് പറയുക',
+  'run.comment-save': 'സേവ് ചെയ്യുക',
+  'run.comment-cancel': 'റദ്ദാക്കുക',
   'run.watching': 'നിങ്ങൾ നിരീക്ഷിക്കുന്നു. ഉത്തരം നൽകുന്നത് നിങ്ങളുടെ ടീമാണ്.',
   'run.not-answered': 'ഉത്തരം നൽകിയിട്ടില്ല',
   'run.jump': 'ഉത്തരം നൽകാത്ത ആദ്യ ടാസ്കിലേക്ക് പോകുക',
@@ -138,7 +149,7 @@ export const ml = {
   'outlets.add': 'ഔട്ട്‌ലെറ്റ് ചേർക്കുക',
   'outlets.attendance': 'ഈ ഔട്ട്‌ലെറ്റിൽ ഹാജർ രേഖപ്പെടുത്തുക',
   'outlets.attendance-hint':
-    'ആരൊക്കെ ഹാജരുണ്ടെന്ന് ഹാജർ മാനേജർമാർക്ക് ഇവിടെ അടയാളപ്പെടുത്താം.',
+    'ആരൊക്കെ ഹാജരുണ്ടെന്ന് അറ്റൻഡൻസ് മാനേജർമാർക്ക് ഇവിടെ അടയാളപ്പെടുത്താം.',
   'outlets.attendance-still-on': 'ഹാജർ ഇപ്പോഴും ഓണാണ്.',
   'outlets.attendance-still-off': 'ഹാജർ ഇപ്പോഴും ഓഫാണ്.',
   'outlets.archive': 'ഔട്ട്‌ലെറ്റ് ആർക്കൈവ് ചെയ്യുക',
@@ -763,7 +774,7 @@ export const ml = {
   'inv.showing-last': 'അവസാന കണക്കുകൾ കാണിക്കുന്നു',
 
   // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
-  'spot.left': 'ಉಳಿದಿದೆ',
+  'spot.left': 'ബാക്കി',
   'spot.final': '5 മിനിറ്റ് ബാക്കി',
   'spot.runs-out':
     "സമയം തീർന്നാൽ ഈ ചെക്ക് 'ചെയ്തില്ല' എന്ന് രേഖപ്പെടുത്തും. വീണ്ടും ചെയ്യാനാവില്ല.",
