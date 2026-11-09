@@ -1,0 +1,184 @@
+{
+  "areas": [
+    {
+      "id": 1,
+      "outlet_id": 3,
+      "name": "Kitchen",
+      "is_eligible": true,
+      "is_archived": false
+    },
+    {
+      "id": 2,
+      "outlet_id": 3,
+      "name": "Dining room",
+      "is_eligible": true,
+      "is_archived": false
+    },
+    {
+      "id": 3,
+      "outlet_id": 3,
+      "name": "Cold room",
+      "is_eligible": true,
+      "is_archived": false
+    },
+    {
+      "id": 4,
+      "outlet_id": 3,
+      "name": "Dishwash",
+      "is_eligible": true,
+      "is_archived": false
+    },
+    {
+      "id": 5,
+      "outlet_id": 3,
+      "name": "Kebab station",
+      "is_eligible": true,
+      "is_archived": false
+    },
+    {
+      "id": 6,
+      "outlet_id": 3,
+      "name": "Store room",
+      "is_eligible": false,
+      "is_archived": false
+    },
+    {
+      "id": 7,
+      "outlet_id": 3,
+      "name": "Old bar",
+      "is_eligible": false,
+      "is_archived": true
+    }
+  ],
+  "checks": [
+    {
+      "id": 1,
+      "outlet_id": 3,
+      "name": "Grooming — kitchen",
+      "subject_type": "STAFF",
+      "recurrence": "DAILY",
+      "st_time": "14:00",
+      "reveal_window_minutes": 20,
+      "weekdays": null,
+      "day_of_month": null,
+      "captures": [
+        {
+          "position": 1,
+          "prompt": "a photograph of the hands and nails"
+        },
+        {
+          "position": 2,
+          "prompt": "a photograph of the uniform"
+        },
+        {
+          "position": 3,
+          "prompt": "a photograph of the face from a short distance"
+        }
+      ],
+      "assertions": [
+        {
+          "position": 1,
+          "text": "nails are trimmed and clean",
+          "weight": 5
+        },
+        {
+          "position": 2,
+          "text": "cap or hairnet is worn",
+          "weight": 5
+        },
+        {
+          "position": 3,
+          "text": "name tag is visible",
+          "weight": 3
+        },
+        {
+          "position": 4,
+          "text": "uniform is clean and complete",
+          "weight": 5
+        },
+        {
+          "position": 5,
+          "text": "apron is clean",
+          "weight": 4
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "outlet_id": 3,
+      "name": "Food areas — hygiene",
+      "subject_type": "AREA",
+      "recurrence": "DAILY",
+      "st_time": "16:00",
+      "reveal_window_minutes": 15,
+      "weekdays": null,
+      "day_of_month": null,
+      "captures": [
+        {
+          "position": 1,
+          "prompt": "a wide photograph of the whole area"
+        },
+        {
+          "position": 2,
+          "prompt": "a close photograph of the lower shelves"
+        }
+      ],
+      "assertions": [
+        {
+          "position": 1,
+          "text": "nothing is open on a lower shelf",
+          "weight": 5
+        },
+        {
+          "position": 2,
+          "text": "the floor is clean and dry",
+          "weight": 5
+        },
+        {
+          "position": 3,
+          "text": "stored food is labelled",
+          "weight": 4
+        },
+        {
+          "position": 4,
+          "text": "the door seal is intact",
+          "weight": 3
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "outlet_id": 3,
+      "name": "Dishwash — weekly",
+      "subject_type": "AREA",
+      "recurrence": "WEEKLY",
+      "st_time": "11:30",
+      "reveal_window_minutes": 15,
+      "weekdays": [1, 4],
+      "day_of_month": null,
+      "captures": [
+        {
+          "position": 1,
+          "prompt": "a photograph of the dishwash station"
+        }
+      ],
+      "assertions": [
+        {
+          "position": 1,
+          "text": "the sink is clear of dishes",
+          "weight": 4
+        },
+        {
+          "position": 2,
+          "text": "the drain is not blocked",
+          "weight": 5
+        },
+        {
+          "position": 3,
+          "text": "chemicals are stored away",
+          "weight": 5
+        }
+      ]
+    }
+  ]
+}

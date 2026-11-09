@@ -59,6 +59,25 @@ import {
   mockUpdateStaff,
   mockUpdateTask,
   mockUpdateUser,
+  mockListAreas,
+  mockCreateArea,
+  mockUpdateArea,
+  mockListSpotChecks,
+  mockGetSpotCheck,
+  mockCreateSpotCheck,
+  mockUpdateSpotCheck,
+  mockAddSpotCheckCapture,
+  mockUpdateSpotCheckCapture,
+  mockRemoveSpotCheckCapture,
+  mockAddSpotCheckAssertion,
+  mockUpdateSpotCheckAssertion,
+  mockListSpotCheckManagers,
+  mockAppointSpotCheckManager,
+  mockRemoveSpotCheckManager,
+  mockListSpotCheckRuns,
+  mockGetSpotCheckRun,
+  mockSubmitSpotCheckPhoto,
+  mockOverrideSpotCheckResult,
 } from '@/shared/mocks/mock-db';
 import type {
   AddMemberRequest,
@@ -122,10 +141,40 @@ import type {
   UploadSignResponse,
   User,
   UsersQuery,
+  Area,
+  AreasQuery,
+  CreateAreaRequest,
+  CreateSpotCheckRequest,
+  OverrideSpotCheckResultRequest,
+  SpotCheck,
+  SpotCheckAssertion,
+  SpotCheckAssertionRequest,
+  SpotCheckCapture,
+  SpotCheckCaptureRequest,
+  SpotCheckManager,
+  SpotCheckResult,
+  SpotCheckRun,
+  SpotCheckRunsQuery,
+  SpotChecksQuery,
+  SubmitSpotCheckPhotoRequest,
+  UpdateAreaRequest,
+  UpdateSpotCheckRequest,
 } from './types';
 
 import { loginRequest, logoutRequest } from './auth-api';
 import { ApiError, request as call, requestAll, USE_REAL_API } from './http';
+
+/**
+ * The platform records the first mark as a change too (`UNMARKED` to a status).
+ * It is not a correction: the row would show "Not marked → Present" and lose its
+ * "who and when" line. Keep only real corrections, as the mock does.
+ */
+function withoutFirstMark(mark: AttendanceMark): AttendanceMark {
+  return {
+    ...mark,
+    changes: mark.changes.filter((change) => change.from_status !== 'UNMARKED'),
+  };
+}
 
 export { ApiError };
 
@@ -591,7 +640,12 @@ export const api = {
     /** GET /attendance/sessions/{id} — with the roster snapshot. */
     session(id: number): Promise<AttendanceSessionDetail> {
       return USE_REAL_API
-        ? call<AttendanceSessionDetail>(`/attendance/sessions/${id}`)
+        ? call<AttendanceSessionDetail>(`/attendance/sessions/${id}`).then(
+            (detail) => ({
+              ...detail,
+              marks: detail.marks.map(withoutFirstMark),
+            }),
+          )
         : mockGetAttendanceSession(id);
     },
 
@@ -601,7 +655,7 @@ export const api = {
         ? call<AttendanceMark>(`/attendance/marks/${id}`, {
             method: 'PATCH',
             body: request,
-          })
+          }).then(withoutFirstMark)
         : mockMarkPerson(id, request);
     },
   },
@@ -645,15 +699,23 @@ export const api = {
     },
 
     /**
-     * GET /inventory/items/{id}/movements. The outlet-wide log (no `itemId`) has
-     * no endpoint in the contract yet, so against the platform it is not built.
+     * GET /inventory/items/{id}/movements, or without an `itemId` the outlet-wide
+     * log, GET /inventory/movements?outlet_id=. Both newest first.
      */
     movements(
       query: InventoryMovementsQuery,
     ): Promise<Page<InventoryMovement>> {
       if (!USE_REAL_API) return mockListInventoryMovements(query);
       if (query.itemId === undefined) {
-        return notBuilt('GET /inventory/movements');
+        return call<Page<InventoryMovement>>('/inventory/movements', {
+          query: {
+            outlet_id: query.outletId,
+            from: query.from,
+            to: query.to,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        });
       }
       return call<Page<InventoryMovement>>(
         `/inventory/items/${query.itemId}/movements`,
@@ -681,24 +743,32 @@ export const api = {
         : mockRecordInventoryMovement(itemId, request);
     },
 
-    /** Inventory Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    /** GET /inventory/managers?outlet_id= — Inventory Managers of an outlet. */
     managers(outletId: number): Promise<InventoryManager[]> {
       return USE_REAL_API
-        ? notBuilt('GET /inventory/managers')
+        ? requestAll<InventoryManager>('/inventory/managers', {
+            outlet_id: outletId,
+          })
         : mockListInventoryManagers(outletId);
     },
 
-    /** Appoint an Inventory Manager. No endpoint yet. */
+    /** POST /inventory/managers — appoint an Inventory Manager. */
     appointManager(outletId: number, userId: number): Promise<void> {
       return USE_REAL_API
-        ? notBuilt('POST /inventory/managers')
+        ? call<InventoryManager>('/inventory/managers', {
+            method: 'POST',
+            body: { outlet_id: outletId, user_id: userId },
+          }).then(() => undefined)
         : mockAppointInventoryManager(outletId, userId);
     },
 
-    /** Remove an Inventory Manager. No endpoint yet. */
+    /** DELETE /inventory/managers/{user_id}?outlet_id= — remove one. */
     removeManager(outletId: number, userId: number): Promise<void> {
       return USE_REAL_API
-        ? notBuilt('DELETE /inventory/managers')
+        ? call<void>(`/inventory/managers/${userId}`, {
+            method: 'DELETE',
+            query: { outlet_id: outletId },
+          })
         : mockRemoveInventoryManager(outletId, userId);
     },
 
@@ -737,6 +807,155 @@ export const api = {
             },
           })
         : mockStockSpendReport(query);
+    },
+  },
+  spotChecks: {
+    /** Areas of an outlet. Mock only: API Contract §13 has no endpoint for them. */
+    areas(query: AreasQuery): Promise<Page<Area>> {
+      return USE_REAL_API ? notBuilt('GET /areas') : mockListAreas(query);
+    },
+
+    createArea(request: CreateAreaRequest): Promise<Area> {
+      return USE_REAL_API ? notBuilt('POST /areas') : mockCreateArea(request);
+    },
+
+    updateArea(id: number, request: UpdateAreaRequest): Promise<Area> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /areas/{id}')
+        : mockUpdateArea(id, request);
+    },
+
+    /** GET /spot-checks?outlet_id= */
+    checks(query: SpotChecksQuery): Promise<Page<SpotCheck>> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks')
+        : mockListSpotChecks(query);
+    },
+
+    /** One check with its prompts and items. */
+    check(id: number): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks/{id}')
+        : mockGetSpotCheck(id);
+    },
+
+    /** POST /spot-checks */
+    createCheck(request: CreateSpotCheckRequest): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks')
+        : mockCreateSpotCheck(request);
+    },
+
+    /** PATCH /spot-checks/{id} */
+    updateCheck(
+      id: number,
+      request: UpdateSpotCheckRequest,
+    ): Promise<SpotCheck> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}')
+        : mockUpdateSpotCheck(id, request);
+    },
+
+    /** POST /spot-checks/{id}/captures */
+    addCapture(
+      id: number,
+      request: SpotCheckCaptureRequest,
+    ): Promise<SpotCheckCapture> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/{id}/captures')
+        : mockAddSpotCheckCapture(id, request);
+    },
+
+    /** Edit a prompt. Mock only. */
+    updateCapture(
+      id: number,
+      position: number,
+      request: SpotCheckCaptureRequest,
+    ): Promise<SpotCheckCapture> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}/captures/{position}')
+        : mockUpdateSpotCheckCapture(id, position, request);
+    },
+
+    /** Remove a prompt. Mock only. */
+    removeCapture(id: number, position: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /spot-checks/{id}/captures/{position}')
+        : mockRemoveSpotCheckCapture(id, position);
+    },
+
+    /** POST /spot-checks/{id}/assertions */
+    addAssertion(
+      id: number,
+      request: SpotCheckAssertionRequest,
+    ): Promise<SpotCheckAssertion> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/{id}/assertions')
+        : mockAddSpotCheckAssertion(id, request);
+    },
+
+    /** Edit or archive an item. Mock only. */
+    updateAssertion(
+      id: number,
+      position: number,
+      request: SpotCheckAssertionRequest,
+    ): Promise<SpotCheckAssertion> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-checks/{id}/assertions/{position}')
+        : mockUpdateSpotCheckAssertion(id, position, request);
+    },
+
+    /** Spot-check Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    managers(outletId: number): Promise<SpotCheckManager[]> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-checks/managers')
+        : mockListSpotCheckManagers(outletId);
+    },
+
+    appointManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-checks/managers')
+        : mockAppointSpotCheckManager(outletId, userId);
+    },
+
+    removeManager(outletId: number, userId: number): Promise<void> {
+      return USE_REAL_API
+        ? notBuilt('DELETE /spot-checks/managers')
+        : mockRemoveSpotCheckManager(outletId, userId);
+    },
+
+    /** GET /spot-check-runs?state=&outlet_id= */
+    runs(query: SpotCheckRunsQuery): Promise<Page<SpotCheckRun>> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-check-runs')
+        : mockListSpotCheckRuns(query);
+    },
+
+    /** GET /spot-check-runs/{id} */
+    run(id: number): Promise<SpotCheckRun> {
+      return USE_REAL_API
+        ? notBuilt('GET /spot-check-runs/{id}')
+        : mockGetSpotCheckRun(id);
+    },
+
+    /** POST /spot-check-runs/{id}/photos — 409 `window_closed` after the close. */
+    submitPhoto(
+      id: number,
+      request: SubmitSpotCheckPhotoRequest,
+    ): Promise<SpotCheckRun> {
+      return USE_REAL_API
+        ? notBuilt('POST /spot-check-runs/{id}/photos')
+        : mockSubmitSpotCheckPhoto(id, request);
+    },
+
+    /** PATCH /spot-check-results/{id} — the note is required. */
+    overrideResult(
+      id: number,
+      request: OverrideSpotCheckResultRequest,
+    ): Promise<SpotCheckResult> {
+      return USE_REAL_API
+        ? notBuilt('PATCH /spot-check-results/{id}')
+        : mockOverrideSpotCheckResult(id, request);
     },
   },
 } as const;

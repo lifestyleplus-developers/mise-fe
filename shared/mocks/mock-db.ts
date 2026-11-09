@@ -22,7 +22,33 @@
  *   The sign-in business picker needs the same username in two businesses; with one
  *   business the mock can no longer show it.
  */
+import { onlineManager } from '@tanstack/react-query';
 import type {
+  Area,
+  AreasQuery,
+  CreateAreaRequest,
+  CreateSpotCheckRequest,
+  OverrideSpotCheckResultRequest,
+  SpotCheck,
+  SpotCheckAssertion,
+  SpotCheckAssertionRequest,
+  SpotCheckLists,
+  SpotCheckCapture,
+  SpotCheckCaptureRequest,
+  SpotCheckCompletion,
+  SpotCheckManager,
+  SpotCheckOutcome,
+  SpotCheckPhoto,
+  SpotCheckRecurrence,
+  SpotCheckResult,
+  SpotCheckRun,
+  SpotCheckRunsQuery,
+  SpotCheckRunStatus,
+  SpotChecksQuery,
+  SpotCheckSubjectType,
+  SubmitSpotCheckPhotoRequest,
+  UpdateAreaRequest,
+  UpdateSpotCheckRequest,
   AddMemberRequest,
   AmbiguousUsernameBody,
   AnswerTaskRequest,
@@ -96,6 +122,7 @@ import type {
 } from '@/shared/api/types';
 import { API_ERROR_CODE } from '@/shared/api/types';
 import { canAdminister, type Role } from '@/shared/constants/roles';
+import { DEFAULT_WEIGHT } from '@/shared/constants/weight';
 import {
   HOURLY_INTERVALS,
   MIN_WINDOW_MINUTES,
@@ -103,12 +130,14 @@ import {
   windowOverlapsNextRun,
 } from '@/shared/lib/schedule';
 import { ApiError } from '@/shared/api/http';
+import { effectiveOutcome } from '@/shared/lib/spot-outcome';
 
 import attendanceFixtures from './fixtures/attendance.json';
 import businesses from './fixtures/businesses.json';
 import checklistFixtures from './fixtures/checklists.json';
 import inventoryFixtures from './fixtures/inventory.json';
 import outletFixtures from './fixtures/outlets.json';
+import spotCheckFixtures from './fixtures/spot-checks.json';
 import users from './fixtures/users.json';
 
 type DbOutlet = Outlet & { tenant_id: number };
@@ -149,6 +178,8 @@ type MockDb = {
   attendanceState?: AttendanceState;
   /** Inventory items and their append-only movements; seeded on first use. */
   inventoryState?: InventoryState;
+  /** Areas, spot checks, their runs and results; seeded on first use. */
+  spotCheckState?: SpotCheckState;
 };
 
 const STAFF_FIRST_NAMES = [
@@ -970,7 +1001,7 @@ function buildTasks(
       unit: task.unit ?? null,
       min_value: task.min ?? null,
       max_value: task.max ?? null,
-      weight: 5,
+      weight: DEFAULT_WEIGHT,
       requires_comment_on_fail: task.type !== 'IMAGE',
       answer_number: answer?.n ?? null,
       answer_bool: answer && task.type === 'BINARY' ? (answer.b ?? null) : null,
@@ -1110,7 +1141,7 @@ function seedChecklistState(): ChecklistState {
         min_value: template.min ?? null,
         max_value: template.max ?? null,
         requires_comment_on_fail: template.type !== 'IMAGE',
-        weight: 5,
+        weight: DEFAULT_WEIGHT,
         is_archived: false,
       });
     });
@@ -1552,7 +1583,7 @@ export async function mockCreateTask(
     unit: request.unit ?? null,
     min_value: request.min_value ?? null,
     max_value: request.max_value ?? null,
-    weight: request.weight ?? 5,
+    weight: request.weight ?? DEFAULT_WEIGHT,
     // A failed Yes/No or reading always needs a comment; a photograph takes none.
     requires_comment_on_fail: request.answer_type !== 'IMAGE',
   };
@@ -2066,6 +2097,25 @@ export async function mockAnswerTask(
   return answered;
 }
 
+/** Runs whose first upload has been refused already, so the retry goes through. */
+const refusedUploadRuns = new Set<number>();
+
+/** A name or prompt of `revoked` stands for the role having been taken away: a 403 on the write. */
+function triggerRevoked(text?: string | null) {
+  if (text !== undefined && text !== null && isPromptTrigger(text, 'revoked')) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Your role no longer allows this.',
+    );
+  }
+}
+
+/** A capture prompt written as a trigger word (`upload`, `slow`, `revoked`), as in Week 8. */
+function isPromptTrigger(prompt: string, word: string): boolean {
+  return prompt.trim().toLowerCase() === word;
+}
+
 /**
  * POST /uploads/sign — §8. Returns a location the client PUTs to. The mock
  * cannot accept real bytes; the key is recorded so the PATCH that follows
@@ -2075,9 +2125,31 @@ export async function mockSignUpload(
   request: UploadSignRequest,
 ): Promise<UploadSignResponse> {
   await delay();
+  // A signature needs the network: with no signal there is no upload location
+  // (a spot-check photograph is then kept on the phone, SPT-01 `noUploadUrl`).
+  if (request.purpose === 'spot_check_run' && !onlineManager.isOnline()) {
+    throw new Error('Network request failed');
+  }
   const me = resolveMe();
   const key = `t${me.business.id}/mock/${request.target_id}-${Date.now()}.jpg`;
   db.signedUploadKeys.set(request.target_id, key);
+  // A run with a prompt of `upload`: the first photograph's bytes are refused, so
+  // the prompt shows Retry (SPT-01 `uploadFailed`); the retry goes through.
+  if (
+    request.purpose === 'spot_check_run' &&
+    !refusedUploadRuns.has(request.target_id) &&
+    spotCheckState()
+      .runs.find((run) => run.id === request.target_id)
+      ?.captures.some((capture) => isPromptTrigger(capture.prompt, 'upload'))
+  ) {
+    refusedUploadRuns.add(request.target_id);
+    return {
+      upload_url: `mock://refuse/${key}`,
+      method: 'PUT',
+      headers: { 'content-type': request.content_type },
+      key,
+    };
+  }
   return {
     upload_url: `mock://storage/${key}`,
     method: 'PUT',
@@ -2564,23 +2636,6 @@ function findVisibleStaff(actor: AttendanceActor, id: number): DbStaff {
   return person;
 }
 
-function assertCodeFree(
-  tenantId: number,
-  code: string | null | undefined,
-  exceptId?: number,
-) {
-  if (!code) return;
-  const taken = attendanceState().staff.some(
-    (person) =>
-      person.tenant_id === tenantId &&
-      person.id !== exceptId &&
-      person.staff_code?.toLowerCase() === code.toLowerCase(),
-  );
-  if (taken) {
-    throw invalid('That code is already used by someone else.', 'staff_code');
-  }
-}
-
 function cleanCode(code: string | null | undefined): string | null {
   const trimmed = code?.trim();
   return trimmed ? trimmed : null;
@@ -2626,7 +2681,6 @@ export async function mockCreateStaff(
   if (!fullName) throw invalid('Name is required.', 'full_name');
   triggerFault(fullName);
   const code = cleanCode(request.staff_code);
-  assertCodeFree(actor.me.business.id, code);
 
   const outletIds = [...new Set(request.outlet_ids ?? [])];
   if (!actor.admin && outletIds.length === 0) {
@@ -2664,7 +2718,6 @@ export async function mockUpdateStaff(
     request.staff_code === undefined
       ? undefined
       : cleanCode(request.staff_code);
-  assertCodeFree(actor.me.business.id, code, person.id);
 
   const next = {
     full_name: request.full_name?.trim() ?? person.full_name,
@@ -2751,7 +2804,7 @@ function assertConfigLive(config: DbAttendanceConfig) {
   }
 }
 
-/** §11 and §5: the schedule's shape, the window against the next period, and the name. */
+/** §11 and §5: the schedule's shape and the window against the next period. The platform has no rule on a repeated name (decision 24). */
 function assertValidConfig(
   config: Pick<
     AttendanceConfig,
@@ -2762,9 +2815,6 @@ function assertValidConfig(
     | 'weekdays'
     | 'day_of_month'
   >,
-  outletId: number,
-  tenantId: number,
-  exceptId?: number,
 ) {
   if ((config.recurrence as string) === 'HOURLY') {
     throw invalid('Attendance cannot repeat hourly.', 'recurrence');
@@ -2776,21 +2826,6 @@ function assertValidConfig(
     throw invalid('Use 150 characters or fewer.', 'name');
   }
   assertValidSchedule({ ...config, interval_hours: null, last_run_time: null });
-
-  const taken = attendanceState().configs.some(
-    (other) =>
-      other.tenant_id === tenantId &&
-      other.outlet_id === outletId &&
-      other.id !== exceptId &&
-      !other.is_archived &&
-      other.name.toLowerCase() === config.name.trim().toLowerCase(),
-  );
-  if (taken) {
-    throw invalid(
-      'This name is already used for another session at this outlet.',
-      'name',
-    );
-  }
 }
 
 /** GET /attendance/configs — ADMIN/OWNER see every outlet's; a manager the ones they manage. */
@@ -2831,7 +2866,7 @@ export async function mockCreateAttendanceConfig(
     weekdays: request.weekdays ?? null,
     day_of_month: request.day_of_month ?? null,
   };
-  assertValidConfig(schedule, request.outlet_id, actor.me.business.id);
+  assertValidConfig(schedule);
 
   const state = attendanceState();
   const config: DbAttendanceConfig = {
@@ -2883,7 +2918,7 @@ export async function mockUpdateAttendanceConfig(
     weekdays: weekdays && [...new Set(weekdays)].sort(),
     day_of_month: dayOfMonth,
   };
-  assertValidConfig(next, config.outlet_id, config.tenant_id, config.id);
+  assertValidConfig(next);
   Object.assign(config, next);
   return toConfig(config);
 }
@@ -3825,4 +3860,1615 @@ export async function mockRemoveInventoryManager(
   if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
   user.memberships.inventory_outlets =
     user.memberships.inventory_outlets.filter((id) => id !== outletId);
+}
+
+// ---------------------------------------------------------------------------
+// Week 9 — spot checks (API Contract §13)
+//
+// Failure triggers, as in Week 8: a name, prompt, note or image key of "offline"
+// kills the network; "fault" is a 500. An override note of "refused" is a 403.
+// A run reveals on the mock clock: it is SCHEDULED (no subject) until `revealed_at`,
+// OPEN until `window_close`, then settled on the next read: some photographs is
+// PARTIAL, none is NOT_DONE (no retry, ever), and every assertion is judged.
+// ---------------------------------------------------------------------------
+
+type DbArea = Area & { tenant_id: number };
+
+type DbSpotCheck = SpotCheck & { tenant_id: number };
+
+type DbSpotPhoto = {
+  position: number;
+  photo: SpotCheckPhoto;
+  /** Photos this one replaced on a retake, oldest first. */
+  earlier: SpotCheckPhoto[];
+};
+
+type DbSpotResult = {
+  id: number;
+  assertion_position: number;
+  assertion_text: string;
+  weight: number;
+  /** What the assessment decided; shown as PENDING_JUDGEMENT until the run's `ready_at`. */
+  outcome: Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'>;
+  confidence: number;
+  overridden_to: SpotCheckResult['overridden_to'];
+  override_note: string | null;
+  overridden_by_id: number | null;
+  overridden_at: string | null;
+};
+
+type DbSpotRun = {
+  id: number;
+  tenant_id: number;
+  spot_check_id: number;
+  outlet_id: number;
+  /** Copied when the run is made: later edits to the check apply from the next one. */
+  check_name: string;
+  captures: SpotCheckCapture[];
+  assertions: { position: number; text: string; weight: number }[];
+  subject: { type: SpotCheckSubjectType; id: number };
+  manager_id: number;
+  scheduled_for: string;
+  revealed_at: string;
+  window_close: string;
+  photos: DbSpotPhoto[];
+  settled: boolean;
+  completion: SpotCheckCompletion | null;
+  results: DbSpotResult[];
+  ready_at: string | null;
+  issue_id: number | null;
+};
+
+type SpotCheckState = {
+  areas: DbArea[];
+  checks: DbSpotCheck[];
+  runs: DbSpotRun[];
+  nextAreaId: number;
+  nextCheckId: number;
+  nextRunId: number;
+  nextResultId: number;
+};
+
+/** How long a closed run shows "being assessed" before its outcomes appear. */
+const SPOT_ASSESS_MS = 2 * MINUTE_MS;
+/** Photographs older than this are removed under the retention policy. */
+const SPOT_RETENTION_DAYS = 30;
+/** How long a send for a `slow` prompt waits before it is answered. */
+const SLOW_SEND_MS = 8_000;
+
+const RESHMA = 16;
+const ARUN = 17;
+/**
+ * Signs in as an Administrator on a platform that cannot do several things the
+ * mockup has a fallback for (SPT-01 `partialFallback` and `retakeFallback`, SPT-03
+ * `afterCloseFallback` and `noIssueLink`, SPT-05 `managerNotWired` and
+ * `itemFallback`, SPT-06 `archivedFallback`). Everyone else gets the full platform.
+ */
+const BASIC = 18;
+
+function onBasicPlatform(actor: SpotActor): boolean {
+  return actor.me.user.id === BASIC;
+}
+
+const SPOT_OUTCOMES: SpotCheckOutcome[] = ['PASS', 'FAIL', 'NEEDS_REVIEW'];
+
+/** The platform's call, made repeatable: mostly pass, some fail, a few too close to call. */
+function judgement(
+  runId: number,
+  position: number,
+): Pick<DbSpotResult, 'outcome' | 'confidence'> {
+  const roll = pseudo(runId, position);
+  if (roll < 70) {
+    return { outcome: 'PASS', confidence: 0.9 + (roll % 10) / 100 };
+  }
+  if (roll < 82) {
+    return { outcome: 'FAIL', confidence: 0.86 + (roll % 10) / 100 };
+  }
+  // Low confidence is NEEDS_REVIEW and never FAIL (API Contract §13).
+  return { outcome: 'NEEDS_REVIEW', confidence: 0.45 + (roll % 20) / 100 };
+}
+
+function spotPhoto(
+  at: Date,
+  managerId: number,
+  key: string,
+  purged = false,
+): SpotCheckPhoto {
+  return {
+    captured_at: at.toISOString(),
+    image_url: purged ? null : `mock://storage/${key}`,
+    purged_at: purged ? at.toISOString() : null,
+    captured_by: userRef(managerId)!,
+  };
+}
+
+const LONG_CHECK_NAME = 'Grooming — front of house, evening service';
+const LONG_ITEM =
+  'the person is wearing the full uniform, a clean apron with the logo showing, closed shoes, and has no jewellery on their hands or wrists';
+const LONG_AREA = 'Walk-in cold room, vegetable store and prep';
+const MALAYALAM_AREA = 'ശീതീകരിച്ച സംഭരണ മുറി';
+
+function seedSpotCheckState(): SpotCheckState {
+  const state: SpotCheckState = {
+    areas: [],
+    checks: [],
+    runs: [],
+    nextAreaId: 300,
+    nextCheckId: 100,
+    nextRunId: 9000,
+    nextResultId: 90000,
+  };
+
+  for (const area of spotCheckFixtures.areas) {
+    state.areas.push({ ...area, tenant_id: 7 });
+  }
+  // 30 areas at Elegance, so the list runs past a screenful.
+  const ELEGANCE_AREAS = [
+    'Entrance',
+    'Reception',
+    'Main hall',
+    'Banquet hall',
+    'Kitchen',
+    'Pastry kitchen',
+    'Dishwash',
+    'Cold room',
+    'Dry store',
+    'Staff room',
+    'Washroom, ground floor',
+    'Washroom, first floor',
+    'Bar',
+    'Terrace',
+    'Lift lobby',
+    'Stairs',
+    'Waste area',
+    'Loading bay',
+    'Cash counter',
+    'Display counter',
+    'Tandoor station',
+    'Grill station',
+    'Salad station',
+    'Beverage station',
+    'Packing station',
+    'Delivery shelf',
+    'Office',
+    'offline',
+    LONG_AREA,
+    MALAYALAM_AREA,
+  ];
+  ELEGANCE_AREAS.forEach((name, index) =>
+    state.areas.push({
+      id: 100 + index,
+      tenant_id: 7,
+      outlet_id: 5,
+      name,
+      is_eligible: index % 9 !== 8,
+      is_archived: false,
+    }),
+  );
+
+  for (const fixture of spotCheckFixtures.checks) {
+    state.checks.push({
+      ...fixture,
+      tenant_id: 7,
+      subject_type: fixture.subject_type as SpotCheckSubjectType,
+      recurrence: fixture.recurrence as SpotCheckRecurrence,
+      is_archived: false,
+      assertions: fixture.assertions.map((assertion) => ({
+        ...assertion,
+        is_archived: false,
+      })),
+    });
+  }
+
+  // Elegance: 12 checks, so the list is long; the last has 8 prompts and 12 items.
+  const filler = (
+    id: number,
+    name: string,
+    prompts: number,
+    items: number,
+    longItem = false,
+  ): DbSpotCheck => ({
+    id,
+    tenant_id: 7,
+    outlet_id: 5,
+    name,
+    subject_type: id % 2 === 0 ? 'AREA' : 'STAFF',
+    recurrence: 'DAILY',
+    st_time: `${String(10 + (id % 8)).padStart(2, '0')}:00`,
+    weekdays: null,
+    day_of_month: null,
+    reveal_window_minutes: 15 + (id % 3) * 5,
+    is_archived: false,
+    captures: Array.from({ length: prompts }, (_, index) => ({
+      position: index + 1,
+      prompt:
+        longItem && index === 0
+          ? LONG_ITEM
+          : `photograph ${index + 1} of the ${id % 2 === 0 ? 'area' : 'person'}`,
+    })),
+    assertions: Array.from({ length: items }, (_, index) => ({
+      position: index + 1,
+      text:
+        longItem && index === 0
+          ? LONG_ITEM
+          : `check item ${index + 1} is as it should be`,
+      weight: 3 + (index % 5),
+      is_archived: false,
+    })),
+  });
+  state.checks.push(
+    filler(11, 'Grooming — front of house', 3, 5),
+    ...Array.from({ length: 9 }, (_, index) =>
+      filler(12 + index, `Spot check ${index + 1}`, 2, 4),
+    ),
+    filler(21, LONG_CHECK_NAME, 3, 5, true),
+    filler(22, 'Full inspection', 8, 12),
+    // Small checks for the photograph states that need a trigger prompt: `upload`
+    // (the first upload is refused), `slow` (the send takes 8 seconds) and `revoked`
+    // (the role is gone: a 403).
+    ...[
+      [23, 'Upload test', 'upload'],
+      [24, 'Slow send test', 'slow'],
+      [25, 'Role lost test', 'revoked'],
+    ].map(([id, name, trigger]) => ({
+      ...filler(id as number, name as string, 2, 3),
+      reveal_window_minutes: 15,
+      captures: [
+        { position: 1, prompt: trigger as string },
+        { position: 2, prompt: 'a second photograph' },
+      ],
+    })),
+  );
+
+  // --- runs ------------------------------------------------------------------
+
+  const at = (minutes: number) => new Date(db.startedAt + minutes * MINUTE_MS);
+  const staffAt3 = (name: string) =>
+    attendanceState().staff.find(
+      (person) =>
+        person.full_name === name &&
+        person.outlets.some((o) => o.outlet_id === 3),
+    )!.id;
+  const areaAt3 = (name: string) =>
+    state.areas.find((area) => area.outlet_id === 3 && area.name === name)!.id;
+  const checkById = (id: number) =>
+    state.checks.find((check) => check.id === id)!;
+
+  type RunSeed = {
+    id: number;
+    check: number;
+    subject: number;
+    manager: number;
+    reveal: Date;
+    /** Photographs sent, by prompt position; the rest are not taken. */
+    sent?: number[];
+    /** Closed runs are settled now; the rest wait for their window. */
+    settle?: boolean;
+    assessedAt?: Date;
+  };
+  const makeRun = (seed: RunSeed): DbSpotRun => {
+    const check = checkById(seed.check);
+    const reveal = seed.reveal;
+    const close = new Date(
+      reveal.getTime() + check.reveal_window_minutes * MINUTE_MS,
+    );
+    const live = check.assertions.filter((assertion) => !assertion.is_archived);
+    const run: DbSpotRun = {
+      id: seed.id,
+      tenant_id: 7,
+      spot_check_id: check.id,
+      outlet_id: check.outlet_id,
+      check_name: check.name,
+      captures: check.captures.map((capture) => ({ ...capture })),
+      assertions: live.map(({ position, text, weight }) => ({
+        position,
+        text,
+        weight,
+      })),
+      subject: { type: check.subject_type, id: seed.subject },
+      manager_id: seed.manager,
+      scheduled_for: reveal.toISOString(),
+      revealed_at: reveal.toISOString(),
+      window_close: close.toISOString(),
+      photos: [],
+      settled: false,
+      completion: null,
+      results: [],
+      ready_at: null,
+      issue_id: null,
+    };
+    const purged =
+      close.getTime() <
+      db.startedAt - SPOT_RETENTION_DAYS * 24 * 60 * MINUTE_MS;
+    (seed.sent ?? []).forEach((position, index) => {
+      run.photos.push({
+        position,
+        photo: spotPhoto(
+          new Date(reveal.getTime() + (2 + index * 3) * MINUTE_MS),
+          seed.manager,
+          `t7/spot/${run.id}-${position}.jpg`,
+          purged,
+        ),
+        earlier: [],
+      });
+    });
+    if (seed.settle) settleRun(state, run, seed.assessedAt);
+    return run;
+  };
+
+  const lakshmi = staffAt3('Lakshmi');
+  const imran = staffAt3('Imran');
+  const rekha = staffAt3('Rekha');
+  const joseph = staffAt3('Joseph');
+  const dev = staffAt3('Dev');
+  const coldRoom = areaAt3('Cold room');
+  const kitchen = areaAt3('Kitchen');
+  const dishwash = areaAt3('Dishwash');
+  const day = (daysAgo: number, hhmm: string) => localTime(daysAgo, hhmm);
+
+  // Today, on the mock clock: one open now with prompt 1 sent, one revealing in
+  // minutes (two open at once for a while), one a little later.
+  state.runs.push(
+    makeRun({
+      id: 1,
+      check: 1,
+      subject: lakshmi,
+      manager: RESHMA,
+      reveal: at(-5),
+      sent: [1],
+    }),
+    makeRun({
+      id: 2,
+      check: 2,
+      subject: coldRoom,
+      manager: RESHMA,
+      reveal: at(3),
+    }),
+    makeRun({
+      id: 3,
+      check: 3,
+      subject: dishwash,
+      manager: RESHMA,
+      reveal: at(60),
+    }),
+    // Just closed: all photographs in, outcomes not back yet.
+    makeRun({
+      id: 6,
+      check: 1,
+      subject: rekha,
+      manager: RESHMA,
+      reveal: at(-21),
+      sent: [1, 2, 3],
+      settle: true,
+      assessedAt: at(2),
+    }),
+    // Yesterday, Cold room, with a review item.
+    makeRun({
+      id: 4,
+      check: 2,
+      subject: coldRoom,
+      manager: RESHMA,
+      reveal: day(1, '16:00'),
+      sent: [1, 2],
+      settle: true,
+    }),
+    // Two of three photographs: assessed on these.
+    makeRun({
+      id: 5,
+      check: 1,
+      subject: imran,
+      manager: RESHMA,
+      reveal: day(2, '14:00'),
+      sent: [1, 2],
+      settle: true,
+    }),
+    // Nothing sent: not done, and no retry.
+    makeRun({
+      id: 7,
+      check: 1,
+      subject: dev,
+      manager: RESHMA,
+      reveal: day(3, '14:00'),
+      settle: true,
+    }),
+    // A failure overridden, with the time it happened.
+    makeRun({
+      id: 8,
+      check: 1,
+      subject: joseph,
+      manager: RESHMA,
+      reveal: day(4, '14:00'),
+      sent: [1, 2, 3],
+      settle: true,
+    }),
+    // An override with no time on it (the platform may not record one).
+    makeRun({
+      id: 9,
+      check: 2,
+      subject: kitchen,
+      manager: ARUN,
+      reveal: day(5, '16:00'),
+      sent: [1, 2],
+      settle: true,
+    }),
+    // A retaken photograph: both kept.
+    makeRun({
+      id: 10,
+      check: 1,
+      subject: lakshmi,
+      manager: RESHMA,
+      reveal: day(6, '14:00'),
+      sent: [1, 2, 3],
+      settle: true,
+    }),
+    // Another manager's run: outcomes are not Reshma's to see.
+    makeRun({
+      id: 11,
+      check: 2,
+      subject: kitchen,
+      manager: ARUN,
+      reveal: day(1, '16:30'),
+      sent: [1, 2],
+      settle: true,
+    }),
+    // Past the retention period: the photographs are gone.
+    makeRun({
+      id: 12,
+      check: 1,
+      subject: joseph,
+      manager: RESHMA,
+      reveal: day(40, '14:00'),
+      sent: [1, 2, 3],
+      settle: true,
+    }),
+  );
+
+  const byId = (id: number) => state.runs.find((run) => run.id === id)!;
+
+  // Run 4: the review item.
+  const run4 = byId(4);
+  run4.results[0] = {
+    ...run4.results[0],
+    outcome: 'NEEDS_REVIEW',
+    confidence: 0.58,
+  };
+  // Run 8: "name tag is visible" failed, and the manager put it right.
+  const run8 = byId(8);
+  run8.results[2] = {
+    ...run8.results[2],
+    outcome: 'FAIL',
+    confidence: 0.91,
+    overridden_to: 'PASS',
+    override_note: 'Tag was pinned under the apron; checked on the floor.',
+    overridden_by_id: RESHMA,
+    overridden_at: day(4, '15:10').toISOString(),
+  };
+  // Run 9: Arun's override, without a time.
+  const run9 = byId(9);
+  run9.results[0] = {
+    ...run9.results[0],
+    outcome: 'NEEDS_REVIEW',
+    confidence: 0.52,
+    overridden_to: 'PASS',
+    override_note: 'Lower shelf was clear when I looked.',
+    overridden_by_id: ARUN,
+    overridden_at: null,
+  };
+  // Run 10: prompt 2 was retaken, the earlier photograph kept.
+  const run10 = byId(10);
+  const second = run10.photos.find((entry) => entry.position === 2)!;
+  second.earlier.push(
+    spotPhoto(
+      new Date(new Date(second.photo.captured_at).getTime() - 2 * MINUTE_MS),
+      RESHMA,
+      `t7/spot/${run10.id}-2-first.jpg`,
+    ),
+  );
+  for (const run of [run4, run8, run9]) {
+    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
+  }
+
+  // About thirty more at ZamZam over the last 45 days, and a dozen at Elegance.
+  const ZAMZAM_CHECKS = [1, 2, 3];
+  for (let index = 0; index < 30; index++) {
+    const checkId = ZAMZAM_CHECKS[index % 3];
+    const check = checkById(checkId);
+    const daysAgo = 7 + index + (index > 22 ? 8 : 0);
+    const subject =
+      check.subject_type === 'STAFF'
+        ? [lakshmi, imran, rekha, joseph, dev][index % 5]
+        : [kitchen, coldRoom, dishwash][index % 3];
+    const sent = check.captures.map((capture) => capture.position);
+    const missed = index % 11 === 6;
+    const partial = index % 7 === 3 && sent.length > 1;
+    const run = makeRun({
+      id: 20 + index,
+      check: checkId,
+      subject,
+      manager: index % 4 === 3 ? ARUN : RESHMA,
+      reveal: day(daysAgo, check.st_time),
+      sent: missed ? [] : partial ? sent.slice(0, -1) : sent,
+      settle: true,
+    });
+    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
+    state.runs.push(run);
+  }
+  const front = checkById(11);
+  const frontStaff = attendanceState().staff.filter((person) =>
+    person.outlets.some((o) => o.outlet_id === 5),
+  );
+  for (let index = 0; index < 12; index++) {
+    const run = makeRun({
+      id: 60 + index,
+      check: 11,
+      subject: frontStaff[index % frontStaff.length].id,
+      manager: ARUN,
+      reveal: day(1 + index, front.st_time),
+      sent: front.captures.map((capture) => capture.position),
+      settle: true,
+    });
+    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
+    state.runs.push(run);
+  }
+
+  // Two open at Elegance for Arun at the start: the long text, and the eight prompts.
+  const kitchen5 = state.areas.find(
+    (area) => area.outlet_id === 5 && area.name === 'Kitchen',
+  )!;
+  state.runs.push(
+    makeRun({
+      id: 80,
+      check: 21,
+      subject: frontStaff[0].id,
+      manager: ARUN,
+      reveal: at(-3),
+    }),
+    makeRun({
+      id: 81,
+      check: 22,
+      subject: kitchen5.id,
+      manager: ARUN,
+      reveal: at(-2),
+    }),
+    // For `uploadFailed` and `pending`: see the trigger prompts on checks 23 and 24.
+    makeRun({
+      id: 82,
+      check: 23,
+      subject: frontStaff[1].id,
+      manager: ARUN,
+      reveal: at(-1),
+    }),
+    makeRun({
+      id: 83,
+      check: 24,
+      subject: kitchen5.id,
+      manager: ARUN,
+      reveal: at(-1),
+    }),
+    makeRun({
+      id: 84,
+      check: 25,
+      subject: frontStaff[2].id,
+      manager: ARUN,
+      reveal: at(-1),
+    }),
+    // For the basic platform (sign in as `basic`): its own run to take photographs
+    // for, so a partial capture and a retake can be seen the way that platform keeps them.
+    makeRun({
+      id: 90,
+      check: 1,
+      subject: dev,
+      manager: BASIC,
+      reveal: at(-1),
+    }),
+  );
+
+  return state;
+}
+
+function hasLiveFail(run: DbSpotRun): boolean {
+  return run.results.some((result) => effectiveOutcome(result) === 'FAIL');
+}
+
+/**
+ * The window has closed: fix how it ended and judge every assertion against the
+ * photographs that were sent. Nothing was sent: not done, and nothing to judge.
+ */
+function settleRun(state: SpotCheckState, run: DbSpotRun, assessedAt?: Date) {
+  if (run.settled) return;
+  run.settled = true;
+  const sent = run.photos.length;
+  run.completion =
+    sent === 0 ? 'NOT_DONE' : sent < run.captures.length ? 'PARTIAL' : 'DONE';
+  if (run.completion === 'NOT_DONE') return;
+  run.results = run.assertions.map((assertion) => ({
+    id: state.nextResultId++,
+    assertion_position: assertion.position,
+    assertion_text: assertion.text,
+    weight: assertion.weight,
+    ...judgement(run.id, assertion.position),
+    overridden_to: null,
+    override_note: null,
+    overridden_by_id: null,
+    overridden_at: null,
+  }));
+  run.ready_at = (
+    assessedAt ??
+    new Date(new Date(run.window_close).getTime() + SPOT_ASSESS_MS)
+  ).toISOString();
+  run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
+}
+
+function spotCheckState(): SpotCheckState {
+  return (db.spotCheckState ??= seedSpotCheckState());
+}
+
+/** Close every run whose window has passed, as a read of the platform would. */
+function settleSpotRuns() {
+  const state = spotCheckState();
+  const now = Date.now();
+  for (const run of state.runs) {
+    if (!run.settled && new Date(run.window_close).getTime() <= now) {
+      settleRun(state, run);
+    }
+  }
+}
+
+type SpotActor = {
+  me: MeResponse;
+  admin: boolean;
+  managedOutletIds: Set<number>;
+};
+
+/** 404 where no outlet has spot checks on; 403 for anyone who is neither admin nor manager. */
+function spotActor(): SpotActor {
+  const me = resolveMe();
+  if (me.modules.spot_check_outlets.length === 0) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  const admin = canAdminister(me.user.tenant_role);
+  const managedOutletIds = new Set(
+    me.memberships.spot_check_outlets.filter((id) =>
+      me.modules.spot_check_outlets.includes(id),
+    ),
+  );
+  if (!admin && managedOutletIds.size === 0) {
+    throw apiError(403, API_ERROR_CODE.PERMISSION_DENIED, 'Not permitted.');
+  }
+  return { me, admin, managedOutletIds };
+}
+
+/** Outlets with spot checks on that the caller may read; anything else looks the same: 404. */
+function readableSpotOutlets(actor: SpotActor): Set<number> {
+  return new Set(
+    actor.admin
+      ? actor.me.modules.spot_check_outlets
+      : [...actor.managedOutletIds],
+  );
+}
+
+function readableSpotOutlet(actor: SpotActor, outletId: number) {
+  if (!readableSpotOutlets(actor).has(outletId)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return outletId;
+}
+
+/** ADMIN and OWNER author checks and areas and appoint managers. */
+function requireSpotAuthor(actor: SpotActor) {
+  if (!actor.admin) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      'Only head office can change spot checks.',
+    );
+  }
+}
+
+function toArea({ tenant_id: _tenant, ...area }: DbArea): Area {
+  return area;
+}
+
+function findSpotArea(actor: SpotActor, id: number): DbArea {
+  const readable = readableSpotOutlets(actor);
+  const area = spotCheckState().areas.find(
+    (candidate) =>
+      candidate.id === id &&
+      candidate.tenant_id === actor.me.business.id &&
+      readable.has(candidate.outlet_id),
+  );
+  if (!area) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return area;
+}
+
+function assertAreaName(name: string) {
+  if (!name.trim()) throw invalid('Name is required.', 'name');
+  if (name.trim().length > 150) {
+    throw invalid('Use 150 characters or fewer.', 'name');
+  }
+}
+
+/** Schema: `unique(outlet_id, name)`, archived areas included. */
+function assertAreaNameFree(area: DbArea, name: string, exceptId?: number) {
+  const taken = spotCheckState().areas.some(
+    (other) =>
+      other.outlet_id === area.outlet_id &&
+      other.id !== exceptId &&
+      other.name.toLowerCase() === name.trim().toLowerCase(),
+  );
+  if (taken) {
+    throw invalid(
+      'An area with this name already exists at this outlet.',
+      'name',
+    );
+  }
+}
+
+/** GET areas — by name, with archived ones on request. Mock only. */
+export async function mockListAreas(query: AreasQuery): Promise<Page<Area>> {
+  await delay();
+  const actor = spotActor();
+  if (query.includeArchived && onBasicPlatform(actor)) {
+    throw apiError(
+      400,
+      'archived_not_listed',
+      'Archived areas cannot be listed.',
+      'include_archived',
+    );
+  }
+  const readable = readableSpotOutlets(actor);
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableSpotOutlet(actor, query.outletId);
+  const matches = spotCheckState()
+    .areas.filter(
+      (area) =>
+        area.tenant_id === actor.me.business.id &&
+        readable.has(area.outlet_id) &&
+        (outletId === undefined || area.outlet_id === outletId) &&
+        (query.includeArchived || !area.is_archived),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id)
+    .map(toArea);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** POST an area. Mock only. */
+export async function mockCreateArea(
+  request: CreateAreaRequest,
+): Promise<Area> {
+  await delay();
+  const actor = spotActor();
+  requireSpotAuthor(actor);
+  triggerFault(request.name);
+  triggerRevoked(request.name);
+  const outletId = readableSpotOutlet(actor, request.outlet_id);
+  assertAreaName(request.name);
+  const state = spotCheckState();
+  const area: DbArea = {
+    id: state.nextAreaId++,
+    tenant_id: actor.me.business.id,
+    outlet_id: outletId,
+    name: request.name.trim(),
+    is_eligible: request.is_eligible ?? true,
+    is_archived: false,
+  };
+  assertAreaNameFree(area, area.name);
+  state.areas.push(area);
+  return toArea(area);
+}
+
+/** PATCH an area: rename, switch eligibility, archive or restore. An archived area is frozen. Mock only. */
+export async function mockUpdateArea(
+  id: number,
+  request: UpdateAreaRequest,
+): Promise<Area> {
+  await delay();
+  const actor = spotActor();
+  requireSpotAuthor(actor);
+  const area = findSpotArea(actor, id);
+  // An area called "offline" or "fault" fails whatever is changed on it, so the
+  // switch and the sheet can be seen failing (SPT-06 `switchFailed`).
+  triggerFault(area.name);
+  triggerFault(request.name);
+  triggerRevoked(area.name);
+  triggerRevoked(request.name);
+  if (
+    area.is_archived &&
+    (request.is_archived === undefined || request.is_archived)
+  ) {
+    throw invalid('An archived area cannot be changed.', 'is_archived');
+  }
+  if (request.name !== undefined) {
+    assertAreaName(request.name);
+    assertAreaNameFree(area, request.name, area.id);
+    area.name = request.name.trim();
+  }
+  if (request.is_eligible !== undefined) area.is_eligible = request.is_eligible;
+  if (request.is_archived !== undefined) area.is_archived = request.is_archived;
+  return toArea(area);
+}
+
+// checks
+
+function toCheck({ tenant_id: _tenant, ...check }: DbSpotCheck): SpotCheck {
+  return check;
+}
+
+function findSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
+  const readable = readableSpotOutlets(actor);
+  const check = spotCheckState().checks.find(
+    (candidate) =>
+      candidate.id === id &&
+      candidate.tenant_id === actor.me.business.id &&
+      readable.has(candidate.outlet_id),
+  );
+  if (!check) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return check;
+}
+
+/** An archived check is frozen: no edit, no new prompts or items. */
+function findEditableSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
+  requireSpotAuthor(actor);
+  const check = findSpotCheck(actor, id);
+  if (check.is_archived) {
+    throw invalid('An archived spot check cannot be changed.', 'is_archived');
+  }
+  return check;
+}
+
+function assertValidSpotCheck(
+  fields: Pick<
+    SpotCheck,
+    | 'name'
+    | 'subject_type'
+    | 'recurrence'
+    | 'st_time'
+    | 'weekdays'
+    | 'day_of_month'
+    | 'reveal_window_minutes'
+  >,
+) {
+  if (fields.name.trim().length > 150) {
+    throw invalid('Use 150 characters or fewer.', 'name');
+  }
+  if (!['STAFF', 'AREA'].includes(fields.subject_type)) {
+    throw invalid('Choose staff or area.', 'subject_type');
+  }
+  if ((fields.recurrence as string) === 'HOURLY') {
+    throw invalid('A spot check cannot repeat hourly.', 'recurrence');
+  }
+  if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(fields.recurrence)) {
+    throw invalid('Choose daily, weekly or monthly.', 'recurrence');
+  }
+  if (
+    !Number.isInteger(fields.reveal_window_minutes) ||
+    fields.reveal_window_minutes < 15 ||
+    fields.reveal_window_minutes > 30
+  ) {
+    throw invalid('Use between 15 and 30 minutes.', 'reveal_window_minutes');
+  }
+  assertValidSchedule({
+    name: fields.name,
+    recurrence: fields.recurrence,
+    st_time: fields.st_time,
+    deadline_minutes: fields.reveal_window_minutes,
+    weekdays: fields.weekdays,
+    day_of_month: fields.day_of_month,
+    interval_hours: null,
+    last_run_time: null,
+  });
+}
+
+/**
+ * Prompts and items written together, in order (mock only). Checked in full before
+ * anything is changed, so a refused save leaves the check as it was.
+ */
+function checkedLists(lists: SpotCheckLists) {
+  const out: {
+    captures?: SpotCheckCapture[];
+    assertions?: SpotCheckAssertion[];
+  } = {};
+  if (lists.captures !== undefined) {
+    if (lists.captures.length === 0) {
+      throw invalid('A spot check needs at least one prompt.', 'captures');
+    }
+    out.captures = lists.captures.map((capture, index) => {
+      const prompt = capture.prompt.trim();
+      if (!prompt) throw invalid('Prompt is required.', 'captures');
+      if (prompt.length > 200) {
+        throw invalid('Use 200 characters or fewer.', 'captures');
+      }
+      return { position: index + 1, prompt };
+    });
+  }
+  if (lists.assertions !== undefined) {
+    out.assertions = lists.assertions.map((item, index) => {
+      assertValidItem({ text: item.text, weight: item.weight });
+      return {
+        position: index + 1,
+        text: item.text.trim(),
+        weight: item.weight,
+        is_archived: item.is_archived,
+      };
+    });
+  }
+  return out;
+}
+
+/** GET /spot-checks — by name, across the outlets the caller can read. */
+export async function mockListSpotChecks(
+  query: SpotChecksQuery,
+): Promise<Page<SpotCheck>> {
+  await delay();
+  const actor = spotActor();
+  const readable = readableSpotOutlets(actor);
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableSpotOutlet(actor, query.outletId);
+  const matches = spotCheckState()
+    .checks.filter(
+      (check) =>
+        check.tenant_id === actor.me.business.id &&
+        readable.has(check.outlet_id) &&
+        (outletId === undefined || check.outlet_id === outletId) &&
+        (query.includeArchived || !check.is_archived),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id)
+    .map(toCheck);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** GET /spot-checks/{id} — with its prompts and items. */
+export async function mockGetSpotCheck(id: number): Promise<SpotCheck> {
+  await delay();
+  const actor = spotActor();
+  return toCheck(findSpotCheck(actor, id));
+}
+
+/** POST /spot-checks */
+export async function mockCreateSpotCheck(
+  request: CreateSpotCheckRequest,
+): Promise<SpotCheck> {
+  await delay();
+  const actor = spotActor();
+  requireSpotAuthor(actor);
+  triggerFault(request.name);
+  triggerRevoked(request.name);
+  const outletId = readableSpotOutlet(actor, request.outlet_id);
+  assertValidSpotCheck(request);
+  const lists = checkedLists(request);
+  const state = spotCheckState();
+  const { captures: _captures, assertions: _assertions, ...fields } = request;
+  const check: DbSpotCheck = {
+    ...fields,
+    id: state.nextCheckId++,
+    tenant_id: actor.me.business.id,
+    outlet_id: outletId,
+    name: request.name.trim(),
+    is_archived: false,
+    captures: lists.captures ?? [],
+    assertions: lists.assertions ?? [],
+  };
+  state.checks.push(check);
+  return toCheck(check);
+}
+
+/** PATCH /spot-checks/{id} — everything but the outlet. Runs already made keep their prompts and items. */
+export async function mockUpdateSpotCheck(
+  id: number,
+  request: UpdateSpotCheckRequest,
+): Promise<SpotCheck> {
+  await delay();
+  const actor = spotActor();
+  requireSpotAuthor(actor);
+  const check = findSpotCheck(actor, id);
+  triggerFault(request.name);
+  triggerRevoked(check.name);
+  triggerRevoked(request.name);
+  // A platform that cannot change the list of a check that exists (SPT-05 `itemFallback`).
+  if (
+    onBasicPlatform(actor) &&
+    (request.captures !== undefined || request.assertions !== undefined)
+  ) {
+    throw apiError(
+      400,
+      'list_locked',
+      'The prompts and items of a check cannot be changed.',
+      'captures',
+    );
+  }
+  if (check.is_archived && request.is_archived !== false) {
+    throw invalid('An archived spot check cannot be changed.', 'is_archived');
+  }
+  const next = {
+    name: request.name?.trim() ?? check.name,
+    subject_type: request.subject_type ?? check.subject_type,
+    recurrence: request.recurrence ?? check.recurrence,
+    st_time: request.st_time ?? check.st_time,
+    weekdays:
+      request.weekdays === undefined ? check.weekdays : request.weekdays,
+    day_of_month:
+      request.day_of_month === undefined
+        ? check.day_of_month
+        : request.day_of_month,
+    reveal_window_minutes:
+      request.reveal_window_minutes ?? check.reveal_window_minutes,
+  };
+  assertValidSpotCheck(next);
+  const lists = checkedLists(request);
+  Object.assign(check, next);
+  if (lists.captures) check.captures = lists.captures;
+  if (lists.assertions) check.assertions = lists.assertions;
+  if (request.is_archived !== undefined)
+    check.is_archived = request.is_archived;
+  return toCheck(check);
+}
+
+/** POST /spot-checks/{id}/captures — added at the end. */
+export async function mockAddSpotCheckCapture(
+  id: number,
+  request: SpotCheckCaptureRequest,
+): Promise<SpotCheckCapture> {
+  await delay();
+  const actor = spotActor();
+  const check = findEditableSpotCheck(actor, id);
+  triggerFault(request.prompt);
+  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
+  if (request.prompt.trim().length > 200) {
+    throw invalid('Use 200 characters or fewer.', 'prompt');
+  }
+  const capture = {
+    position: check.captures.length + 1,
+    prompt: request.prompt.trim(),
+  };
+  check.captures.push(capture);
+  return capture;
+}
+
+/** PATCH a prompt's wording. Mock only: the contract lists add and read. */
+export async function mockUpdateSpotCheckCapture(
+  id: number,
+  position: number,
+  request: SpotCheckCaptureRequest,
+): Promise<SpotCheckCapture> {
+  await delay();
+  const actor = spotActor();
+  const check = findEditableSpotCheck(actor, id);
+  triggerFault(request.prompt);
+  const capture = check.captures.find((entry) => entry.position === position);
+  if (!capture) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
+  capture.prompt = request.prompt.trim();
+  return capture;
+}
+
+/** DELETE a prompt; those after it move up. Mock only. */
+export async function mockRemoveSpotCheckCapture(
+  id: number,
+  position: number,
+): Promise<void> {
+  await delay();
+  const actor = spotActor();
+  const check = findEditableSpotCheck(actor, id);
+  if (!check.captures.some((entry) => entry.position === position)) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  check.captures = check.captures
+    .filter((entry) => entry.position !== position)
+    .map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function assertValidItem(fields: { text?: string; weight?: number }) {
+  if (fields.text !== undefined) {
+    if (!fields.text.trim()) throw invalid('Text is required.', 'text');
+    if (fields.text.trim().length > 200) {
+      throw invalid('Use 200 characters or fewer.', 'text');
+    }
+  }
+  if (
+    fields.weight !== undefined &&
+    (!Number.isInteger(fields.weight) ||
+      fields.weight < 1 ||
+      fields.weight > 10)
+  ) {
+    throw invalid('Use a weight from 1 to 10.', 'weight');
+  }
+}
+
+/** POST /spot-checks/{id}/assertions — added at the end, never tied to a prompt. */
+export async function mockAddSpotCheckAssertion(
+  id: number,
+  request: SpotCheckAssertionRequest,
+): Promise<SpotCheckAssertion> {
+  await delay();
+  const actor = spotActor();
+  const check = findEditableSpotCheck(actor, id);
+  triggerFault(request.text);
+  if (request.text === undefined) throw invalid('Text is required.', 'text');
+  assertValidItem(request);
+  const assertion: SpotCheckAssertion = {
+    position: check.assertions.length + 1,
+    text: request.text.trim(),
+    weight: request.weight ?? DEFAULT_WEIGHT,
+    is_archived: false,
+  };
+  check.assertions.push(assertion);
+  return assertion;
+}
+
+/** PATCH an item: wording, weight, archive or restore. Mock only. */
+export async function mockUpdateSpotCheckAssertion(
+  id: number,
+  position: number,
+  request: SpotCheckAssertionRequest,
+): Promise<SpotCheckAssertion> {
+  await delay();
+  const actor = spotActor();
+  const check = findEditableSpotCheck(actor, id);
+  triggerFault(request.text);
+  const assertion = check.assertions.find(
+    (entry) => entry.position === position,
+  );
+  if (!assertion) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  assertValidItem(request);
+  if (request.text !== undefined) assertion.text = request.text.trim();
+  if (request.weight !== undefined) assertion.weight = request.weight;
+  if (request.is_archived !== undefined) {
+    assertion.is_archived = request.is_archived;
+  }
+  return assertion;
+}
+
+// Spot-check Managers. The Schema has no membership table (Known Inconsistency
+// #7), so this is the mock's own shape, written to the rows /auth/me reads
+// (`spot_check_outlets`).
+
+/** GET (invented) spot-check managers of one outlet, by name. */
+export async function mockListSpotCheckManagers(
+  outletId: number,
+): Promise<SpotCheckManager[]> {
+  await delay();
+  const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
+  requireSpotAuthor(actor);
+  readableSpotOutlet(actor, outletId);
+  return db.users
+    .filter(
+      (user) =>
+        user.tenant_id === actor.me.business.id &&
+        user.is_active &&
+        user.memberships.spot_check_outlets.includes(outletId),
+    )
+    .sort((a, b) => a.full_name.localeCompare(b.full_name) || a.id - b.id)
+    .map((user) => ({
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+    }));
+}
+
+/** Appoint someone as an outlet's Spot-check Manager; appointing twice changes nothing. */
+export async function mockAppointSpotCheckManager(
+  outletId: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
+  requireSpotAuthor(actor);
+  readableSpotOutlet(actor, outletId);
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === userId && candidate.tenant_id === actor.me.business.id,
+  );
+  if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (!user.is_active) {
+    throw invalid('A deactivated user cannot be appointed.', 'user_id');
+  }
+  if (!user.memberships.spot_check_outlets.includes(outletId)) {
+    user.memberships.spot_check_outlets.push(outletId);
+  }
+}
+
+/** Take a Spot-check Manager off an outlet. Their past runs keep their name. */
+export async function mockRemoveSpotCheckManager(
+  outletId: number,
+  userId: number,
+): Promise<void> {
+  await delay();
+  const actor = spotActor();
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      405,
+      'method_not_allowed',
+      'Spot-check managers cannot be changed here.',
+    );
+  }
+  requireSpotAuthor(actor);
+  readableSpotOutlet(actor, outletId);
+  const user = db.users.find(
+    (candidate) =>
+      candidate.id === userId &&
+      candidate.tenant_id === actor.me.business.id &&
+      candidate.memberships.spot_check_outlets.includes(outletId),
+  );
+  if (!user) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  user.memberships.spot_check_outlets =
+    user.memberships.spot_check_outlets.filter((id) => id !== outletId);
+}
+
+// runs, photographs and results
+
+function runStatus(run: DbSpotRun, now: number): SpotCheckRunStatus {
+  if (now < new Date(run.revealed_at).getTime()) return 'SCHEDULED';
+  return now < new Date(run.window_close).getTime() ? 'OPEN' : 'FINALIZED';
+}
+
+function toRunPhoto(photo: SpotCheckPhoto): SpotCheckPhoto {
+  return { ...photo, captured_by: { ...photo.captured_by } };
+}
+
+function toResult(
+  run: DbSpotRun,
+  result: DbSpotResult,
+  now: number,
+): SpotCheckResult {
+  const pending =
+    run.ready_at !== null && now < new Date(run.ready_at).getTime();
+  return {
+    id: result.id,
+    assertion_position: result.assertion_position,
+    assertion_text: result.assertion_text,
+    outcome: pending ? 'PENDING_JUDGEMENT' : result.outcome,
+    confidence: pending ? null : result.confidence,
+    overridden_to: result.overridden_to,
+    override_note: result.override_note,
+    overridden_by: userRef(result.overridden_by_id),
+    overridden_at: result.overridden_at,
+  };
+}
+
+/**
+ * 🔒 Before the reveal nothing identifies the subject: no name, no id, no times.
+ * Outcomes are the responsible manager's and head office's; another manager sees none.
+ */
+function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
+  const now = Date.now();
+  const status = runStatus(run, now);
+  const base = {
+    id: run.id,
+    spot_check_id: run.spot_check_id,
+    spot_check_name: run.check_name,
+    outlet_id: run.outlet_id,
+    status,
+    manager: userRef(run.manager_id),
+  };
+  if (status === 'SCHEDULED') {
+    return {
+      ...base,
+      // 🔒 No subject, and no time that gives the moment of the reveal away.
+      scheduled_for: null,
+      subject: null,
+      revealed_at: null,
+      window_close: null,
+      captures: null,
+      completion: null,
+      results: null,
+      issue_id: null,
+    };
+  }
+  const state = spotCheckState();
+  let subject: SpotCheckRun['subject'];
+  if (run.subject.type === 'STAFF') {
+    const person = attendanceState().staff.find(
+      (candidate) => candidate.id === run.subject.id,
+    );
+    subject = {
+      type: 'STAFF',
+      id: run.subject.id,
+      full_name: person?.full_name ?? '',
+    };
+  } else {
+    const area = state.areas.find(
+      (candidate) => candidate.id === run.subject.id,
+    );
+    subject = { type: 'AREA', id: run.subject.id, name: area?.name ?? '' };
+  }
+  const sees = actor.admin || run.manager_id === actor.me.user.id;
+  const basic = onBasicPlatform(actor);
+  // On the basic platform a partial capture is simply "not done" and is not assessed,
+  // a retake overwrites, and no failure raises an issue.
+  const completion =
+    status === 'FINALIZED'
+      ? basic && run.completion === 'PARTIAL'
+        ? 'NOT_DONE'
+        : run.completion
+      : null;
+  return {
+    ...base,
+    scheduled_for: run.scheduled_for,
+    subject,
+    revealed_at: run.revealed_at,
+    window_close: run.window_close,
+    captures: run.captures.map((capture) => {
+      const sent = run.photos.find(
+        (entry) => entry.position === capture.position,
+      );
+      return {
+        ...capture,
+        photo: sent ? toRunPhoto(sent.photo) : null,
+        earlier_photos: sent && !basic ? sent.earlier.map(toRunPhoto) : [],
+      };
+    }),
+    completion,
+    results:
+      sees && status === 'FINALIZED'
+        ? basic && run.completion === 'PARTIAL'
+          ? []
+          : run.results.map((result) => toResult(run, result, now))
+        : null,
+    issue_id: sees && !basic ? run.issue_id : null,
+  };
+}
+
+/** A run of an outlet the caller can read; the capture flow is the responsible manager's. */
+function findSpotRun(actor: SpotActor, id: number): DbSpotRun {
+  settleSpotRuns();
+  const readable = readableSpotOutlets(actor);
+  const run = spotCheckState().runs.find(
+    (candidate) =>
+      candidate.id === id &&
+      candidate.tenant_id === actor.me.business.id &&
+      readable.has(candidate.outlet_id),
+  );
+  if (!run) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  return run;
+}
+
+/** Whether the caller can see this run's outcomes yet: theirs, or head office, once assessed. */
+function outcomesVisible(actor: SpotActor, run: DbSpotRun, now: number) {
+  return (
+    (actor.admin || run.manager_id === actor.me.user.id) &&
+    (run.ready_at === null || now >= new Date(run.ready_at).getTime())
+  );
+}
+
+/** A result still waiting on a person: needs review and not yet overridden. */
+function needsReview(actor: SpotActor, run: DbSpotRun, now: number): boolean {
+  return (
+    outcomesVisible(actor, run, now) &&
+    run.results.some(
+      (result) =>
+        result.outcome === 'NEEDS_REVIEW' && result.overridden_to === null,
+    )
+  );
+}
+
+/**
+ * GET /spot-check-runs. `revealed` and `scheduled` are the responsible manager's own;
+ * `closed` is the results list (mock only): runs that need review first, then newest.
+ */
+export async function mockListSpotCheckRuns(
+  query: SpotCheckRunsQuery,
+): Promise<Page<SpotCheckRun>> {
+  await delay();
+  const actor = spotActor();
+  settleSpotRuns();
+  const readable = readableSpotOutlets(actor);
+  const outletId =
+    query.outletId === undefined
+      ? undefined
+      : readableSpotOutlet(actor, query.outletId);
+  const now = Date.now();
+  const wanted: SpotCheckRunStatus | null =
+    query.state === 'revealed'
+      ? 'OPEN'
+      : query.state === 'scheduled'
+        ? 'SCHEDULED'
+        : query.state === 'closed'
+          ? 'FINALIZED'
+          : null;
+  const matches = spotCheckState()
+    .runs.filter((run) => {
+      if (run.tenant_id !== actor.me.business.id) return false;
+      if (!readable.has(run.outlet_id)) return false;
+      if (outletId !== undefined && run.outlet_id !== outletId) return false;
+      const status = runStatus(run, now);
+      if (wanted && status !== wanted) return false;
+      if (
+        (wanted === 'OPEN' || wanted === 'SCHEDULED') &&
+        !actor.admin &&
+        run.manager_id !== actor.me.user.id
+      ) {
+        return false;
+      }
+      if (
+        query.outcome &&
+        !(
+          outcomesVisible(actor, run, now) &&
+          // By what each result stands as now (an override counts), as the cards' tally does.
+          run.results.some(
+            (result) => effectiveOutcome(result) === query.outcome,
+          )
+        )
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const time = (iso: string) => new Date(iso).getTime();
+      if (wanted === 'SCHEDULED')
+        return time(a.revealed_at) - time(b.revealed_at);
+      // Soonest to close first, so the one running out of time leads.
+      if (wanted === 'OPEN') return time(a.window_close) - time(b.window_close);
+      if (wanted === 'FINALIZED') {
+        const review =
+          Number(needsReview(actor, b, now)) -
+          Number(needsReview(actor, a, now));
+        if (review !== 0) return review;
+      }
+      return time(b.window_close) - time(a.window_close);
+    })
+    .map((run) => toRun(actor, run));
+  return paginate(matches, query.page, query.pageSize);
+}
+
+/** GET /spot-check-runs/{id} */
+export async function mockGetSpotCheckRun(id: number): Promise<SpotCheckRun> {
+  await delay();
+  const actor = spotActor();
+  const run = findSpotRun(actor, id);
+  // 🔒 An open check was revealed to its own manager and head office: to another
+  // manager at the outlet it does not exist, the same as the lists leave it out.
+  if (
+    !actor.admin &&
+    run.manager_id !== actor.me.user.id &&
+    runStatus(run, Date.now()) === 'OPEN'
+  ) {
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  }
+  return toRun(actor, run);
+}
+
+/**
+ * POST /spot-check-runs/{id}/photos — the responsible manager only. A photograph
+ * for a prompt that already has one replaces it, and the earlier one is kept.
+ */
+export async function mockSubmitSpotCheckPhoto(
+  id: number,
+  request: SubmitSpotCheckPhotoRequest,
+): Promise<SpotCheckRun> {
+  await delay();
+  const actor = spotActor();
+  triggerFault(request.image_key);
+  const run = findSpotRun(actor, id);
+  if (run.manager_id !== actor.me.user.id) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.NOT_YOUR_ASSIGNMENT,
+      'This check was revealed to someone else.',
+    );
+  }
+  // A prompt of `slow`: the send takes a while to be answered, so the prompt can
+  // be seen as "Waiting to send" (SPT-01 `pending`), and a lost signal leaves it queued.
+  const asked = run.captures.find(
+    (capture) => capture.position === request.capture_position,
+  );
+  // A prompt of `revoked`: the role was taken away, so the photograph is refused (403).
+  if (asked) triggerRevoked(asked.prompt);
+  if (asked && isPromptTrigger(asked.prompt, 'slow')) {
+    await new Promise((resolve) => setTimeout(resolve, SLOW_SEND_MS));
+  }
+  const now = Date.now();
+  if (now < new Date(run.revealed_at).getTime()) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.WINDOW_NOT_OPEN,
+      'This check has not opened.',
+    );
+  }
+  if (now >= new Date(run.window_close).getTime()) {
+    throw apiError(409, API_ERROR_CODE.WINDOW_CLOSED, 'This check has closed.');
+  }
+  if (
+    !run.captures.some(
+      (capture) => capture.position === request.capture_position,
+    )
+  ) {
+    throw invalid('There is no such prompt.', 'capture_position');
+  }
+  if (!request.image_key.trim())
+    throw invalid('Image is required.', 'image_key');
+  const photo = spotPhoto(new Date(now), run.manager_id, request.image_key);
+  const sent = run.photos.find(
+    (entry) => entry.position === request.capture_position,
+  );
+  if (sent) {
+    // A platform that keeps only the latest photograph (SPT-01 `retakeFallback`).
+    if (!onBasicPlatform(actor)) sent.earlier.push(sent.photo);
+    sent.photo = photo;
+  } else {
+    run.photos.push({ position: request.capture_position, photo, earlier: [] });
+  }
+  return toRun(actor, run);
+}
+
+/**
+ * PATCH /spot-check-results/{id} — the note is required, and the original outcome is
+ * kept beside the override. The responsible manager and head office may override.
+ */
+export async function mockOverrideSpotCheckResult(
+  id: number,
+  request: OverrideSpotCheckResultRequest,
+): Promise<SpotCheckResult> {
+  await delay();
+  const actor = spotActor();
+  settleSpotRuns();
+  triggerFault(request.override_note);
+  const readable = readableSpotOutlets(actor);
+  const run = spotCheckState().runs.find(
+    (candidate) =>
+      candidate.tenant_id === actor.me.business.id &&
+      readable.has(candidate.outlet_id) &&
+      candidate.results.some((result) => result.id === id),
+  );
+  const result = run?.results.find((entry) => entry.id === id);
+  if (!run || !result)
+    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+  if (
+    request.override_note.trim().toLowerCase() === 'refused' ||
+    (!actor.admin && run.manager_id !== actor.me.user.id)
+  ) {
+    throw apiError(
+      403,
+      API_ERROR_CODE.PERMISSION_DENIED,
+      "You can't change this result.",
+    );
+  }
+  // A platform that takes no override once the window has closed (SPT-03
+  // `afterCloseFallback`); results only exist after the close, so none is allowed.
+  if (onBasicPlatform(actor)) {
+    throw apiError(
+      409,
+      API_ERROR_CODE.WINDOW_CLOSED,
+      "Results can't be changed after the window closes.",
+    );
+  }
+  if (!request.override_note.trim()) {
+    throw apiError(
+      400,
+      API_ERROR_CODE.OVERRIDE_NOTE_REQUIRED,
+      'Say why you are changing this result.',
+      'override_note',
+    );
+  }
+  if (!SPOT_OUTCOMES.includes(request.overridden_to)) {
+    throw invalid('Choose passed, failed or needs review.', 'overridden_to');
+  }
+  const now = Date.now();
+  if (run.ready_at !== null && now < new Date(run.ready_at).getTime()) {
+    throw invalid('This result is still being assessed.', 'overridden_to');
+  }
+  result.overridden_to = request.overridden_to;
+  result.override_note = request.override_note.trim();
+  result.overridden_by_id = actor.me.user.id;
+  result.overridden_at = new Date(now).toISOString();
+  run.issue_id = hasLiveFail(run) ? 7000 + run.id : run.issue_id;
+  return toResult(run, result, now);
 }

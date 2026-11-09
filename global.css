@@ -46,6 +46,10 @@
     --pending-soft: 216 15% 94%;
     --pending-soft-foreground: 215 16% 44%;
 
+    /* Needs review: not red, so a low-confidence result never reads as a failure. */
+    --review-soft: 245 38% 94%;
+    --review-soft-foreground: 244 35% 42%;
+
     --border: 48 17% 88%;
     --input: 48 17% 88%;
     --input-edge: 240 3% 57%;
@@ -105,6 +109,9 @@
     --pending-foreground: 240 5% 96%;
     --pending-soft: 217 19% 14%;
     --pending-soft-foreground: 214 26% 65%;
+
+    --review-soft: 243 23% 15%;
+    --review-soft-foreground: 244 59% 78%;
 
     --border: 240 8% 17%;
     --input: 240 8% 17%;

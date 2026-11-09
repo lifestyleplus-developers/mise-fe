@@ -21,7 +21,7 @@ export function classifyConfigError(error: unknown): ConfigFailure {
   return 'failed';
 }
 
-/** The platform's own words for a refusal, e.g. a name already used at the outlet. */
+/** The platform's own words for a refusal, e.g. a window that overlaps the next period. */
 export function configMessage(error: unknown): string | null {
   return error instanceof ApiError ? error.body.error.message : null;
 }

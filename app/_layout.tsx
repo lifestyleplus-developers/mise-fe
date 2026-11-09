@@ -1,3 +1,4 @@
+import '@/features/spot-checks/sign-out';
 import '@/shared/lib/icons';
 import { ApiProvider } from '@/shared/api/query-client';
 import { NAV_THEME, THEME, WASH } from '@/shared/lib/theme';

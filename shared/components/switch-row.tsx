@@ -2,6 +2,27 @@ import { Text } from '@/shared/components/ui/text';
 import { cn } from '@/shared/lib/utils';
 import { Pressable, View } from 'react-native';
 
+/** The on/off track and thumb alone, for rows that lay out their own label. */
+function SwitchTrack({ checked }: { checked: boolean }) {
+  return (
+    <View
+      className={cn(
+        'h-8 w-[52px] shrink-0 rounded-full border',
+        checked ? 'border-primary bg-primary' : 'border-input-edge bg-muted',
+      )}
+    >
+      <View
+        className={cn(
+          'bg-card absolute top-[3px] size-6 rounded-full border',
+          checked
+            ? 'border-primary left-[23px]'
+            : 'border-input-edge left-[3px]',
+        )}
+      />
+    </View>
+  );
+}
+
 type SwitchRowProps = {
   label: string;
   hint?: string;
@@ -35,23 +56,9 @@ function SwitchRow({
           </Text>
         ) : null}
       </View>
-      <View
-        className={cn(
-          'h-8 w-[52px] shrink-0 rounded-full border',
-          checked ? 'border-primary bg-primary' : 'border-input-edge bg-muted',
-        )}
-      >
-        <View
-          className={cn(
-            'bg-card absolute top-[3px] size-6 rounded-full border',
-            checked
-              ? 'border-primary left-[23px]'
-              : 'border-input-edge left-[3px]',
-          )}
-        />
-      </View>
+      <SwitchTrack checked={checked} />
     </Pressable>
   );
 }
 
-export { SwitchRow };
+export { SwitchRow, SwitchTrack };

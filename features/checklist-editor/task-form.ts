@@ -3,6 +3,7 @@ import type {
   Task,
   UpdateTaskRequest,
 } from '@/shared/api/types';
+import { DEFAULT_WEIGHT } from '@/shared/constants/weight';
 
 export type AnswerType = Task['answer_type'];
 
@@ -16,7 +17,7 @@ export type TaskForm = {
   weight: number;
 };
 
-export const DEFAULT_WEIGHT = 5;
+export { DEFAULT_WEIGHT };
 
 /** A new reading has no unit and no limits: it is only logged until the author adds them. */
 export const EMPTY_TASK_FORM: TaskForm = {

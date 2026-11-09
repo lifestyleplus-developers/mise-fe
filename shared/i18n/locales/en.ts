@@ -757,6 +757,185 @@ export const en = {
   'inv.spend-total': 'Total spend',
   'inv.no-items': 'No items yet.',
   'inv.showing-last': 'Showing the last figures',
+
+  // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
+  'spot.left': 'left',
+  'spot.final': '5 min left',
+  'spot.runs-out':
+    "If time runs out, this check is recorded as not done. It can't be redone.",
+  'spot.to-take': 'To take',
+  'spot.uploading': 'Uploading',
+  'spot.sent': 'Sent',
+  'spot.waiting': 'Waiting to send',
+  'spot.upload-failed': 'Upload failed',
+  'spot.retry': 'Retry',
+  'spot.not-taken': 'Not taken',
+  'spot.send-now': 'Send now',
+  'spot.by-at': '{name} {time}',
+  'spot.new-photo': 'New photo · {name} {time}',
+  'spot.replaced': 'Replaced · {name} {time}',
+  'spot.retake': 'Retake',
+  'spot.photo-n': 'Photo {n}',
+  'spot.late-refused':
+    'Window closed. This photo was not recorded. It will show as missed.',
+  'spot.purged': 'Photo removed under the photo retention policy',
+  'spot.passed': 'Passed',
+  'spot.failed': 'Failed',
+  'spot.review': 'Needs review',
+  'spot.assessing': 'Being assessed',
+  'spot.not-done': 'Not done',
+  'spot.overridden-by': 'Overridden: {to}, by {name}',
+  'spot.overridden-at': 'Overridden: {to}, by {name} · {time}',
+
+  // Week 9 navigation: the Spot checks screens' titles and links.
+  'spot.results': 'Results',
+  'spot.checks': 'Checks',
+  'spot.areas': 'Areas',
+  'spot.new-check': 'New check',
+
+  // SPT-06: areas list and area sheet.
+  'spot.eyebrow': 'Spot checks · {outlet}',
+  'spot.add-area': 'Add area',
+  'spot.new-area': 'New area',
+  'spot.name': 'Name',
+  'spot.can-pick': 'Can be picked',
+  'spot.not-picked': 'Not picked',
+  'spot.none-eligible':
+    'No area can be picked. Area checks at this outlet will have no subject.',
+  'spot.name-taken': '{outlet} already has an area called {name}.',
+  'spot.archive-area': 'Archive area',
+  'spot.archive-area-title': 'Archive {name}?',
+  'spot.archive-area-body':
+    "It won't be picked for new checks. Past results keep it.",
+  'spot.empty-areas':
+    'No areas yet. Add the parts of this outlet you want inspected.',
+  'spot.forbidden-areas': 'Only head office can change areas.',
+  'spot.show-archived': 'Show archived',
+  'spot.archived': 'Archived',
+  'spot.archive': 'Archive',
+  'modules.spot-checks-off': "Spot checks aren't turned on for {outlet}.",
+  'spot.cached': 'Showing the last list',
+
+  // SPT-05: checks list and check editor.
+  'spot.no-managers':
+    'Nobody will be told when a check is revealed. Add a Spot-check Manager.',
+  'spot.row-line': '{subject} · {freq} · {time} · {n} min window',
+  'spot.counts': '{p} photos · {i} check items',
+  'spot.staff': 'Staff',
+  'spot.area': 'Area',
+  'spot.managers': 'Spot-check Managers',
+  'spot.add-manager': 'Add manager',
+  'spot.already-manager': 'Already a Spot-check Manager here',
+  'spot.not-wired': "This can't be saved yet.",
+  'spot.partial-fallback':
+    'Closed · Not done. {n} of {total} photos were taken.',
+  'spot.item-fallback':
+    'To change this list, archive the check and create a new one.',
+  'spot.after-close': "Results can't be changed after the window closes.",
+  'spot.remove': 'Remove',
+  'spot.empty-checks': 'No spot checks yet.',
+  'spot.apply-next':
+    'Changes apply from the next check. Past results keep what they were judged against.',
+  'spot.name-ph': 'e.g. Grooming — kitchen',
+  'spot.subject': 'Subject',
+  'spot.subject-staff': 'Picked at random from the {outlet} roster.',
+  'spot.subject-area': 'Picked at random from the areas that can be picked.',
+  'spot.sel-time': 'Selection time',
+  'spot.sel-hint': 'When the subject is picked.',
+  'spot.window': 'Window',
+  'spot.minutes': '{n} min',
+  'spot.shorter': 'Shorter window',
+  'spot.longer': 'Longer window',
+  'spot.window-hint':
+    'Long enough to walk across the outlet, short enough that nobody gets prepared.',
+  'spot.prompts': 'What to photograph',
+  'spot.prompts-hint':
+    'Each prompt is one photo. Every photo costs money to assess and store.',
+  'spot.add-prompt': 'Add prompt',
+  'spot.items': 'What gets judged',
+  'spot.items-hint': 'Each item is judged against all the photos.',
+  'spot.add-item': 'Add check item',
+  'spot.item-hint': 'One thing a photo can show.',
+  'spot.weight': 'Weight {n}',
+  'spot.weight-label': 'Weight',
+  'spot.less-weight': 'Less weight',
+  'spot.more-weight': 'More weight',
+  'spot.edit': 'Edit',
+  'spot.move-up': 'Move up',
+  'spot.move-down': 'Move down',
+  'spot.menu-for': 'More for {name}',
+  'spot.archive-check': 'Archive check',
+  'spot.archive-title': 'Archive {name}?',
+  'spot.archive-body':
+    'No new checks will be revealed. Past results stay in Results.',
+  'spot.archive-item-title': 'Archive “{name}”?',
+  'spot.archive-item-body':
+    'It leaves every future check. Past results keep it.',
+  'spot.forbidden-edit': 'Only head office can change spot checks.',
+  'spot.prompt-field': 'Prompt',
+  'spot.item-field': 'Check item',
+  'spot.placeholder-title': 'Placeholder checks.',
+  'spot.placeholder-body':
+    'What a photo can be judged on is set by the AI evaluation. Until then these prompts and checks are examples.',
+
+  // SPT-01: capture flow and the camera steps.
+  'spot.take-photo': 'Take photo · {prompt}',
+  'spot.all-taken': 'All photos taken. Results will appear in Results.',
+  'spot.cant-find':
+    "Can't find {name}? If no photo is taken, this check is recorded as not done.",
+  'spot.closed-at': 'Closed at {time}',
+  'spot.closed-done': 'Done. Results will appear in Results.',
+  'spot.closed-none': 'Not done. The window closed before any photo was taken.',
+  'spot.closed-partial': '{n} of {total} photos · assessed on these',
+  'spot.scheduled': '{name} · scheduled',
+  'spot.nothing': 'No spot check right now.',
+  'spot.no-checks': 'No spot checks are set up at this outlet yet.',
+  'spot.view-only':
+    'Viewing only. Only a Spot-check Manager can take these photos.',
+  'spot.role-lost': "You can't take photos for this check.",
+  'spot.n-waiting-one': '1 photo waiting to send',
+  'spot.n-waiting': '{n} photos waiting to send',
+  'spot.closes-at': 'Closes {time}',
+  'spot.sign-out-title': "A photo hasn't been sent",
+  'spot.sign-out-body':
+    "1 photo hasn't been sent yet. If you sign out now it will be lost.",
+  'spot.placeholder-prompts': 'Placeholder prompts until the AI evaluation',
+  'spot.why': 'mise needs the camera to take the photos for this spot check.',
+  'spot.sign-out-body-n':
+    "{n} photos haven't been sent yet. If you sign out now they will be lost.",
+  'cam.name': 'Camera',
+  'cam.continue': 'Continue',
+  'cam.not-now': 'Not now',
+  'cam.off-title': 'Camera access is off',
+  'cam.off-body':
+    "mise needs the camera to take the photo for this task. Turn it on in your phone's settings.",
+  'cam.open-settings': 'Open settings',
+  'cam.failed': "Camera couldn't start.",
+  'cam.failed-again':
+    "Camera still couldn't start. Close other apps that use the camera and try again.",
+  'cam.try-again': 'Try again',
+  'cam.preview': 'Photo preview',
+  'cam.use-photo': 'Use photo',
+  'cam.save-failed': "Couldn't save the photo. Free up space and try again.",
+  'cam.save-failed-again':
+    "Still couldn't save the photo. Free up space on the phone, then tap Use photo.",
+  'cam.torch-on': 'Torch on',
+  'cam.torch-off': 'Torch off',
+
+  // SPT-03: results list and run review.
+  'spot.filter-all': 'All',
+  'spot.filter-empty': 'No results match this filter.',
+  'spot.clear-filter': 'Clear filter',
+  'spot.results-empty': 'No spot checks have closed yet.',
+  'spot.tally': '{passed} passed · {failed} failed · {review} review',
+  'spot.own-only': "Results aren't shown for a check assigned to someone else.",
+  'spot.issue-raised': 'Issue raised',
+  'spot.photos': 'Photos',
+  'spot.override': 'Override',
+  'spot.override-to': 'Change to',
+  'spot.note-label': 'Note',
+  'spot.note-placeholder': "Say why you're changing this.",
+  'spot.note-missing': 'A note is required.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

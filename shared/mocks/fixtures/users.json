@@ -185,5 +185,56 @@
       "spot_check_outlets": []
     },
     "is_active": true
+  },
+  {
+    "id": 16,
+    "tenant_id": 7,
+    "username": "reshma",
+    "password": "1234",
+    "full_name": "Reshma Das",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": [3]
+    },
+    "is_active": true
+  },
+  {
+    "id": 17,
+    "tenant_id": 7,
+    "username": "arun",
+    "password": "1234",
+    "full_name": "Arun Menon",
+    "tenant_role": "MEMBER",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": [3, 5]
+    },
+    "is_active": true
+  },
+  {
+    "id": 18,
+    "tenant_id": 7,
+    "username": "basic",
+    "password": "1234",
+    "full_name": "Basil Varghese",
+    "tenant_role": "ADMIN",
+    "interface_language": "EN",
+    "memberships": {
+      "cl_admin_assignments": [],
+      "cl_imp_assignments": [],
+      "attendance_configs": [],
+      "inventory_outlets": [],
+      "spot_check_outlets": []
+    },
+    "is_active": true
   }
 ]
