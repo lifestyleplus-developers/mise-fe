@@ -57,23 +57,31 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           throw new Error('No image captured');
         }
 
+        // The platform signs the size of the photograph into the upload, so
+        // read the bytes first.
+        const photo = await fetch(asset.uri).then((r) => r.blob());
+
         // Get upload signature
         const sign = await api.uploads.sign({
           purpose: 'run_task',
           target_id: taskId,
           content_type: 'image/jpeg',
+          content_length: photo.size,
         });
 
         // The mock backend hands out `mock://` locations there is nothing to
         // PUT to; skip the transfer and keep the rest of the flow real.
         if (!sign.upload_url.startsWith('mock://')) {
+          // The length is signed in, but the phone sets it from the body itself;
+          // sending it by hand as well risks a duplicate header.
+          const { 'Content-Length': _length, ...headers } = sign.headers;
           const response = await fetch(sign.upload_url, {
             method: sign.method,
             headers: {
               'Content-Type': 'image/jpeg',
-              ...sign.headers,
+              ...headers,
             },
-            body: await fetch(asset.uri).then((r) => r.blob()),
+            body: photo,
           });
 
           if (!response.ok) {

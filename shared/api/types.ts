@@ -368,7 +368,11 @@ export type RunTask = {
 };
 
 /** GET /runs/{id} — the run as Home lists it, plus its tasks. */
-export type RunDetail = Run & {
+export type RunDetail = Omit<Run, 'status' | 'my_role'> & {
+  /** A finalised run is only ever opened by a supervisor or head office. */
+  status: 'OPEN' | 'FINALIZED';
+  /** Null for ADMIN or OWNER opening a run of an assignment they are not on. */
+  my_role: 'CL_ADMIN' | 'CL_IMP' | null;
   tasks: RunTask[];
 };
 
@@ -394,6 +398,9 @@ export type UploadSignRequest = {
   purpose: 'run_task' | 'spot_check_run';
   target_id: number;
   content_type: 'image/jpeg';
+  /** Size of the photograph in bytes. The platform signs it into the upload and
+   * requires it for a `run_task` (1 byte to 10 MB). */
+  content_length?: number;
 };
 
 /** → 200. */
@@ -402,6 +409,8 @@ export type UploadSignResponse = {
   method: 'PUT';
   headers: Record<string, string>;
   key: string;
+  /** Seconds the upload location stays valid (platform only). */
+  expires_in?: number;
 };
 
 /** API Contract §11 — where a person on the roster is enrolled. */
