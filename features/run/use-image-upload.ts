@@ -2,19 +2,32 @@ import * as ImagePicker from 'expo-image-picker';
 import * as React from 'react';
 
 import { api } from '@/shared/api/client';
-import type { ApiErrorBody } from '@/shared/api/types';
+
+/**
+ * Why an upload failed, as a code: screens decide what to say, in the person's
+ * language. Never a message to show as it is.
+ */
+export type UploadError =
+  'camera_permission_denied' | 'no_image' | 'upload_failed';
 
 type UploadState = {
   uploading: boolean;
   key: string | null;
   url: string | null;
-  error: string | null;
+  error: UploadError | null;
 };
 
 type UseImageUploadOptions = {
   onSuccess?: (key: string, url: string) => void;
-  onError?: (error: string) => void;
+  onError?: (error: UploadError) => void;
 };
+
+/** Thrown inside `upload` so one catch turns every failure into a code. */
+class UploadFailure extends Error {
+  constructor(readonly code: UploadError) {
+    super(code);
+  }
+}
 
 /**
  * Handles live camera capture and direct upload to storage.
@@ -36,7 +49,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         // Request camera permissions
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-          throw new Error('Camera permission denied');
+          throw new UploadFailure('camera_permission_denied');
         }
 
         // Launch camera - live capture only, no gallery
@@ -54,7 +67,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 
         const asset = result.assets[0];
         if (!asset) {
-          throw new Error('No image captured');
+          throw new UploadFailure('no_image');
         }
 
         // The platform signs the size of the photograph into the upload, so
@@ -85,7 +98,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           });
 
           if (!response.ok) {
-            throw new Error('Upload failed');
+            throw new UploadFailure('upload_failed');
           }
         }
 
@@ -100,11 +113,9 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         options.onSuccess?.(sign.key, asset.uri);
         return { key: sign.key, url: asset.uri };
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : ((error as { body?: ApiErrorBody })?.body?.error?.message ??
-              'Upload failed');
+        // A refusal from the platform or a dropped connection is a failed upload.
+        const message: UploadError =
+          error instanceof UploadFailure ? error.code : 'upload_failed';
         setState((prev) => ({
           ...prev,
           uploading: false,

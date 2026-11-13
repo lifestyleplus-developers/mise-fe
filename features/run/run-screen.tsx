@@ -224,12 +224,9 @@ export function RunScreen() {
     answer.mutate(
       { taskId: task.id, request },
       {
-        onError: (error) => {
-          const message =
-            error instanceof Error && 'body' in error
-              ? ((error as { body?: { error?: { message?: string } } }).body
-                  ?.error?.message ?? t('run.write-failed'))
-              : t('run.write-failed');
+        onError: () => {
+          // The platform's message is English only; say it in the person's language.
+          const message = t('run.write-failed');
           setRowErrors((current) => ({ ...current, [task.id]: { message } }));
           if (request.answer_number !== undefined) {
             setDrafts((current) => ({
