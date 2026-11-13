@@ -10,13 +10,27 @@ import type { AnswerTaskRequest, RunDetail, RunTask } from '@/shared/api/types';
  * replayed after the app restarts (AGENTS.md: setMutationDefaults at the
  * point the mutation is defined).
  */
-const answerTaskMutationFn = ([id, request]: readonly [
-  number,
-  AnswerTaskRequest,
-]): Promise<RunTask> => api.runTasks.answer(id, request);
+type AnswerTaskVariables = { taskId: number; request: AnswerTaskRequest };
+
+const answerTaskMutationFn = ({
+  taskId,
+  request,
+}: AnswerTaskVariables): Promise<RunTask> =>
+  api.runTasks.answer(taskId, request);
 
 queryClient.setMutationDefaults(['run-tasks', 'answer'], {
   mutationFn: answerTaskMutationFn,
+  // A replayed mutation has no hook around it, so it does not know its run:
+  // find the cached run that holds this task and update that one.
+  onSuccess: (task: RunTask) => {
+    for (const [key, run] of queryClient.getQueriesData<RunDetail>({
+      queryKey: ['runs'],
+    })) {
+      if (run?.tasks?.some((candidate) => candidate.id === task.id)) {
+        applyAnswer(key[1] as number, task);
+      }
+    }
+  },
 });
 
 function applyAnswer(runId: number, task: RunTask): void {
@@ -42,13 +56,12 @@ export function useAnswerTask(runId: number) {
   return useMutation<
     RunTask,
     Error,
-    { taskId: number; request: AnswerTaskRequest },
+    AnswerTaskVariables,
     { previous: RunDetail | undefined }
   >({
     mutationKey: ['run-tasks', 'answer'],
     networkMode: 'online',
-    mutationFn: ({ taskId, request }) =>
-      answerTaskMutationFn([taskId, request]),
+    mutationFn: answerTaskMutationFn,
     onMutate: async ({ taskId, request }) => {
       // Optimistic: the row shows the answer (or its pending part) at once.
       const previous = queryClient.getQueryData<RunDetail>(['runs', runId]);
