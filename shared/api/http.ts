@@ -36,6 +36,11 @@ type RequestOptions = {
   body?: unknown;
   /** False for login and refresh, which carry no token. Default true. */
   authenticated?: boolean;
+  /**
+   * Send this access token instead of the saved one, with no refresh on a 401.
+   * For a call made after the saved tokens were cleared (logout).
+   */
+  access?: string;
 };
 
 function buildUrl(path: string, query: RequestOptions['query']): string {
@@ -151,7 +156,11 @@ export async function request<T>(
   const authenticated = options.authenticated ?? true;
   const saved = authenticated ? await getTokens() : null;
 
-  let result = await send(path, options, saved?.access ?? null);
+  let result = await send(
+    path,
+    options,
+    options.access ?? saved?.access ?? null,
+  );
   if (authenticated && result.response.status === 401 && saved) {
     // Another call may have refreshed while this one was in flight. Its 401
     // came from the old access token, so retry with the new one; refreshing
