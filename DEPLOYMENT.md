@@ -68,7 +68,7 @@ To get a direct download link without opening the Expo dashboard, run `eas build
 
 ## Which server the build talks to
 
-The address of the platform is `EXPO_PUBLIC_API_BASE_URL`, set in each profile's `env` in `eas.json` (currently the Railway backend, ending in `/api/v1`). It has to be there: `mise-fe/.env` is gitignored, so EAS cloud builds never see it, and a build without the variable silently runs on the app's built-in mock. The value is a public address, so it is safe to commit. Never put a secret in an `EXPO_PUBLIC_` variable.
+The address of the platform is `EXPO_PUBLIC_API_BASE_URL`, set in each profile's `env` in `eas.json` (currently the Railway backend, ending in `/api/v1`). It has to be there: `mise-fe/.env` is gitignored, so EAS cloud builds never see it, and a build without it now fails: `app.config.js` stops an EAS build that sets `APP_VARIANT` but not the address, and a release app refuses to start without it, instead of running on the app's built-in mock. The value is a public address, so it is safe to commit. Never put a secret in an `EXPO_PUBLIC_` variable.
 
 When there are separate test and live servers, give each profile its own address.
 
