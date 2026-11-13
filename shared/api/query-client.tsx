@@ -59,9 +59,20 @@ const persister = createAsyncStoragePersister({ storage: AsyncStorage });
  * emptied at both ends of a session: on sign-out, and again on sign-in, since
  * the app can be force-closed in between and restored with the previous
  * person's outlets, users and checklists still in it.
+ *
+ * Queued writes go too: they were made as the previous person, and sent with
+ * the next person's token they would be recorded as theirs. The login call
+ * itself (the `auth` mutations) is the one thing left, as it is mid-flight when
+ * this runs at sign-in.
  */
 export function dropSessionCache(): void {
   queryClient.removeQueries();
+  const mutations = queryClient.getMutationCache();
+  for (const mutation of mutations.getAll()) {
+    if (mutation.options.mutationKey?.[0] !== 'auth') {
+      mutations.remove(mutation);
+    }
+  }
   void persister.removeClient();
 }
 

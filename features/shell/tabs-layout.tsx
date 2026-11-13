@@ -1,9 +1,9 @@
+import { ExpiredSessionRedirect } from '@/features/auth/expired-session-redirect';
 import { isSessionExpired, useMe } from '@/features/auth/use-me';
 import { LaunchScreen } from '@/features/shell/launch-screen';
 import { TabBar } from '@/features/shell/tab-bar';
 import { TAB } from '@/features/shell/tabs';
 import { useT } from '@/shared/i18n';
-import { Redirect } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 
 /** The signed-in shell. */
@@ -12,7 +12,7 @@ export function TabsLayout() {
   const t = useT();
 
   if (!me) {
-    if (isError && isSessionExpired(error)) return <Redirect href="/" />;
+    if (isError && isSessionExpired(error)) return <ExpiredSessionRedirect />;
     return (
       <LaunchScreen
         loadingLabel={t('common.loading')}

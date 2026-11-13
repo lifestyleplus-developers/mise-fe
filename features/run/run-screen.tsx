@@ -1,3 +1,4 @@
+import { ExpiredSessionRedirect } from '@/features/auth/expired-session-redirect';
 import { isSessionExpired, useMe } from '@/features/auth/use-me';
 import { useHomeNotice } from '@/features/home/home-notice';
 import { clockTime, dayKey } from '@/features/home/run-time';
@@ -21,7 +22,7 @@ import { RetryBanner } from '@/shared/components/retry-banner';
 import { Text } from '@/shared/components/ui/text';
 import { useNow } from '@/shared/lib/use-now';
 import { format, useT } from '@/shared/i18n';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Eye } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -116,7 +117,7 @@ export function RunScreen() {
   }, [gone, missing, run, router, setNotice, t]);
 
   if (!me) {
-    if (meError && isSessionExpired(meErr)) return <Redirect href="/" />;
+    if (meError && isSessionExpired(meErr)) return <ExpiredSessionRedirect />;
     return null;
   }
   if (gone || missing) return null;
