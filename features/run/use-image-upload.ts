@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as React from 'react';
 
 import { api } from '@/shared/api/client';
+import { UPLOAD_TIMEOUT_MS, withTimeout } from '@/shared/api/with-timeout';
 
 /**
  * Why an upload failed, as a code: screens decide what to say, in the person's
@@ -88,14 +89,17 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           // The length is signed in, but the phone sets it from the body itself;
           // sending it by hand as well risks a duplicate header.
           const { 'Content-Length': _length, ...headers } = sign.headers;
-          const response = await fetch(sign.upload_url, {
-            method: sign.method,
-            headers: {
-              'Content-Type': 'image/jpeg',
-              ...headers,
-            },
-            body: photo,
-          });
+          const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
+            fetch(sign.upload_url, {
+              method: sign.method,
+              headers: {
+                'Content-Type': 'image/jpeg',
+                ...headers,
+              },
+              body: photo,
+              signal,
+            }),
+          );
 
           if (!response.ok) {
             throw new UploadFailure('upload_failed');

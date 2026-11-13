@@ -1,5 +1,6 @@
 import { noteServerTime } from './server-clock';
 import { clearTokens, getTokens, setTokens, type Tokens } from './session';
+import { REQUEST_TIMEOUT_MS, withTimeout } from './with-timeout';
 import type { ApiErrorBody, Page } from './types';
 
 /**
@@ -94,18 +95,22 @@ async function send(
   access: string | null,
 ): Promise<{ response: Response; parsed: unknown }> {
   const { method = 'GET', query, body } = options;
-  const sentAt = Date.now();
-  const response = await fetch(buildUrl(path, query), {
-    method,
-    headers: {
-      Accept: 'application/json',
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(access ? { Authorization: `Bearer ${access}` } : {}),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
+  // The timeout covers the whole exchange, the reply's body included.
+  return withTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
+    const sentAt = Date.now();
+    const response = await fetch(buildUrl(path, query), {
+      method,
+      headers: {
+        Accept: 'application/json',
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(access ? { Authorization: `Bearer ${access}` } : {}),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+    });
+    noteServerTime(response.headers.get('date'), sentAt, Date.now());
+    return { response, parsed: await readBody(response) };
   });
-  noteServerTime(response.headers.get('date'), sentAt, Date.now());
-  return { response, parsed: await readBody(response) };
 }
 
 /**
