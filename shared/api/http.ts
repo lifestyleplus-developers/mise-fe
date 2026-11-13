@@ -107,16 +107,21 @@ function refreshTokens(refresh: string): Promise<boolean> {
         { method: 'POST', body: { refresh } },
         null,
       );
-      if (!response.ok) {
+      if (response.status === 401) {
+        // Only a 401 means the refresh token is refused (§15).
         await clearTokens();
         return false;
+      }
+      if (!response.ok) {
+        // A 429, 500 or 502 says nothing about the session: keep the tokens.
+        throw new Error('The server could not refresh the session.');
       }
       await setTokens(parsed as Tokens);
       return true;
     } catch {
       // No answer is not a rejection: keep the tokens and let the call fail as
       // unreachable, so a dropped signal does not sign the person out.
-      throw new Error('Could not reach the server to refresh the session.');
+      throw new Error('Could not refresh the session.');
     } finally {
       refreshing = null;
     }
@@ -132,9 +137,9 @@ function refreshTokens(refresh: string): Promise<boolean> {
  *
  * Calls carry the saved access token, read when the call is sent, not when it
  * was queued. A 401 on one means the token is missing, expired or ended (§15):
- * the session is refreshed once and the call repeated. If the refresh is
- * refused the tokens are cleared and the 401 reaches the caller, which returns
- * to Login.
+ * the session is refreshed once and the call repeated (or just repeated, when
+ * another call already refreshed). If the refresh is refused with a 401 the
+ * tokens are cleared and the 401 reaches the caller, which returns to Login.
  */
 export async function request<T>(
   path: string,
@@ -148,7 +153,13 @@ export async function request<T>(
 
   let result = await send(path, options, saved?.access ?? null);
   if (authenticated && result.response.status === 401 && saved) {
-    if (await refreshTokens(saved.refresh)) {
+    // Another call may have refreshed while this one was in flight. Its 401
+    // came from the old access token, so retry with the new one; refreshing
+    // again with the old refresh token (now blacklisted) would sign out.
+    const current = await getTokens();
+    if (current && current.access !== saved.access) {
+      result = await send(path, options, current.access);
+    } else if (current && (await refreshTokens(current.refresh))) {
       const fresh = await getTokens();
       result = await send(path, options, fresh?.access ?? null);
     }
