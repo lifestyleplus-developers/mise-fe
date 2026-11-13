@@ -4,15 +4,46 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import {
   focusManager,
   onlineManager,
+  QueryCache,
   QueryClient,
   type Query,
 } from '@tanstack/react-query';
 import * as ExpoNetwork from 'expo-network';
+import { router } from 'expo-router';
 import * as React from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 
+import { runSignOutHandlers } from '@/shared/lib/on-sign-out';
+
+import { ApiError } from './http';
+import { getTokens } from './session';
+
+/** When the last session end was handled; several queries fail on one 401. */
+let lastSessionEnd = 0;
+
+/**
+ * A query answered 401 after the refresh was refused (§15): the session is
+ * over while the app is open — the refresh token expired, the account was
+ * deactivated or its password reset. Queries keep their last data when a
+ * refetch fails, so no screen would notice; clean up and go to Login here.
+ */
+async function onQueryError(error: Error): Promise<void> {
+  if (!(error instanceof ApiError) || error.status !== 401) return;
+  // Tokens are cleared when a refresh is refused. If some exist, a newer
+  // sign-in has happened and this is a late answer to the old session.
+  if (await getTokens()) return;
+  const now = Date.now();
+  if (now - lastSessionEnd < 5000) return;
+  lastSessionEnd = now;
+  if (router.canDismiss()) router.dismissAll();
+  router.replace('/');
+  dropSessionCache();
+  runSignOutHandlers(undefined);
+}
+
 /** One client for the whole app. */
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: (error) => void onQueryError(error) }),
   defaultOptions: {
     queries: {
       gcTime: 1000 * 60 * 60 * 24,
