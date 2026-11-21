@@ -936,6 +936,26 @@ export const en = {
   'spot.note-label': 'Note',
   'spot.note-placeholder': "Say why you're changing this.",
   'spot.note-missing': 'A note is required.',
+  // Issues (ISS-01, FE Spec §3.6)
+  'iss.open-issues': 'Open issues',
+  'iss.open': 'Open',
+  'iss.resolved': 'Resolved',
+  'iss.show': 'Show',
+  'iss.n-failed': '{n} failed',
+  'iss.n-missed': '{n} missed',
+  'iss.n-assessing': '{n} being assessed',
+  'iss.rushed': 'Rushed',
+  'iss.waiting': 'Resolved · waiting to send',
+  'iss.pending-line': '1 change waiting to send',
+  'iss.pending-line-n': '{n} changes waiting to send',
+  'iss.resolved-by': 'Resolved by {name} · {when}',
+  'iss.empty': 'No open issues',
+  'iss.empty-body': 'Nothing waiting for you.',
+  'iss.empty-resolved': 'No resolved issues yet.',
+  'iss.empty-filter': 'No open issues for {what}.',
+  'iss.load-failed': "Couldn't load issues. Can't reach mise.",
+  'iss.try-again': 'Try again',
+  'iss.empty-filter-resolved': 'No resolved issues for {what}.',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;
