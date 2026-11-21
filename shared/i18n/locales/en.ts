@@ -976,6 +976,19 @@ export const en = {
   'risk.empty': 'Nothing at risk in the last 24 hours.',
   'risk.failed': "Couldn't load. Can't reach mise.",
   'iss.no-manager': 'No Checklist Manager',
+  'ovs.today': 'Today · {date}',
+  'ovs.no-score': 'No score yet',
+  'ovs.empty':
+    'No closed periods yet. Scores appear after the first run closes.',
+  'ovs.empty-at':
+    'No closed periods yet at {outlet}. Scores appear after the first run closes.',
+  'ovs.load-failed': "Couldn't load scores. Can't reach mise.",
+  'ovs.issue': 'Issue',
+  'ovs.resolved': 'Resolved',
+  'ovs.load-earlier': 'Load earlier periods',
+  'ovs.chart': 'Scores, oldest to newest: {values}',
+  'ovs.periods': 'Periods',
+  'ovs.open-outlet': '{outlet}, {score}. Open its history',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

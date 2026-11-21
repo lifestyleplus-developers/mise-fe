@@ -964,4 +964,16 @@ export const hi = {
   'risk.empty': 'पिछले 24 घंटों में कुछ भी जोखिम में नहीं।',
   'risk.failed': 'लोड नहीं हुआ। mise तक नहीं पहुँच पा रहे।',
   'iss.no-manager': 'कोई चेकलिस्ट मैनेजर नहीं',
+  'ovs.today': 'आज · {date}',
+  'ovs.no-score': 'अभी कोई स्कोर नहीं',
+  'ovs.empty': 'अभी कोई बंद अवधि नहीं। पहला रन बंद होने के बाद स्कोर दिखेंगे।',
+  'ovs.empty-at':
+    '{outlet} में अभी कोई बंद अवधि नहीं। पहला रन बंद होने के बाद स्कोर दिखेंगे।',
+  'ovs.load-failed': 'स्कोर लोड नहीं हुए। mise तक नहीं पहुँच पा रहे।',
+  'ovs.issue': 'समस्या',
+  'ovs.resolved': 'हल',
+  'ovs.load-earlier': 'पहले की अवधियाँ लोड करें',
+  'ovs.chart': 'स्कोर, पुराने से नए: {values}',
+  'ovs.periods': 'अवधियाँ',
+  'ovs.open-outlet': '{outlet}, {score}। इसका इतिहास खोलें',
 } satisfies Partial<Catalogue>;

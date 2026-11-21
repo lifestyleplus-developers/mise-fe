@@ -1,1 +1,1 @@
-export { ChecklistAnalyticsScreen as default } from '@/features/checklists/checklist-analytics-screen';
+export { ChecklistAnalyticsScreen as default } from '@/features/analytics/analytics-screen';
