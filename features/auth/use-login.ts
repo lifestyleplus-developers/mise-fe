@@ -60,6 +60,8 @@ export function useLogin() {
   const [candidates, setCandidates] = React.useState<BusinessRef[] | null>(
     null,
   );
+  /** Signed in, but `/auth/me` could not be read: nothing else to wait for. */
+  const [meFailed, setMeFailed] = React.useState(false);
   const lastRequest = React.useRef<LoginRequest | null>(null);
   /** True when the person picked a language on the Login screen itself. */
   const pickedLanguage = React.useRef(false);
@@ -82,9 +84,19 @@ export function useLogin() {
     onSuccess: () => {
       // Whoever just signed in must never read what the last session cached.
       dropSessionCache();
+      setMeFailed(false);
       queryClient_
         .fetchQuery({ queryKey: ['auth', 'me'], queryFn: () => api.auth.me() })
+        .then(
+          (meResponse) => meResponse,
+          () => {
+            // Without `me` the app has nothing to show: tell the person.
+            setMeFailed(true);
+            return null;
+          },
+        )
         .then(async (meResponse) => {
+          if (!meResponse) return;
           const store = useLanguageStore.getState();
           const saved = meResponse.user.interface_language;
           if (pickedLanguage.current && store.language !== saved) {
@@ -130,6 +142,9 @@ export function useLogin() {
       return { kind: 'failure', failure: classify(error) };
     }
     if (mutation.isSuccess) {
+      if (!me && meFailed) {
+        return { kind: 'failure', failure: LOGIN_FAILURE.UNREACHABLE };
+      }
       if (!me) {
         const choosingId = mutation.variables?.tenant_id;
         if (candidates && choosingId !== undefined) {
@@ -151,6 +166,7 @@ export function useLogin() {
     options: { pickedLanguage?: boolean } = {},
   ) => {
     lastRequest.current = request;
+    setMeFailed(false);
     pickedLanguage.current = options.pickedLanguage ?? false;
     mutation.mutate(request);
   };
@@ -163,6 +179,7 @@ export function useLogin() {
 
   const resetLogin = () => {
     setCandidates(null);
+    setMeFailed(false);
     mutation.reset();
   };
 

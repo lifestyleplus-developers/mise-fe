@@ -6,7 +6,7 @@ import { retryTransient } from '@/shared/api/query-helpers';
 const managersKey = (outletId: number) =>
   ['inventory', 'managers', outletId] as const;
 
-/** Who records stock at an outlet. Not on the platform yet, so only the mock answers. */
+/** Who records stock at an outlet (GET /inventory/managers). */
 export function useInventoryManagers(outletId: number, enabled = true) {
   return useQuery({
     queryKey: managersKey(outletId),

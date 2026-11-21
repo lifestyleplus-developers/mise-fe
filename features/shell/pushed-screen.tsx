@@ -1,3 +1,4 @@
+import { ExpiredSessionRedirect } from '@/features/auth/expired-session-redirect';
 import { isSessionExpired, useMe } from '@/features/auth/use-me';
 import { Text } from '@/shared/components/ui/text';
 import { canAdminister } from '@/shared/constants/roles';
@@ -72,7 +73,7 @@ export function PushedScreen({
   const insets = useSafeAreaInsets();
 
   if (!me) {
-    if (isError && isSessionExpired(error)) return <Redirect href="/" />;
+    if (isError && isSessionExpired(error)) return <ExpiredSessionRedirect />;
     return null;
   }
   if (adminOnly && !canAdminister(me.user.tenant_role)) {

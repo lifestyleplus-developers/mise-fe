@@ -28,6 +28,17 @@ export const hi = {
   'checklists.team': 'टीम',
   'checklists.removed': 'अब आप {name} में नहीं हैं।',
   'run.answered': '{total} में से {n} के जवाब दिए गए',
+  'run.seconds-left': '{n} सेकंड बचे',
+  'run.minutes-left': '{n} मिनट बचे',
+  'run.closing-now': 'अभी बंद हो रहा है',
+  'run.answer': 'जवाब दें',
+  'run.change': 'बदलें',
+  'run.keep': 'रखें',
+  'run.enter-number': 'कोई संख्या दर्ज करें',
+  'run.comment-title': 'क्यों?',
+  'run.comment-placeholder': 'बताएँ क्या हुआ',
+  'run.comment-save': 'सेव करें',
+  'run.comment-cancel': 'रद्द करें',
   'run.watching': 'आप देख रहे हैं। जवाब आपकी टीम देती है।',
   'run.not-answered': 'जवाब नहीं दिया गया',
   'run.jump': 'पहले बिना जवाब वाले काम पर जाएँ',
@@ -139,7 +150,7 @@ export const hi = {
   'outlets.add': 'आउटलेट जोड़ें',
   'outlets.attendance': 'इस आउटलेट पर उपस्थिति दर्ज करें',
   'outlets.attendance-hint':
-    'उपस्थिति मैनेजर यहाँ दर्ज कर सकते हैं कि कौन मौजूद है।',
+    'अटेंडेंस मैनेजर यहाँ दर्ज कर सकते हैं कि कौन मौजूद है।',
   'outlets.attendance-still-on': 'उपस्थिति अभी भी चालू है।',
   'outlets.attendance-still-off': 'उपस्थिति अभी भी बंद है।',
   'outlets.archive': 'आउटलेट आर्काइव करें',
@@ -740,7 +751,7 @@ export const hi = {
   'inv.showing-last': 'पिछले आँकड़े दिखाए जा रहे हैं',
 
   // Week 9 shared components: countdown, outcome, override, photo and prompt rows.
-  'spot.left': 'ബാക്കി',
+  'spot.left': 'बाकी',
   'spot.final': '5 मिनट बाकी',
   'spot.runs-out':
     "समय खत्म हुआ तो यह चेक 'नहीं हुआ' दर्ज होगा। इसे दोबारा नहीं किया जा सकता।",
@@ -774,7 +785,7 @@ export const hi = {
   'spot.new-check': 'नया चेक',
 
   // SPT-06: areas list and area sheet.
-  'spot.eyebrow': 'സ്പോട്ട് ചെക്ക് · {outlet}',
+  'spot.eyebrow': 'स्पॉट चेक · {outlet}',
   'spot.add-area': 'जगह जोड़ें',
   'spot.new-area': 'नई जगह',
   'spot.name': 'नाम',

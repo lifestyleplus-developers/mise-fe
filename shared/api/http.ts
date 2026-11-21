@@ -1,4 +1,6 @@
+import { noteServerTime } from './server-clock';
 import { clearTokens, getTokens, setTokens, type Tokens } from './session';
+import { REQUEST_TIMEOUT_MS, withTimeout } from './with-timeout';
 import type { ApiErrorBody, Page } from './types';
 
 /**
@@ -12,6 +14,14 @@ const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(
 
 /** True when a server address is set; otherwise the app runs on the mock. */
 export const USE_REAL_API = API_BASE_URL !== '';
+
+// The mock is for development only. A release build with no address would look
+// like it works, on the mock's people and its password, so it refuses to start.
+if (!__DEV__ && !USE_REAL_API) {
+  throw new Error(
+    'EXPO_PUBLIC_API_BASE_URL is not set in this build. Set it in the profile env in eas.json.',
+  );
+}
 
 /**
  * An error answer from the platform, or from the mock standing in for it.
@@ -36,6 +46,11 @@ type RequestOptions = {
   body?: unknown;
   /** False for login and refresh, which carry no token. Default true. */
   authenticated?: boolean;
+  /**
+   * Send this access token instead of the saved one, with no refresh on a 401.
+   * For a call made after the saved tokens were cleared (logout).
+   */
+  access?: string;
 };
 
 function buildUrl(path: string, query: RequestOptions['query']): string {
@@ -80,16 +95,22 @@ async function send(
   access: string | null,
 ): Promise<{ response: Response; parsed: unknown }> {
   const { method = 'GET', query, body } = options;
-  const response = await fetch(buildUrl(path, query), {
-    method,
-    headers: {
-      Accept: 'application/json',
-      ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(access ? { Authorization: `Bearer ${access}` } : {}),
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
+  // The timeout covers the whole exchange, the reply's body included.
+  return withTimeout(REQUEST_TIMEOUT_MS, async (signal) => {
+    const sentAt = Date.now();
+    const response = await fetch(buildUrl(path, query), {
+      method,
+      headers: {
+        Accept: 'application/json',
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(access ? { Authorization: `Bearer ${access}` } : {}),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+    });
+    noteServerTime(response.headers.get('date'), sentAt, Date.now());
+    return { response, parsed: await readBody(response) };
   });
-  return { response, parsed: await readBody(response) };
 }
 
 /**
@@ -107,16 +128,21 @@ function refreshTokens(refresh: string): Promise<boolean> {
         { method: 'POST', body: { refresh } },
         null,
       );
-      if (!response.ok) {
+      if (response.status === 401) {
+        // Only a 401 means the refresh token is refused (§15).
         await clearTokens();
         return false;
+      }
+      if (!response.ok) {
+        // A 429, 500 or 502 says nothing about the session: keep the tokens.
+        throw new Error('The server could not refresh the session.');
       }
       await setTokens(parsed as Tokens);
       return true;
     } catch {
       // No answer is not a rejection: keep the tokens and let the call fail as
       // unreachable, so a dropped signal does not sign the person out.
-      throw new Error('Could not reach the server to refresh the session.');
+      throw new Error('Could not refresh the session.');
     } finally {
       refreshing = null;
     }
@@ -132,9 +158,9 @@ function refreshTokens(refresh: string): Promise<boolean> {
  *
  * Calls carry the saved access token, read when the call is sent, not when it
  * was queued. A 401 on one means the token is missing, expired or ended (§15):
- * the session is refreshed once and the call repeated. If the refresh is
- * refused the tokens are cleared and the 401 reaches the caller, which returns
- * to Login.
+ * the session is refreshed once and the call repeated (or just repeated, when
+ * another call already refreshed). If the refresh is refused with a 401 the
+ * tokens are cleared and the 401 reaches the caller, which returns to Login.
  */
 export async function request<T>(
   path: string,
@@ -146,9 +172,19 @@ export async function request<T>(
   const authenticated = options.authenticated ?? true;
   const saved = authenticated ? await getTokens() : null;
 
-  let result = await send(path, options, saved?.access ?? null);
+  let result = await send(
+    path,
+    options,
+    options.access ?? saved?.access ?? null,
+  );
   if (authenticated && result.response.status === 401 && saved) {
-    if (await refreshTokens(saved.refresh)) {
+    // Another call may have refreshed while this one was in flight. Its 401
+    // came from the old access token, so retry with the new one; refreshing
+    // again with the old refresh token (now blacklisted) would sign out.
+    const current = await getTokens();
+    if (current && current.access !== saved.access) {
+      result = await send(path, options, current.access);
+    } else if (current && (await refreshTokens(current.refresh))) {
       const fresh = await getTokens();
       result = await send(path, options, fresh?.access ?? null);
     }

@@ -180,9 +180,8 @@ export { ApiError };
 
 /**
  * With `EXPO_PUBLIC_API_BASE_URL` set, calls go to the platform; left empty, the
- * app runs on the fixture mock. Runs, answers and photograph uploads have no
- * endpoints on the platform yet (Lamax, weeks 6 to 8): Home is empty and the rest
- * fail until they land.
+ * app runs on the fixture mock. Runs, answers and run-task photograph uploads are on
+ * the platform. Spot checks are not (Lamax, stage 9): those calls fail until they land.
  */
 export class NotBuiltError extends Error {}
 
@@ -259,12 +258,12 @@ export const api = {
   runs: {
     /** GET /runs — only what the caller may act on; closed runs never come back. */
     list(): Promise<Run[]> {
-      return USE_REAL_API ? Promise.resolve<Run[]>([]) : mockListRuns();
+      return USE_REAL_API ? requestAll<Run>('/runs') : mockListRuns();
     },
 
     /** GET /runs/{id} — the run with its tasks and answers. */
     get(id: number): Promise<RunDetail> {
-      return USE_REAL_API ? notBuilt('GET /runs/{id}') : mockGetRun(id);
+      return USE_REAL_API ? call<RunDetail>(`/runs/${id}`) : mockGetRun(id);
     },
   },
   runTasks: {
@@ -275,7 +274,7 @@ export const api = {
      */
     answer(id: number, request: AnswerTaskRequest): Promise<RunTask> {
       return USE_REAL_API
-        ? notBuilt('PATCH /run-tasks/{id}')
+        ? call<RunTask>(`/run-tasks/${id}`, { method: 'PATCH', body: request })
         : mockAnswerTask(id, request);
     },
   },
@@ -286,7 +285,10 @@ export const api = {
      */
     sign(request: UploadSignRequest): Promise<UploadSignResponse> {
       return USE_REAL_API
-        ? notBuilt('POST /uploads/sign')
+        ? call<UploadSignResponse>('/uploads/sign', {
+            method: 'POST',
+            body: request,
+          })
         : mockSignUpload(request);
     },
   },

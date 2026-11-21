@@ -1,3 +1,4 @@
+import { ExpiredSessionRedirect } from '@/features/auth/expired-session-redirect';
 import { isSessionExpired, useMe } from '@/features/auth/use-me';
 import { useHomeNotice } from '@/features/home/home-notice';
 import { clockTime, dayKey } from '@/features/home/run-time';
@@ -21,7 +22,7 @@ import { RetryBanner } from '@/shared/components/retry-banner';
 import { Text } from '@/shared/components/ui/text';
 import { useNow } from '@/shared/lib/use-now';
 import { format, useT } from '@/shared/i18n';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Eye } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -91,7 +92,7 @@ export function RunScreen() {
     try {
       const uploaded = await imageUpload.upload(task.id);
       if (uploaded) {
-        await writeAnswer(task, { image_key: uploaded.key, comment: null });
+        writeAnswer(task, { image_key: uploaded.key, comment: null });
       }
     } catch {
       // The hook has recorded the failure; the row shows it.
@@ -116,7 +117,7 @@ export function RunScreen() {
   }, [gone, missing, run, router, setNotice, t]);
 
   if (!me) {
-    if (meError && isSessionExpired(meErr)) return <Redirect href="/" />;
+    if (meError && isSessionExpired(meErr)) return <ExpiredSessionRedirect />;
     return null;
   }
   if (gone || missing) return null;
@@ -200,7 +201,14 @@ export function RunScreen() {
     setChangingFor(task, false);
   }
 
-  async function writeAnswer(
+  /**
+   * Hands the answer to the write queue and returns at once. Offline, the
+   * mutation is paused and its promise would not settle until the signal came
+   * back, so nothing here waits for it: the row shows the answer (optimistic)
+   * and counts as waiting to send. A refusal later puts the row back into
+   * editing, with its message.
+   */
+  function writeAnswer(
     task: RunTask,
     request: {
       answer_bool?: boolean;
@@ -208,23 +216,29 @@ export function RunScreen() {
       image_key?: string;
       comment?: string | null;
     },
-  ): Promise<boolean> {
+  ): boolean {
     const verify = isSupervisor ? false : true;
     if (!verify) return false;
-    try {
-      setRowErrors((current) => ({ ...current, [task.id]: null }));
-      await answer.mutateAsync({ taskId: task.id, request });
-      setChangingFor(task, false);
-      return true;
-    } catch (error) {
-      const message =
-        error instanceof Error && 'body' in error
-          ? ((error as { body?: { error?: { message?: string } } }).body?.error
-              ?.message ?? t('run.write-failed'))
-          : t('run.write-failed');
-      setRowErrors((current) => ({ ...current, [task.id]: { message } }));
-      return false;
-    }
+    setRowErrors((current) => ({ ...current, [task.id]: null }));
+    setChangingFor(task, false);
+    answer.mutate(
+      { taskId: task.id, request },
+      {
+        onError: () => {
+          // The platform's message is English only; say it in the person's language.
+          const message = t('run.write-failed');
+          setRowErrors((current) => ({ ...current, [task.id]: { message } }));
+          if (request.answer_number !== undefined) {
+            setDrafts((current) => ({
+              ...current,
+              [task.id]: String(request.answer_number),
+            }));
+          }
+          setChangingFor(task, true);
+        },
+      },
+    );
+    return true;
   }
 
   async function answerBinary(task: RunTask, value: boolean) {
@@ -234,7 +248,7 @@ export function RunScreen() {
     }
     if (value) {
       // An earlier comment stays under the new answer (bundle: changedKeptComment).
-      await writeAnswer(task, { answer_bool: true });
+      writeAnswer(task, { answer_bool: true });
       return;
     }
     // A No always needs its reason (Model §6, FE Spec §3.3).
@@ -259,11 +273,11 @@ export function RunScreen() {
       setSheetFor(task.id);
       return;
     }
-    await writeAnswer(task, { answer_number: parsed, comment: null });
+    writeAnswer(task, { answer_number: parsed, comment: null });
   }
 
   async function saveComment(task: RunTask, text: string) {
-    const written = await writeAnswer(task, {
+    const written = writeAnswer(task, {
       ...sheetAnswer,
       comment: text,
     });

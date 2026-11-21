@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useMe } from '@/features/auth/use-me';
 import { api } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/http';
+import { UPLOAD_TIMEOUT_MS, withTimeout } from '@/shared/api/with-timeout';
 
 import { photoDraftId, usePhotoOutbox, type PhotoDraft } from './photo-outbox';
 import {
@@ -58,11 +59,15 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
         throw new Error('Upload failed');
       }
       if (!sign.upload_url.startsWith('mock://')) {
-        const response = await fetch(sign.upload_url, {
-          method: sign.method,
-          headers: { 'Content-Type': 'image/jpeg', ...sign.headers },
-          body: await fetch(draft.uri).then((r) => r.blob()),
-        });
+        const photo = await fetch(draft.uri).then((r) => r.blob());
+        const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
+          fetch(sign.upload_url, {
+            method: sign.method,
+            headers: { 'Content-Type': 'image/jpeg', ...sign.headers },
+            body: photo,
+            signal,
+          }),
+        );
         if (!response.ok) throw new Error('Upload failed');
       }
     } catch (error) {

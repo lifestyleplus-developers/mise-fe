@@ -2,19 +2,33 @@ import * as ImagePicker from 'expo-image-picker';
 import * as React from 'react';
 
 import { api } from '@/shared/api/client';
-import type { ApiErrorBody } from '@/shared/api/types';
+import { UPLOAD_TIMEOUT_MS, withTimeout } from '@/shared/api/with-timeout';
+
+/**
+ * Why an upload failed, as a code: screens decide what to say, in the person's
+ * language. Never a message to show as it is.
+ */
+export type UploadError =
+  'camera_permission_denied' | 'no_image' | 'upload_failed';
 
 type UploadState = {
   uploading: boolean;
   key: string | null;
   url: string | null;
-  error: string | null;
+  error: UploadError | null;
 };
 
 type UseImageUploadOptions = {
   onSuccess?: (key: string, url: string) => void;
-  onError?: (error: string) => void;
+  onError?: (error: UploadError) => void;
 };
+
+/** Thrown inside `upload` so one catch turns every failure into a code. */
+class UploadFailure extends Error {
+  constructor(readonly code: UploadError) {
+    super(code);
+  }
+}
 
 /**
  * Handles live camera capture and direct upload to storage.
@@ -36,7 +50,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         // Request camera permissions
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-          throw new Error('Camera permission denied');
+          throw new UploadFailure('camera_permission_denied');
         }
 
         // Launch camera - live capture only, no gallery
@@ -54,30 +68,41 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 
         const asset = result.assets[0];
         if (!asset) {
-          throw new Error('No image captured');
+          throw new UploadFailure('no_image');
         }
+
+        // The platform signs the size of the photograph into the upload, so
+        // read the bytes first.
+        const photo = await fetch(asset.uri).then((r) => r.blob());
 
         // Get upload signature
         const sign = await api.uploads.sign({
           purpose: 'run_task',
           target_id: taskId,
           content_type: 'image/jpeg',
+          content_length: photo.size,
         });
 
         // The mock backend hands out `mock://` locations there is nothing to
         // PUT to; skip the transfer and keep the rest of the flow real.
         if (!sign.upload_url.startsWith('mock://')) {
-          const response = await fetch(sign.upload_url, {
-            method: sign.method,
-            headers: {
-              'Content-Type': 'image/jpeg',
-              ...sign.headers,
-            },
-            body: await fetch(asset.uri).then((r) => r.blob()),
-          });
+          // The length is signed in, but the phone sets it from the body itself;
+          // sending it by hand as well risks a duplicate header.
+          const { 'Content-Length': _length, ...headers } = sign.headers;
+          const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
+            fetch(sign.upload_url, {
+              method: sign.method,
+              headers: {
+                'Content-Type': 'image/jpeg',
+                ...headers,
+              },
+              body: photo,
+              signal,
+            }),
+          );
 
           if (!response.ok) {
-            throw new Error('Upload failed');
+            throw new UploadFailure('upload_failed');
           }
         }
 
@@ -92,11 +117,9 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
         options.onSuccess?.(sign.key, asset.uri);
         return { key: sign.key, url: asset.uri };
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : ((error as { body?: ApiErrorBody })?.body?.error?.message ??
-              'Upload failed');
+        // A refusal from the platform or a dropped connection is a failed upload.
+        const message: UploadError =
+          error instanceof UploadFailure ? error.code : 'upload_failed';
         setState((prev) => ({
           ...prev,
           uploading: false,
