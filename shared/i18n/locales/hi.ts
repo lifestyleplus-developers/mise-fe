@@ -960,4 +960,8 @@ export const hi = {
   'iss.photo': 'फ़ोटो',
   'iss.limit': '{value} · सीमा {limit}',
   'iss.by-at': '{name} · {time}',
+  'risk.heading': 'जोखिम में · पिछले 24 घंटे',
+  'risk.empty': 'पिछले 24 घंटों में कुछ भी जोखिम में नहीं।',
+  'risk.failed': 'लोड नहीं हुआ। mise तक नहीं पहुँच पा रहे।',
+  'iss.no-manager': 'कोई चेकलिस्ट मैनेजर नहीं',
 } satisfies Partial<Catalogue>;

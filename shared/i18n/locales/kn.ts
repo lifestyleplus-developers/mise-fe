@@ -967,4 +967,8 @@ export const kn = {
   'iss.photo': 'ಫೋಟೋ',
   'iss.limit': '{value} · ಮಿತಿ {limit}',
   'iss.by-at': '{name} · {time}',
+  'risk.heading': 'ಅಪಾಯದಲ್ಲಿ · ಕಳೆದ 24 ಗಂಟೆಗಳು',
+  'risk.empty': 'ಕಳೆದ 24 ಗಂಟೆಗಳಲ್ಲಿ ಯಾವುದೂ ಅಪಾಯದಲ್ಲಿಲ್ಲ.',
+  'risk.failed': 'ಲೋಡ್ ಆಗಲಿಲ್ಲ. mise ತಲುಪಲಾಗುತ್ತಿಲ್ಲ.',
+  'iss.no-manager': 'ಚೆಕ್‌ಲಿಸ್ಟ್ ಮ್ಯಾನೇಜರ್ ಇಲ್ಲ',
 } satisfies Partial<Catalogue>;

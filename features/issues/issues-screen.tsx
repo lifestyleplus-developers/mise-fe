@@ -9,7 +9,6 @@ import { OptionList } from '@/shared/components/option-list';
 import { PendingPill } from '@/shared/components/pending-pill';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SegmentedControl } from '@/shared/components/segmented-control';
-import { Skeleton } from '@/shared/components/skeleton';
 import { Banner } from '@/shared/components/ui/banner';
 import { BottomSheet } from '@/shared/components/ui/bottom-sheet';
 import { Button } from '@/shared/components/ui/button';
@@ -27,6 +26,8 @@ import {
   type IssueFilters,
   type ResolveVariables,
 } from './issue-keys';
+import { AtRiskBlock } from './at-risk-block';
+import { CardSkeletons } from './card-skeletons';
 import { useIncidents, useIssueFilterOptions } from './use-incidents';
 
 const ALL = '';
@@ -180,6 +181,8 @@ export function IssuesScreen() {
         </View>
       ) : null}
 
+      {canAdminister(me.user.tenant_role) ? <AtRiskBlock /> : null}
+
       {canAdminister(me.user.tenant_role) ? (
         <Text
           accessibilityRole="header"
@@ -258,26 +261,5 @@ export function IssuesScreen() {
         />
       </BottomSheet>
     </TabScreen>
-  );
-}
-
-function CardSkeletons({ count }: { count: number }) {
-  return (
-    <View
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      className="gap-3"
-    >
-      {Array.from({ length: count }, (_, key) => (
-        <View
-          key={key}
-          className="shadow-card border-border bg-card mx-4 gap-2.5 rounded-3xl border p-4"
-        >
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-3 w-1/3" />
-          <Skeleton className="mt-1 h-3.5 w-2/3" />
-        </View>
-      ))}
-    </View>
   );
 }

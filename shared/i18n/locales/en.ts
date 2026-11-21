@@ -972,6 +972,10 @@ export const en = {
   'iss.photo': 'Photo',
   'iss.limit': '{value} · limit {limit}',
   'iss.by-at': '{name} · {time}',
+  'risk.heading': 'At risk · last 24 hours',
+  'risk.empty': 'Nothing at risk in the last 24 hours.',
+  'risk.failed': "Couldn't load. Can't reach mise.",
+  'iss.no-manager': 'No Checklist Manager',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

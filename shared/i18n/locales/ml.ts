@@ -986,4 +986,8 @@ export const ml = {
   'iss.photo': 'ഫോട്ടോ',
   'iss.limit': '{value} · പരിധി {limit}',
   'iss.by-at': '{name} · {time}',
+  'risk.heading': 'അപകടസാധ്യത · കഴിഞ്ഞ 24 മണിക്കൂർ',
+  'risk.empty': 'കഴിഞ്ഞ 24 മണിക്കൂറിൽ ഒന്നും അപകടത്തിലില്ല.',
+  'risk.failed': 'ലോഡ് ചെയ്യാനായില്ല. mise-ൽ എത്താനാകുന്നില്ല.',
+  'iss.no-manager': 'ചെക്ക്‌ലിസ്റ്റ് മാനേജർ ഇല്ല',
 } satisfies Partial<Catalogue>;
