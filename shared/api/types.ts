@@ -957,3 +957,123 @@ export type OverrideSpotCheckResultRequest = {
   overridden_to: Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'>;
   override_note: string;
 };
+
+/** API Contract §9 — a person, as an incident names who resolved it. */
+export type PersonRef = { id: number; full_name: string };
+
+/** API Contract §9 — a checklist or an outlet, named. */
+export type NamedRef = { id: number; name: string };
+
+export type IncidentStatus = 'OPEN' | 'RESOLVED';
+
+/**
+ * API Contract §9 — one incident per imperfect run, raised when the run
+ * finalises below a perfect score. `score` is compliance from 0 to 1 (1 is
+ * perfect); show it as a percentage and never rescale it here. Resolving never
+ * changes it.
+ */
+export type Incident = {
+  id: number;
+  run_id: number;
+  checklist: NamedRef;
+  outlet: NamedRef;
+  window_open: string;
+  window_close: string;
+  score: number;
+  missed_count: number;
+  failed_count: number;
+  rushed: boolean;
+  status: IncidentStatus;
+  resolved_by: PersonRef | null;
+  resolved_at: string | null;
+  created_at: string;
+  /**
+   * Mock only: photographs of the run still being assessed (the "1 being
+   * assessed" mark). The platform sends no such field, so it is undefined
+   * against it and the mark is simply not shown.
+   */
+  assessing_count?: number;
+};
+
+/** GET /incidents/{id} — adds every failed and missed task, in position order. */
+export type IncidentDetail = Incident & { tasks: RunTask[] };
+
+/** GET /incidents filters. The platform answers OPEN unless told otherwise. */
+export type IncidentsQuery = {
+  page: number;
+  pageSize: number;
+  status?: IncidentStatus | 'ALL';
+  outletId?: number;
+  checklistId?: number;
+};
+
+/**
+ * GET /reports/checklist/{id}/outlets — the same checklist at every outlet.
+ * `score` is the mean of the finalised runs that closed in the last `days`
+ * days, null when there are none; `latest_run` is the most recent closed one.
+ * Lowest-first and "today only" are the screen's to do from these.
+ */
+export type ChecklistOutletsReport = {
+  checklist: NamedRef;
+  days: number;
+  outlets: {
+    assignment_id: number;
+    outlet: NamedRef;
+    score: number | null;
+    runs_counted: number;
+    latest_run: {
+      run_id: number;
+      score: number | null;
+      window_open: string;
+      window_close: string;
+    } | null;
+  }[];
+};
+
+/** One closed period in GET /reports/checklist/{id}/history, newest first. */
+export type ChecklistHistoryRow = {
+  run_id: number;
+  window_open: string;
+  window_close: string;
+  score: number | null;
+  missed_count: number;
+  failed_count: number;
+  rushed: boolean;
+  /** Mock only, like `Incident.assessing_count`. */
+  assessing_count?: number;
+};
+
+/**
+ * GET /reports/checklist/{id}/history filters. Without `assignmentId` the
+ * platform answers for the caller's only outlet, and 400 if there are several.
+ * `from` and `to` are dates (YYYY-MM-DD), inclusive, on the day each period closed.
+ */
+export type ChecklistHistoryQuery = {
+  page: number;
+  pageSize: number;
+  assignmentId?: number;
+  from?: string;
+  to?: string;
+};
+
+/**
+ * GET /reports/at-risk — the worst runs among those that closed in the last
+ * `hours` hours (fixed at 24, no parameter), at most five. Empty means nothing
+ * went wrong. ADMIN and OWNER only.
+ */
+export type AtRiskReport = {
+  hours: number;
+  results: {
+    run_id: number;
+    checklist: NamedRef;
+    outlet: NamedRef;
+    window_open: string;
+    window_close: string;
+    score: number;
+    missed_count: number;
+    failed_count: number;
+    rushed: boolean;
+    incident_id: number | null;
+    cl_admins: PersonRef[];
+  }[];
+};

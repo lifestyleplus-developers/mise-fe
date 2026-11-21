@@ -59,6 +59,12 @@ import {
   mockUpdateStaff,
   mockUpdateTask,
   mockUpdateUser,
+  mockListIncidents,
+  mockGetIncident,
+  mockResolveIncident,
+  mockChecklistOutletsReport,
+  mockChecklistHistoryReport,
+  mockAtRiskReport,
   mockListAreas,
   mockCreateArea,
   mockUpdateArea,
@@ -82,6 +88,13 @@ import {
 import type {
   AddMemberRequest,
   AnswerTaskRequest,
+  AtRiskReport,
+  ChecklistHistoryQuery,
+  ChecklistHistoryRow,
+  ChecklistOutletsReport,
+  Incident,
+  IncidentDetail,
+  IncidentsQuery,
   AppointManagerRequest,
   AttendanceConfig,
   AttendanceConfigsQuery,
@@ -809,6 +822,80 @@ export const api = {
             },
           })
         : mockStockSpendReport(query);
+    },
+  },
+  incidents: {
+    /**
+     * GET /incidents — OPEN unless `status` says otherwise, newest first, 25 a
+     * page. ADMIN and OWNER see all; a CL_ADMIN only their own assignments.
+     */
+    list(query: IncidentsQuery): Promise<Page<Incident>> {
+      return USE_REAL_API
+        ? call<Page<Incident>>('/incidents', {
+            query: {
+              status: query.status,
+              outlet_id: query.outletId,
+              checklist_id: query.checklistId,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListIncidents(query);
+    },
+
+    /** GET /incidents/{id} — with its failed and missed tasks. 404 when not yours. */
+    get(id: number): Promise<IncidentDetail> {
+      return USE_REAL_API
+        ? call<IncidentDetail>(`/incidents/${id}`)
+        : mockGetIncident(id);
+    },
+
+    /**
+     * POST /incidents/{id}/resolve — the incident back, score unchanged.
+     * Resolving a resolved incident is a 200 that keeps the first resolver.
+     */
+    resolve(id: number): Promise<Incident> {
+      return USE_REAL_API
+        ? call<Incident>(`/incidents/${id}/resolve`, { method: 'POST' })
+        : mockResolveIncident(id);
+    },
+  },
+  reports: {
+    /** GET /reports/checklist/{id}/outlets — the checklist scored at each outlet. */
+    checklistOutlets(checklistId: number): Promise<ChecklistOutletsReport> {
+      return USE_REAL_API
+        ? call<ChecklistOutletsReport>(
+            `/reports/checklist/${checklistId}/outlets`,
+          )
+        : mockChecklistOutletsReport(checklistId);
+    },
+
+    /** GET /reports/checklist/{id}/history — one outlet's closed periods, newest first. */
+    checklistHistory(
+      checklistId: number,
+      query: ChecklistHistoryQuery,
+    ): Promise<Page<ChecklistHistoryRow>> {
+      return USE_REAL_API
+        ? call<Page<ChecklistHistoryRow>>(
+            `/reports/checklist/${checklistId}/history`,
+            {
+              query: {
+                assignment_id: query.assignmentId,
+                from: query.from,
+                to: query.to,
+                page: query.page,
+                page_size: query.pageSize,
+              },
+            },
+          )
+        : mockChecklistHistoryReport(checklistId, query);
+    },
+
+    /** GET /reports/at-risk — ADMIN and OWNER; no lookback parameter (§10). */
+    atRisk(): Promise<AtRiskReport> {
+      return USE_REAL_API
+        ? call<AtRiskReport>('/reports/at-risk')
+        : mockAtRiskReport();
     },
   },
   spotChecks: {
