@@ -956,6 +956,22 @@ export const en = {
   'iss.load-failed': "Couldn't load issues. Can't reach mise.",
   'iss.try-again': 'Try again',
   'iss.empty-filter-resolved': 'No resolved issues for {what}.',
+  'iss.eyebrow': 'Issue',
+  'iss.failed-group': 'Failed',
+  'iss.missed-group': 'Missed',
+  'iss.other-group': 'Being assessed',
+  'iss.not-answered': 'Not answered',
+  'iss.score-line':
+    "Resolving doesn't change the score ({score}). It records that you've seen it.",
+  'iss.mark-resolved': 'Mark resolved',
+  'iss.confirm-title': 'Mark this issue resolved?',
+  'iss.resolve': 'Resolve',
+  'iss.already': 'Already resolved.',
+  'iss.gone': 'This issue is no longer available.',
+  'iss.detail-failed': "Couldn't load this issue. Can't reach mise.",
+  'iss.photo': 'Photo',
+  'iss.limit': '{value} · limit {limit}',
+  'iss.by-at': '{name} · {time}',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;
