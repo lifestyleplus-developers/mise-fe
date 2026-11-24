@@ -3944,10 +3944,8 @@ const SLOW_SEND_MS = 8_000;
 const RESHMA = 16;
 const ARUN = 17;
 /**
- * Signs in as an Administrator on a platform that cannot do several things the
- * mockup has a fallback for (SPT-01 `partialFallback` and `retakeFallback`, SPT-03
- * `afterCloseFallback` and `noIssueLink`, SPT-05 `managerNotWired` and
- * `itemFallback`, SPT-06 `archivedFallback`). Everyone else gets the full platform.
+ * Signs in as an Administrator on a platform that keeps only the latest photograph
+ * of a prompt (SPT-01 `retakeFallback`). Everyone else gets the full platform.
  */
 const BASIC = 18;
 
@@ -4602,14 +4600,6 @@ function assertAreaNameFree(area: DbArea, name: string, exceptId?: number) {
 export async function mockListAreas(query: AreasQuery): Promise<Page<Area>> {
   await delay();
   const actor = spotActor();
-  if (query.includeArchived && onBasicPlatform(actor)) {
-    throw apiError(
-      400,
-      'archived_not_listed',
-      'Archived areas cannot be listed.',
-      'include_archived',
-    );
-  }
   const readable = readableSpotOutlets(actor);
   const outletId =
     query.outletId === undefined
@@ -4852,18 +4842,6 @@ export async function mockUpdateSpotCheck(
   triggerFault(request.name);
   triggerRevoked(check.name);
   triggerRevoked(request.name);
-  // A platform that cannot change the list of a check that exists (SPT-05 `itemFallback`).
-  if (
-    onBasicPlatform(actor) &&
-    (request.captures !== undefined || request.assertions !== undefined)
-  ) {
-    throw apiError(
-      400,
-      'list_locked',
-      'The prompts and items of a check cannot be changed.',
-      'captures',
-    );
-  }
   if (check.is_archived && request.is_archived !== false) {
     throw invalid('An archived spot check cannot be changed.', 'is_archived');
   }
@@ -4918,13 +4896,6 @@ export async function mockListSpotCheckManagers(
 ): Promise<SpotCheckManager[]> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   return db.users
@@ -4949,13 +4920,6 @@ export async function mockAppointSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -4978,13 +4942,6 @@ export async function mockRemoveSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -5076,14 +5033,8 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
   }
   const sees = actor.admin || run.manager_id === actor.me.user.id;
   const basic = onBasicPlatform(actor);
-  // On the basic platform a partial capture is simply "not done" and is not assessed,
-  // a retake overwrites, and no failure raises an issue.
-  const completion =
-    status === 'FINALIZED'
-      ? basic && run.completion === 'PARTIAL'
-        ? 'NOT_DONE'
-        : run.completion
-      : null;
+  // On the basic platform a retake overwrites.
+  const completion = status === 'FINALIZED' ? run.completion : null;
   return {
     ...base,
     scheduled_for: run.scheduled_for,
@@ -5103,9 +5054,7 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
     completion,
     results:
       sees && status === 'FINALIZED'
-        ? basic && run.completion === 'PARTIAL'
-          ? []
-          : run.results.map((result) => toResult(run, result, now))
+        ? run.results.map((result) => toResult(run, result, now))
         : null,
   };
 }
@@ -5323,15 +5272,6 @@ export async function mockOverrideSpotCheckResult(
       403,
       API_ERROR_CODE.PERMISSION_DENIED,
       "You can't change this result.",
-    );
-  }
-  // A platform that takes no override once the window has closed (SPT-03
-  // `afterCloseFallback`); results only exist after the close, so none is allowed.
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      409,
-      API_ERROR_CODE.WINDOW_CLOSED,
-      "Results can't be changed after the window closes.",
     );
   }
   if (!request.override_note.trim()) {

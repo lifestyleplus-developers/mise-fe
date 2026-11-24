@@ -14,13 +14,13 @@ Exactly 24, in mockup order. "Reach it with" names the sign-in that shows the st
 
 1. **default** — the outlet's checks A to Z, each with its name, "{Staff|Area} · {How often} · {time} · {n} min window" and "{p} photos · {i} check items"; a dashed notice that the prompts and checks are examples until the AI evaluation; the Spot-check Managers below. _raheem: ZamZam._
 2. **noManagers** — "Nobody will be told when a check is revealed. Add a Spot-check Manager." above the list, "None" under Managers. _Remove Reshma and Arun at ZamZam._
-3. **managerNotWired** — a platform with no way to list, appoint or remove Spot-check Managers: "This can't be saved yet." under the managers, and Add and Remove do nothing. _Sign in as `basic` (password 1234) and open Checks: the Managers section says so._
+3. ~~**managerNotWired**~~ — removed. The platform lists, appoints and removes Spot-check Managers, so the "This can't be saved yet." line no longer exists.
 4. **new** — New check: empty name, Staff, Daily, no time, 20 min, no prompts, no items; Save off. _New check._
 5. **newFilled** — a name, a time, 3 prompts and 5 items; Save on. _Fill the form, or open "Grooming — kitchen" (state 6) and read it._
 6. **edit** — "Grooming — kitchen": every field filled, "Changes apply from the next check. Past results keep what they were judged against.", Archive check at the foot. _Tap a check._
 7. **itemMenu** — the menu for one item: Edit, Move up, Move down, Archive. _The ⋮ on an item._
 8. **itemArchived** — the item is gone from the list and the count drops. It is archived on Save, and stays on past results. _Archive an item._
-9. **itemFallback** — a platform that cannot change the prompts or items of a check that exists: "To change this list, archive the check and create a new one.", with no ⋮ on the rows and no Add buttons. _Sign in as `basic`, open an existing check, change a prompt or item and Save. The platform refuses the list (400), the list goes back as it was, every other edit is kept, and the line shows. Other fields (name, time, window) still save. A new check can still have prompts and items._
+9. ~~**itemFallback**~~ — removed. The platform takes a check's prompts and items on every save (the check is saved whole, with the ids of the rows it already has), so the lists are always editable.
 10. **addItem** — Add check item: the item text, "One thing a photo can show.", and a weight from 1 to 10 starting at 5. _Add check item._
 11. **area** — an area check: Subject is Area (fixed), "Picked at random from the areas that can be picked." with an Areas link to SPT-06. _Food areas — hygiene._
 12. **weekly** — How often: Weekly, with the days. _Dishwash — weekly (Mon, Thu), or choose Weekly._

@@ -885,7 +885,6 @@ export const hi = {
   'spot.managers': 'स्पॉट-चेक मैनेजर',
   'spot.add-manager': 'मैनेजर जोड़ें',
   'spot.already-manager': 'यहाँ पहले से स्पॉट-चेक मैनेजर',
-  'spot.not-wired': 'यह अभी सेव नहीं हो सकता।',
   'spot.remove': 'हटाएँ',
   'spot.empty-checks': 'अभी कोई स्पॉट चेक नहीं।',
   'spot.apply-next':
@@ -970,9 +969,6 @@ export const hi = {
     'फ़ोटो फिर भी सेव नहीं हो सकी। फ़ोन में जगह खाली करें, फिर "यह फ़ोटो रखें" दबाएँ।',
   'cam.torch-on': 'टॉर्च चालू',
   'cam.torch-off': 'टॉर्च बंद',
-  'spot.partial-fallback': 'बंद · नहीं हुआ। {total} में से {n} फ़ोटो ली गईं।',
-  'spot.item-fallback': 'यह सूची बदलने के लिए चेक संग्रहीत करें और नया बनाएँ।',
-  'spot.after-close': 'समय बंद होने के बाद नतीजे नहीं बदले जा सकते।',
   'cam.save-failed': 'फ़ोटो सेव नहीं हो सकी। जगह खाली करें और फिर कोशिश करें।',
 
   'spot.filter-all': 'सभी',

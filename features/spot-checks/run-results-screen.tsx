@@ -21,7 +21,6 @@ import { ResultRow } from './result-row';
 import { SpotCheckLinks } from './spot-check-links';
 import { closedSummary } from './capture-view';
 import { closedLine } from './closed-line';
-import { usePlatformLimit } from './platform-limits';
 import { subjectName } from './spot-outcome';
 import { useSpotCheckOutlets } from './use-spot-check-outlets';
 import { useSpotCheckRun } from './use-spot-check-runs';
@@ -103,8 +102,6 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
   const { data: me } = useMe();
   const pull = usePullToRefresh(() => void query.refetch());
   const [opening, setOpening] = React.useState<SpotCheckResult | null>(null);
-  // The platform has said it takes no override after the close: no row opens.
-  const noOverride = usePlatformLimit('overrideAfterClose');
 
   const status = query.error instanceof ApiError ? query.error.status : null;
   const moduleOff = status === 404;
@@ -198,7 +195,7 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
               result={result}
               first={index === 0}
               onOpen={
-                result.outcome === 'PENDING_JUDGEMENT' || noOverride
+                result.outcome === 'PENDING_JUDGEMENT'
                   ? undefined
                   : () => setOpening(result)
               }
