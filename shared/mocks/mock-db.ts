@@ -39,10 +39,8 @@ import type {
   OverrideSpotCheckResultRequest,
   SpotCheck,
   SpotCheckAssertion,
-  SpotCheckAssertionRequest,
   SpotCheckLists,
   SpotCheckCapture,
-  SpotCheckCaptureRequest,
   SpotCheckCompletion,
   SpotCheckManager,
   SpotCheckOutcome,
@@ -2135,7 +2133,7 @@ export async function mockSignUpload(
   await delay();
   // A signature needs the network: with no signal there is no upload location
   // (a spot-check photograph is then kept on the phone, SPT-01 `noUploadUrl`).
-  if (request.purpose === 'spot_check_run' && !onlineManager.isOnline()) {
+  if (request.purpose === 'spot_check' && !onlineManager.isOnline()) {
     throw new Error('Network request failed');
   }
   const me = resolveMe();
@@ -2144,7 +2142,7 @@ export async function mockSignUpload(
   // A run with a prompt of `upload`: the first photograph's bytes are refused, so
   // the prompt shows Retry (SPT-01 `uploadFailed`); the retry goes through.
   if (
-    request.purpose === 'spot_check_run' &&
+    request.purpose === 'spot_check' &&
     !refusedUploadRuns.has(request.target_id) &&
     spotCheckState()
       .runs.find((run) => run.id === request.target_id)
@@ -4716,16 +4714,6 @@ function findSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
   return check;
 }
 
-/** An archived check is frozen: no edit, no new prompts or items. */
-function findEditableSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
-  requireSpotAuthor(actor);
-  const check = findSpotCheck(actor, id);
-  if (check.is_archived) {
-    throw invalid('An archived spot check cannot be changed.', 'is_archived');
-  }
-  return check;
-}
-
 function assertValidSpotCheck(
   fields: Pick<
     SpotCheck,
@@ -4915,60 +4903,6 @@ export async function mockUpdateSpotCheck(
   return toCheck(check);
 }
 
-/** POST /spot-checks/{id}/captures — added at the end. */
-export async function mockAddSpotCheckCapture(
-  id: number,
-  request: SpotCheckCaptureRequest,
-): Promise<SpotCheckCapture> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.prompt);
-  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
-  if (request.prompt.trim().length > 200) {
-    throw invalid('Use 200 characters or fewer.', 'prompt');
-  }
-  const capture = {
-    position: check.captures.length + 1,
-    prompt: request.prompt.trim(),
-  };
-  check.captures.push(capture);
-  return capture;
-}
-
-/** PATCH a prompt's wording. Mock only: the contract lists add and read. */
-export async function mockUpdateSpotCheckCapture(
-  id: number,
-  position: number,
-  request: SpotCheckCaptureRequest,
-): Promise<SpotCheckCapture> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.prompt);
-  const capture = check.captures.find((entry) => entry.position === position);
-  if (!capture) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
-  capture.prompt = request.prompt.trim();
-  return capture;
-}
-
-/** DELETE a prompt; those after it move up. Mock only. */
-export async function mockRemoveSpotCheckCapture(
-  id: number,
-  position: number,
-): Promise<void> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  if (!check.captures.some((entry) => entry.position === position)) {
-    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  }
-  check.captures = check.captures
-    .filter((entry) => entry.position !== position)
-    .map((entry, index) => ({ ...entry, position: index + 1 }));
-}
-
 function assertValidItem(fields: { text?: string; weight?: number }) {
   if (fields.text !== undefined) {
     if (!fields.text.trim()) throw invalid('Text is required.', 'text');
@@ -4984,50 +4918,6 @@ function assertValidItem(fields: { text?: string; weight?: number }) {
   ) {
     throw invalid('Use a weight from 1 to 10.', 'weight');
   }
-}
-
-/** POST /spot-checks/{id}/assertions — added at the end, never tied to a prompt. */
-export async function mockAddSpotCheckAssertion(
-  id: number,
-  request: SpotCheckAssertionRequest,
-): Promise<SpotCheckAssertion> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.text);
-  if (request.text === undefined) throw invalid('Text is required.', 'text');
-  assertValidItem(request);
-  const assertion: SpotCheckAssertion = {
-    position: check.assertions.length + 1,
-    text: request.text.trim(),
-    weight: request.weight ?? DEFAULT_WEIGHT,
-    is_archived: false,
-  };
-  check.assertions.push(assertion);
-  return assertion;
-}
-
-/** PATCH an item: wording, weight, archive or restore. Mock only. */
-export async function mockUpdateSpotCheckAssertion(
-  id: number,
-  position: number,
-  request: SpotCheckAssertionRequest,
-): Promise<SpotCheckAssertion> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.text);
-  const assertion = check.assertions.find(
-    (entry) => entry.position === position,
-  );
-  if (!assertion) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  assertValidItem(request);
-  if (request.text !== undefined) assertion.text = request.text.trim();
-  if (request.weight !== undefined) assertion.weight = request.weight;
-  if (request.is_archived !== undefined) {
-    assertion.is_archived = request.is_archived;
-  }
-  return assertion;
 }
 
 // Spot-check Managers. The Schema has no membership table (Known Inconsistency

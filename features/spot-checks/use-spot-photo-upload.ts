@@ -33,12 +33,27 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
   try {
     update(draft.id, { stage: 'uploading', error: null });
 
+    // The platform signs the size of the photograph into the upload, so read the
+    // bytes first. The file is on the phone: failing to read it is not "no signal".
+    let photo: Blob;
+    try {
+      photo = await fetch(draft.uri).then((r) => r.blob());
+    } catch (error) {
+      update(draft.id, {
+        stage: 'uploadFailed',
+        error: error instanceof Error ? error.message : 'Upload failed',
+      });
+      return;
+    }
+
     let sign;
     try {
       sign = await api.uploads.sign({
-        purpose: 'spot_check_run',
+        purpose: 'spot_check',
         target_id: draft.runId,
+        capture_position: draft.position,
         content_type: 'image/jpeg',
+        content_length: photo.size,
       });
     } catch (error) {
       // No answer at all is "no signal": keep the photograph and wait. An answer
@@ -59,11 +74,13 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
         throw new Error('Upload failed');
       }
       if (!sign.upload_url.startsWith('mock://')) {
-        const photo = await fetch(draft.uri).then((r) => r.blob());
+        // The length is signed in, but the phone sets it from the body itself;
+        // sending it by hand as well risks a duplicate header.
+        const { 'Content-Length': _length, ...headers } = sign.headers;
         const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
           fetch(sign.upload_url, {
             method: sign.method,
-            headers: { 'Content-Type': 'image/jpeg', ...sign.headers },
+            headers: { 'Content-Type': 'image/jpeg', ...headers },
             body: photo,
             signal,
           }),

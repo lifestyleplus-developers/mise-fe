@@ -13,8 +13,6 @@ import type {
   CreateSpotCheckRequest,
   Page,
   SpotCheck,
-  SpotCheckAssertionRequest,
-  SpotCheckCaptureRequest,
   UpdateSpotCheckRequest,
 } from '@/shared/api/types';
 
@@ -106,41 +104,5 @@ export function useCreateSpotCheck() {
 export function useUpdateSpotCheck(id: number) {
   return useCheckWrite(id, (patch: UpdateSpotCheckRequest) =>
     api.spotChecks.updateCheck(id, patch),
-  );
-}
-
-export function useAddCapture(id: number) {
-  return useCheckWrite(id, (request: SpotCheckCaptureRequest) =>
-    api.spotChecks.addCapture(id, request),
-  );
-}
-
-export function useUpdateCapture(id: number) {
-  return useCheckWrite(
-    id,
-    (variables: { position: number; request: SpotCheckCaptureRequest }) =>
-      api.spotChecks.updateCapture(id, variables.position, variables.request),
-  );
-}
-
-export function useRemoveCapture(id: number) {
-  return useCheckWrite(id, (position: number) =>
-    api.spotChecks.removeCapture(id, position),
-  );
-}
-
-/** Items are never paired with a prompt: there is no field for it. */
-export function useAddAssertion(id: number) {
-  return useCheckWrite(id, (request: SpotCheckAssertionRequest) =>
-    api.spotChecks.addAssertion(id, request),
-  );
-}
-
-/** Edit an item, or archive and restore it with `is_archived`. */
-export function useUpdateAssertion(id: number) {
-  return useCheckWrite(
-    id,
-    (variables: { position: number; request: SpotCheckAssertionRequest }) =>
-      api.spotChecks.updateAssertion(id, variables.position, variables.request),
   );
 }

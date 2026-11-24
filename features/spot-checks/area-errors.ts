@@ -10,7 +10,7 @@ export function classifyAreaError(error: unknown): AreaFailure {
     if (error.status === 404) return 'gone';
     if (error.status === 400) {
       return error.body.error.field === 'name' &&
-        /already exists/i.test(error.body.error.message)
+        /already (exists|has)/i.test(error.body.error.message)
         ? 'duplicate'
         : 'rejected';
     }
