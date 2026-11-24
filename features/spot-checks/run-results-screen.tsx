@@ -6,14 +6,12 @@ import type { SpotCheckResult, SpotCheckRunCapture } from '@/shared/api/types';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SkeletonRows } from '@/shared/components/skeleton';
 import { Banner } from '@/shared/components/ui/banner';
-import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { format, useT } from '@/shared/i18n';
 import { isoToClock } from '@/shared/lib/time';
 import { useFormatClock } from '@/shared/lib/use-clock-format';
 import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useRouter } from 'expo-router';
-import { Flag } from 'lucide-react-native';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -187,22 +185,6 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
           {closedLine(summary, t)}
         </Text>
       </View>
-
-      {run.issue_id !== null ? (
-        <View className="mx-4 mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-destructive/50 self-start"
-            onPress={() => router.push('/issues')}
-          >
-            <Flag className="text-destructive-soft-foreground size-4" />
-            <Text className="text-destructive-soft-foreground">
-              {t('spot.issue-raised')}
-            </Text>
-          </Button>
-        </View>
-      ) : null}
 
       {ownOnly ? (
         <View className="mx-4 mb-3">

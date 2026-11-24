@@ -981,7 +981,6 @@ export const hi = {
   'spot.results-empty': 'अभी तक कोई स्पॉट चेक बंद नहीं हुआ।',
   'spot.tally': '{passed} पास · {failed} फ़ेल · {review} जाँच ज़रूरी',
   'spot.own-only': 'किसी और को सौंपे गए चेक के नतीजे नहीं दिखाए जाते।',
-  'spot.issue-raised': 'समस्या दर्ज हुई',
   'spot.photos': 'फ़ोटो',
   'spot.override': 'बदलें',
   'spot.override-to': 'इसमें बदलें',

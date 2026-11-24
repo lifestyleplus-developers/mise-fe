@@ -992,7 +992,6 @@ export const en = {
   'spot.results-empty': 'No spot checks have closed yet.',
   'spot.tally': '{passed} passed · {failed} failed · {review} review',
   'spot.own-only': "Results aren't shown for a check assigned to someone else.",
-  'spot.issue-raised': 'Issue raised',
   'spot.photos': 'Photos',
   'spot.override': 'Override',
   'spot.override-to': 'Change to',

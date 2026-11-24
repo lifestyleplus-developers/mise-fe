@@ -988,7 +988,6 @@ export const kn = {
   'spot.results-empty': 'ಇನ್ನೂ ಯಾವುದೇ ಸ್ಪಾಟ್ ಚೆಕ್ ಮುಗಿದಿಲ್ಲ.',
   'spot.tally': '{passed} ಪಾಸ್ · {failed} ಫೇಲ್ · {review} ಪರಿಶೀಲನೆ ಬೇಕು',
   'spot.own-only': 'ಬೇರೊಬ್ಬರಿಗೆ ನೀಡಿದ ಚೆಕ್‌ನ ಫಲಿತಾಂಶಗಳನ್ನು ತೋರಿಸಲಾಗುವುದಿಲ್ಲ.',
-  'spot.issue-raised': 'ಸಮಸ್ಯೆ ದಾಖಲಾಗಿದೆ',
   'spot.photos': 'ಫೋಟೋಗಳು',
   'spot.override': 'ಬದಲಾಯಿಸಿ',
   'spot.override-to': 'ಇದಕ್ಕೆ ಬದಲಾಯಿಸಿ',

@@ -3922,7 +3922,6 @@ type DbSpotRun = {
   completion: SpotCheckCompletion | null;
   results: DbSpotResult[];
   ready_at: string | null;
-  issue_id: number | null;
 };
 
 type SpotCheckState = {
@@ -4181,7 +4180,6 @@ function seedSpotCheckState(): SpotCheckState {
       completion: null,
       results: [],
       ready_at: null,
-      issue_id: null,
     };
     const purged =
       close.getTime() <
@@ -4370,9 +4368,6 @@ function seedSpotCheckState(): SpotCheckState {
       `t7/spot/${run10.id}-2-first.jpg`,
     ),
   );
-  for (const run of [run4, run8, run9]) {
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
-  }
 
   // About thirty more at ZamZam over the last 45 days, and a dozen at Elegance.
   const ZAMZAM_CHECKS = [1, 2, 3];
@@ -4396,7 +4391,6 @@ function seedSpotCheckState(): SpotCheckState {
       sent: missed ? [] : partial ? sent.slice(0, -1) : sent,
       settle: true,
     });
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
     state.runs.push(run);
   }
   const front = checkById(11);
@@ -4413,7 +4407,6 @@ function seedSpotCheckState(): SpotCheckState {
       sent: front.captures.map((capture) => capture.position),
       settle: true,
     });
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
     state.runs.push(run);
   }
 
@@ -4472,10 +4465,6 @@ function seedSpotCheckState(): SpotCheckState {
   return state;
 }
 
-function hasLiveFail(run: DbSpotRun): boolean {
-  return run.results.some((result) => effectiveOutcome(result) === 'FAIL');
-}
-
 /**
  * The window has closed: fix how it ended and judge every assertion against the
  * photographs that were sent. Nothing was sent: not done, and nothing to judge.
@@ -4502,7 +4491,6 @@ function settleRun(state: SpotCheckState, run: DbSpotRun, assessedAt?: Date) {
     assessedAt ??
     new Date(new Date(run.window_close).getTime() + SPOT_ASSESS_MS)
   ).toISOString();
-  run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
 }
 
 function spotCheckState(): SpotCheckState {
@@ -5067,7 +5055,6 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
       captures: null,
       completion: null,
       results: null,
-      issue_id: null,
     };
   }
   const state = spotCheckState();
@@ -5120,7 +5107,6 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
           ? []
           : run.results.map((result) => toResult(run, result, now))
         : null,
-    issue_id: sees && !basic ? run.issue_id : null,
   };
 }
 
@@ -5367,7 +5353,6 @@ export async function mockOverrideSpotCheckResult(
   result.override_note = request.override_note.trim();
   result.overridden_by_id = actor.me.user.id;
   result.overridden_at = new Date(now).toISOString();
-  run.issue_id = hasLiveFail(run) ? 7000 + run.id : run.issue_id;
   return toResult(run, result, now);
 }
 

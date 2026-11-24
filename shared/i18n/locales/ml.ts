@@ -1007,7 +1007,6 @@ export const ml = {
   'spot.results-empty': 'ഇതുവരെ ഒരു സ്പോട്ട് ചെക്കും അടഞ്ഞിട്ടില്ല.',
   'spot.tally': '{passed} പാസ് · {failed} ഫെയിൽ · {review} പരിശോധന വേണം',
   'spot.own-only': 'മറ്റൊരാൾക്ക് നൽകിയ ചെക്കിന്റെ ഫലങ്ങൾ കാണിക്കില്ല.',
-  'spot.issue-raised': 'പ്രശ്നം രേഖപ്പെടുത്തി',
   'spot.photos': 'ഫോട്ടോകൾ',
   'spot.override': 'മാറ്റുക',
   'spot.override-to': 'ഇതിലേക്ക് മാറ്റുക',

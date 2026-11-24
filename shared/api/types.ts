@@ -933,8 +933,6 @@ export type SpotCheckRun = {
   results: SpotCheckResult[] | null;
   /** Compliance 0 to 1, once the run is scored; null otherwise and for a caller who may not see results. */
   score?: number | null;
-  /** Always null on the platform: a spot check raises no issue (Known Inconsistency #6). Mock only otherwise. */
-  issue_id: number | null;
 };
 
 /** GET /spot-check-runs filters. `outcome` matches a result's effective (overridden) outcome. */
