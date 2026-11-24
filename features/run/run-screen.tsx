@@ -107,20 +107,23 @@ export function RunScreen() {
 
   const gone = Boolean(run && closed && !isSupervisor);
   const missing = query.isError && !run && isNotFound(query.error);
+  // A push meant for someone else (403) is told apart from one that is gone (404).
+  const stray = query.isError && !run && isForbidden(query.error);
   React.useEffect(() => {
     if (gone && run) {
       setNotice(format(t('home.closed'), { name: run.checklist_name }));
       router.replace('/home');
-    } else if (missing) {
+    } else if (missing || stray) {
+      setNotice(t(stray ? 'ntf.stray' : 'ntf.no-entry'));
       router.replace('/home');
     }
-  }, [gone, missing, run, router, setNotice, t]);
+  }, [gone, missing, stray, run, router, setNotice, t]);
 
   if (!me) {
     if (meError && isSessionExpired(meErr)) return <ExpiredSessionRedirect />;
     return null;
   }
-  if (gone || missing) return null;
+  if (gone || missing || stray) return null;
 
   const title = run?.checklist_name ?? name ?? '';
   const outletName = run?.outlet_name ?? outlet;
@@ -533,6 +536,15 @@ function closedLabelOf(
   return format(
     t(dayKey(closeIso, now, 'home.closes', 'home.closes-tomorrow')),
     { time: clockTime(closeIso) },
+  );
+}
+
+function isForbidden(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    (error as { status: number }).status === 403
   );
 }
 

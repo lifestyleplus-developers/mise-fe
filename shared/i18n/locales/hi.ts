@@ -976,4 +976,11 @@ export const hi = {
   'ovs.chart': 'स्कोर, पुराने से नए: {values}',
   'ovs.periods': 'अवधियाँ',
   'ovs.open-outlet': '{outlet}, {score}। इसका इतिहास खोलें',
+  'ntf.open': 'खोलें',
+  'ntf.stray': 'यह इस फ़ोन पर आपके लिए उपलब्ध नहीं है।',
+  'ntf.no-entry': 'यह आपके लिए उपलब्ध नहीं है।',
+  'ntf.ask.title': 'सूचनाएँ',
+  'ntf.ask.why': 'ताकि आपको पता चले कि चेकलिस्ट कब खुलती है',
+  'ntf.ask.allow': 'अनुमति दें',
+  'ntf.ask.later': 'अभी नहीं',
 } satisfies Partial<Catalogue>;

@@ -989,6 +989,14 @@ export const en = {
   'ovs.chart': 'Scores, oldest to newest: {values}',
   'ovs.periods': 'Periods',
   'ovs.open-outlet': '{outlet}, {score}. Open its history',
+
+  'ntf.open': 'Open',
+  'ntf.stray': "This isn't available to you on this phone.",
+  'ntf.no-entry': "This isn't available to you.",
+  'ntf.ask.title': 'Notifications',
+  'ntf.ask.why': 'So you know when a checklist opens',
+  'ntf.ask.allow': 'Allow',
+  'ntf.ask.later': 'Not now',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

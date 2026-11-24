@@ -1,6 +1,7 @@
 import { cssInterop } from 'nativewind';
 import {
   Archive,
+  Bell,
   ArrowDown,
   ArrowUp,
   Camera,
@@ -62,6 +63,7 @@ import {
  */
 const ICONS = [
   Archive,
+  Bell,
   ArrowDown,
   ArrowUp,
   Camera,

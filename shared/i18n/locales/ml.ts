@@ -1002,4 +1002,11 @@ export const ml = {
   'ovs.chart': 'സ്കോറുകൾ, പഴയതിൽ നിന്ന് പുതിയതിലേക്ക്: {values}',
   'ovs.periods': 'കാലയളവുകൾ',
   'ovs.open-outlet': '{outlet}, {score}. ചരിത്രം തുറക്കുക',
+  'ntf.open': 'തുറക്കുക',
+  'ntf.stray': 'ഇത് ഈ ഫോണിൽ നിങ്ങൾക്ക് ലഭ്യമല്ല.',
+  'ntf.no-entry': 'ഇത് നിങ്ങൾക്ക് ലഭ്യമല്ല.',
+  'ntf.ask.title': 'അറിയിപ്പുകൾ',
+  'ntf.ask.why': 'ഒരു ചെക്ക്‌ലിസ്റ്റ് തുറക്കുമ്പോൾ നിങ്ങൾ അറിയാൻ',
+  'ntf.ask.allow': 'അനുവദിക്കുക',
+  'ntf.ask.later': 'ഇപ്പോൾ വേണ്ട',
 } satisfies Partial<Catalogue>;

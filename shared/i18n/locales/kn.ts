@@ -984,4 +984,11 @@ export const kn = {
   'ovs.chart': 'ಸ್ಕೋರ್‌ಗಳು, ಹಳೆಯದರಿಂದ ಹೊಸದಕ್ಕೆ: {values}',
   'ovs.periods': 'ಅವಧಿಗಳು',
   'ovs.open-outlet': '{outlet}, {score}. ಇತಿಹಾಸ ತೆರೆಯಿರಿ',
+  'ntf.open': 'ತೆರೆಯಿರಿ',
+  'ntf.stray': 'ಇದು ಈ ಫೋನ್‌ನಲ್ಲಿ ನಿಮಗೆ ಲಭ್ಯವಿಲ್ಲ.',
+  'ntf.no-entry': 'ಇದು ನಿಮಗೆ ಲಭ್ಯವಿಲ್ಲ.',
+  'ntf.ask.title': 'ಅಧಿಸೂಚನೆಗಳು',
+  'ntf.ask.why': 'ಚೆಕ್‌ಲಿಸ್ಟ್ ಯಾವಾಗ ತೆರೆಯುತ್ತದೆ ಎಂದು ನಿಮಗೆ ತಿಳಿಯಲು',
+  'ntf.ask.allow': 'ಅನುಮತಿಸಿ',
+  'ntf.ask.later': 'ಈಗ ಬೇಡ',
 } satisfies Partial<Catalogue>;

@@ -174,7 +174,7 @@ import type {
   UpdateSpotCheckRequest,
 } from './types';
 
-import { loginRequest, logoutRequest } from './auth-api';
+import { loginRequest, logoutRequest, pushTokenRequest } from './auth-api';
 import { ApiError, request as call, requestAll, USE_REAL_API } from './http';
 
 /**
@@ -227,6 +227,11 @@ export const api = {
       return USE_REAL_API
         ? call<MeResponse>('/auth/me', { method: 'PATCH', body: request })
         : mockUpdateMe(request);
+    },
+
+    /** PATCH /auth/push-token. Sign-out sends `null` itself, inside `logout`. */
+    setPushToken(pushToken: string | null): Promise<void> {
+      return USE_REAL_API ? pushTokenRequest(pushToken) : Promise.resolve();
     },
 
     /** POST /auth/logout */
