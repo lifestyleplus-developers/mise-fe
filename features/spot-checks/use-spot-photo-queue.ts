@@ -15,7 +15,7 @@ export type SubmitPhotoVariables = {
   request: SubmitSpotCheckPhotoRequest;
 };
 
-const SUBMIT_KEY = ['spot-checks', 'photo'] as const;
+export const SUBMIT_KEY = ['spot-checks', 'photo'] as const;
 
 /**
  * POST /spot-check-runs/{id}/photos — its defaults, so a paused (queued) photograph

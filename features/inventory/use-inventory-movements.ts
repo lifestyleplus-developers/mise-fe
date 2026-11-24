@@ -53,7 +53,7 @@ export type RecordVariables = {
   request: RecordMovementRequest;
 };
 
-const RECORD_KEY = ['inventory', 'record'] as const;
+export const RECORD_KEY = ['inventory', 'record'] as const;
 
 /**
  * POST /inventory/items/{id}/movements — its defaults, so a paused (queued)
