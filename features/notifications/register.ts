@@ -1,9 +1,21 @@
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { api } from '@/shared/api/client';
 import { USE_REAL_API } from '@/shared/api/http';
+
+/**
+ * Remote push needs a development build: Expo Go on Android dropped it in
+ * SDK 53, and calling the push-token APIs there throws. On the web there is no
+ * push at all.
+ */
+export const pushSupported =
+  Platform.OS !== 'web' &&
+  !(
+    Platform.OS === 'android' &&
+    Constants.executionEnvironment === ExecutionEnvironment.StoreClient
+  );
 
 /** True when the phone lets us show notifications. Never asks. */
 export async function isAllowed(): Promise<boolean> {
@@ -25,7 +37,7 @@ export async function askSystem(): Promise<boolean> {
  * refusing. A person must still be able to use the app without notifications.
  */
 export async function registerPushToken(): Promise<void> {
-  if (!USE_REAL_API || Platform.OS === 'web') return;
+  if (!USE_REAL_API || !pushSupported) return;
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {

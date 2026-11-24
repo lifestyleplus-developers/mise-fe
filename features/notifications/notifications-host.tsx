@@ -12,7 +12,12 @@ import { Bell } from 'lucide-react-native';
 
 import { onTapOffered, takeTap } from './pending-tap';
 import { useNotificationPrefs } from './prefs-store';
-import { askSystem, isAllowed, registerPushToken } from './register';
+import {
+  askSystem,
+  isAllowed,
+  pushSupported,
+  registerPushToken,
+} from './register';
 import { targetFromPush, type PushData } from './targets';
 
 type Shown = { id: string; title: string; body: string; target: Href | null };
@@ -49,6 +54,7 @@ export function NotificationsHost({ userId }: { userId: number }) {
 
   // Expo can hand out a new token; the platform must hear of it.
   React.useEffect(() => {
+    if (!pushSupported) return;
     const subscription = Notifications.addPushTokenListener(() => {
       void registerPushToken();
     });
