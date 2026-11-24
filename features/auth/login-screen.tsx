@@ -1,5 +1,7 @@
 import { BusinessPicker } from '@/features/auth/business-picker';
 import { useLogin } from '@/features/auth/use-login';
+import { heldLine } from '@/features/pending/held-writes';
+import { Banner } from '@/shared/components/ui/banner';
 import { LanguageSelector } from '@/shared/components/language-selector';
 import { Button } from '@/shared/components/ui/button';
 import { ModalDialog } from '@/shared/components/ui/modal';
@@ -9,7 +11,9 @@ import { TextField } from '@/shared/components/ui/text-field';
 import { LOGIN_FAILURE, type LoginFailure } from '@/shared/constants/errors';
 import { THEME } from '@/shared/lib/theme';
 import { useT, type MessageKey } from '@/shared/i18n';
+import { useHeldWrites } from '@/shared/stores/held-writes-store';
 import { useLanguageStore } from '@/shared/stores/language-store';
+import { useSessionOwner } from '@/shared/stores/session-owner-store';
 import { Redirect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
@@ -33,6 +37,11 @@ export function LoginScreen() {
   const t = useT();
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
+
+  // The platform ended the last session: say so, and say what is being kept.
+  const sessionEnded = useSessionOwner((state) => state.sessionEnded);
+  const held = useHeldWrites((state) => state.items);
+  const heldMessage = heldLine(held, t);
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -68,6 +77,18 @@ export function LoginScreen() {
         <Text className="font-script mb-6 py-4 text-center text-[112px] leading-[1.3] text-[#eac469]">
           Mise
         </Text>
+
+        {sessionEnded || heldMessage ? (
+          <View className="mx-4 mb-4">
+            <Banner
+              tone="notice"
+              message={
+                sessionEnded ? t('login.signed-out') : (heldMessage ?? '')
+              }
+              detail={sessionEnded ? (heldMessage ?? undefined) : undefined}
+            />
+          </View>
+        ) : null}
 
         <View className="shadow-card border-border bg-card mx-4 flex flex-col gap-4 rounded-[1.75rem] border p-6">
           <TextField

@@ -6,7 +6,6 @@ import { useQueuedWrites } from '@/shared/api/query-helpers';
 import type { IncidentStatus } from '@/shared/api/types';
 import { EmptyState } from '@/shared/components/empty-state';
 import { OptionList } from '@/shared/components/option-list';
-import { PendingPill } from '@/shared/components/pending-pill';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SegmentedControl } from '@/shared/components/segmented-control';
 import { Banner } from '@/shared/components/ui/banner';
@@ -167,18 +166,6 @@ export function IssuesScreen() {
           onRetry={() => void incidents.refetch()}
           retrying={incidents.isRefetching}
         />
-      ) : null}
-
-      {waiting.size > 0 ? (
-        <View className="mx-4 mb-3">
-          <PendingPill
-            label={
-              waiting.size === 1
-                ? t('iss.pending-line')
-                : format(t('iss.pending-line-n'), { n: String(waiting.size) })
-            }
-          />
-        </View>
       ) : null}
 
       {canAdminister(me.user.tenant_role) ? <AtRiskBlock /> : null}

@@ -1,4 +1,5 @@
 import '@/features/notifications/sign-out';
+import '@/features/pending/late-writes';
 import '@/features/spot-checks/sign-out';
 import '@/shared/lib/icons';
 import { ApiProvider } from '@/shared/api/query-client';

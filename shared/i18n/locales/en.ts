@@ -228,6 +228,74 @@ export const en = {
 
   'signout.queued.language':
     "Your language choice hasn't been saved to your account yet. If you sign out now, it is lost.",
+  'signout.q.answers.one':
+    "1 answer hasn't been sent. If you sign out now it is lost, and that task may show as missed if its window closes first.",
+  'signout.q.answers.many':
+    "{n} answers haven't been sent. If you sign out now they are lost, and those tasks may show as missed if the window closes first.",
+  'signout.q.photos.one':
+    "1 photo hasn't been sent. If you sign out now it is lost, and the check may show as not done or incomplete if the window closes first.",
+  'signout.q.photos.many':
+    "{n} photos haven't been sent. If you sign out now they are lost, and the check may show as not done or incomplete if the window closes first.",
+  'signout.q.marks.one':
+    "1 mark hasn't been sent. If you sign out now it is lost, and that person may show as not marked if the window closes first.",
+  'signout.q.marks.many':
+    "{n} marks haven't been sent. If you sign out now they are lost, and those people may show as not marked if the window closes first.",
+  'signout.q.stock.one':
+    "1 stock entry hasn't been sent. If you sign out now it is lost.",
+  'signout.q.stock.many':
+    "{n} stock entries haven't been sent. If you sign out now they are lost.",
+  'signout.q.changes.one':
+    "1 change hasn't been sent. If you sign out now it is lost.",
+  'signout.q.changes.many':
+    "{n} changes haven't been sent. If you sign out now they are lost.",
+  'signout.q.mixed':
+    "{n} things haven't been sent. If you sign out now they are lost.",
+  'signout.q.mixed-window':
+    "{n} things haven't been sent. If you sign out now they are lost, and some of it may not be recorded if a window closes first.",
+  'queue.line.answers.one': '1 answer waiting to send',
+  'queue.line.answers.many': '{n} answers waiting to send',
+  'queue.line.photos.one': '1 photo waiting to send',
+  'queue.line.photos.many': '{n} photos waiting to send',
+  'queue.line.marks.one': '1 mark waiting to send',
+  'queue.line.marks.many': '{n} marks waiting to send',
+  'queue.line.stock.one': '1 stock entry waiting to send',
+  'queue.line.stock.many': '{n} stock entries waiting to send',
+  'queue.line.changes.one': '1 change waiting to send',
+  'queue.line.changes.many': '{n} changes waiting to send',
+  'queue.line.mixed': '{n} waiting to send',
+  'queue.late.title': "Your answer wasn't recorded",
+  'queue.late.body':
+    "Your answer to “{task}” wasn't recorded: the window closed at {time}. Your manager will see it as missed. If something was wrong, tell them now.",
+  'queue.late.ok': 'OK',
+  'queue.late-change.title': "Your change wasn't recorded",
+  'queue.late-change.body':
+    "Your change to “{task}” wasn't recorded: the window closed at {time}. The earlier answer stands.",
+  'queue.late-changes.title': "Your changes weren't recorded",
+  'queue.late-changes.body':
+    "{n} changes to {name} weren't recorded: the window closed at {time}. The earlier answers stand.",
+  'queue.late.also.one':
+    "A change you made wasn't recorded either; the earlier answer stands.",
+  'queue.late.also.many':
+    "{n} changes you made weren't recorded either; the earlier answers stand.",
+  'queue.late-many.title': "Your answers weren't recorded",
+  'queue.late-many.body':
+    "{n} answers to {name} weren't recorded: the window closed at {time}. Your manager will see them as missed. If something was wrong, tell them now.",
+  'queue.late-mark.title': "Your mark wasn't recorded",
+  'queue.late-mark.body':
+    "Your mark for {name} wasn't recorded: the window closed at {time}. {name} will show as not marked.",
+  'queue.late-marks.title': "Your marks weren't recorded",
+  'queue.late-marks.body':
+    'The window closed at {time}. {names} will show as not marked.',
+  'queue.late-photo.title': "Your photo wasn't recorded",
+  'queue.late-photo.partial':
+    'Window closed. This photo was not recorded. The check reads Closed · {n} of {total} photos · assessed on these.',
+  'login.signed-out': "You've been signed out. Sign in again.",
+  'login.waiting.one': '1 answer on this phone is waiting to be sent.',
+  'login.waiting.many': '{n} answers on this phone are waiting to be sent.',
+  'queue.kept.one':
+    '{name} has 1 answer waiting on this phone. It sends when {name} signs in.',
+  'queue.kept.many':
+    '{name} has {n} answers waiting on this phone. They send when {name} signs in.',
 
   'settings.sign-out': 'Sign out',
 
@@ -896,13 +964,8 @@ export const en = {
   'spot.n-waiting-one': '1 photo waiting to send',
   'spot.n-waiting': '{n} photos waiting to send',
   'spot.closes-at': 'Closes {time}',
-  'spot.sign-out-title': "A photo hasn't been sent",
-  'spot.sign-out-body':
-    "1 photo hasn't been sent yet. If you sign out now it will be lost.",
   'spot.placeholder-prompts': 'Placeholder prompts until the AI evaluation',
   'spot.why': 'mise needs the camera to take the photos for this spot check.',
-  'spot.sign-out-body-n':
-    "{n} photos haven't been sent yet. If you sign out now they will be lost.",
   'cam.name': 'Camera',
   'cam.continue': 'Continue',
   'cam.not-now': 'Not now',
@@ -946,8 +1009,6 @@ export const en = {
   'iss.n-assessing': '{n} being assessed',
   'iss.rushed': 'Rushed',
   'iss.waiting': 'Resolved · waiting to send',
-  'iss.pending-line': '1 change waiting to send',
-  'iss.pending-line-n': '{n} changes waiting to send',
   'iss.resolved-by': 'Resolved by {name} · {when}',
   'iss.empty': 'No open issues',
   'iss.empty-body': 'Nothing waiting for you.',

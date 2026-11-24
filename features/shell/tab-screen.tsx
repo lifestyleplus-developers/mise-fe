@@ -1,5 +1,6 @@
 import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useMe } from '@/features/auth/use-me';
+import { PendingLine } from '@/features/pending/pending-line';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { Text } from '@/shared/components/ui/text';
 import { useT } from '@/shared/i18n';
@@ -19,7 +20,7 @@ type TabScreenProps = {
   onEndReached?: () => void;
 };
 
-/** Frame for every tab root: header, offline banner, scroll area. */
+/** Frame for every tab root: header, offline banner, pending line, scroll area. */
 export function TabScreen({
   title,
   eyebrow,
@@ -76,6 +77,8 @@ export function TabScreen({
             retrying={isRefetching}
           />
         ) : null}
+
+        <PendingLine />
 
         {children}
       </ScrollView>

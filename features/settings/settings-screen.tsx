@@ -1,11 +1,12 @@
 import { useMe } from '@/features/auth/use-me';
+import { signOutWarning } from '@/features/pending/sign-out-warning';
+import { useUnsentWork } from '@/features/pending/use-unsent-work';
 import { useSignOut } from '@/features/auth/use-sign-out';
 import {
   useLanguageSaveState,
   useSetLanguage,
 } from '@/features/settings/use-set-language';
 import { PushedScreen } from '@/features/shell/pushed-screen';
-import { useUnsentPhotoCount } from '@/features/spot-checks/use-unsent-photos';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { DescriptionList } from '@/shared/components/description-list';
 import { OptionList } from '@/shared/components/option-list';
@@ -14,7 +15,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { INTERFACE_LANGUAGES } from '@/shared/constants/languages';
 import { ROLE } from '@/shared/constants/roles';
-import { format, useT, type MessageKey } from '@/shared/i18n';
+import { useT, type MessageKey } from '@/shared/i18n';
 import { useLanguageStore } from '@/shared/stores/language-store';
 import { useThemeStore, type ThemeName } from '@/shared/stores/theme-store';
 import { LogOut, TriangleAlert } from 'lucide-react-native';
@@ -48,9 +49,10 @@ export function SettingsScreen() {
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useSetLanguage();
   const { waiting, unsaved: languageUnsaved } = useLanguageSaveState();
-  // Spot-check photographs that exist only on this phone are lost on sign-out.
-  const unsentPhotos = useUnsentPhotoCount();
-  const unsaved = languageUnsaved || unsentPhotos > 0;
+  // Anything not yet sent is lost on sign-out (FE Spec §6): queued answers,
+  // marks, stock entries and changes, and photographs only on this phone.
+  const unsentWork = useUnsentWork();
+  const unsaved = languageUnsaved || unsentWork.total > 0;
   const theme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
   const signOut = useSignOut();
@@ -121,15 +123,10 @@ export function SettingsScreen() {
         visible={confirming}
         icon={unsaved ? TriangleAlert : LogOut}
         tone={unsaved ? 'warning' : 'neutral'}
-        title={unsentPhotos > 0 ? t('spot.sign-out-title') : t('signout.title')}
+        title={t('signout.title')}
         body={
-          unsentPhotos > 0
-            ? unsentPhotos === 1
-              ? t('spot.sign-out-body')
-              : format(t('spot.sign-out-body-n'), { n: String(unsentPhotos) })
-            : languageUnsaved
-              ? t('signout.queued.language')
-              : undefined
+          signOutWarning(unsentWork, t) ??
+          (languageUnsaved ? t('signout.queued.language') : undefined)
         }
         safe={{
           label: unsaved ? t('signout.stay') : t('signout.cancel'),

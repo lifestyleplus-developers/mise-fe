@@ -4,6 +4,7 @@ import { api } from '@/shared/api/client';
 import { dropSessionCache, queryClient } from '@/shared/api/query-client';
 import type { MeResponse } from '@/shared/api/types';
 import { runSignOutHandlers } from '@/shared/lib/on-sign-out';
+import { useSessionOwner } from '@/shared/stores/session-owner-store';
 
 /** Ends the session and returns to Login. */
 export function useSignOut() {
@@ -22,5 +23,7 @@ export function useSignOut() {
     dropSessionCache();
     // Each feature that keeps data on the phone clears its own.
     runSignOutHandlers(userId);
+    // Signed out on purpose: nobody's session ended, and there is nobody to hold for.
+    useSessionOwner.getState().clearOwner();
   };
 }

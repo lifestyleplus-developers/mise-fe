@@ -3,6 +3,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
   focusManager,
+  MutationCache,
   onlineManager,
   QueryCache,
   QueryClient,
@@ -14,8 +15,15 @@ import * as React from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 
 import { runSignOutHandlers } from '@/shared/lib/on-sign-out';
+import {
+  useHeldWrites,
+  type HeldWrite,
+} from '@/shared/stores/held-writes-store';
+import { useSessionOwner } from '@/shared/stores/session-owner-store';
 
 import { ApiError } from './http';
+import { reportLateWrite } from './late-writes';
+import { API_ERROR_CODE } from './types';
 import { getTokens } from './session';
 
 /** When the last session end was handled; several queries fail on one 401. */
@@ -37,12 +45,43 @@ async function onQueryError(error: Error): Promise<void> {
   lastSessionEnd = now;
   if (router.canDismiss()) router.dismissAll();
   router.replace('/');
-  dropSessionCache();
+  endSession();
   runSignOutHandlers(undefined);
+}
+
+/**
+ * A write refused because its window had closed (409 `window_closed`). It is the
+ * one refusal the person must be told about wherever they are: they did the work
+ * and the record will not show it (FE Spec §6).
+ */
+function onMutationError(
+  error: Error,
+  variables: unknown,
+  context: unknown,
+  mutationKey: readonly unknown[] | undefined,
+  meta: Record<string, unknown> | undefined,
+): void {
+  if (!mutationKey) return;
+  if (
+    error instanceof ApiError &&
+    error.body.error.code === API_ERROR_CODE.WINDOW_CLOSED
+  ) {
+    reportLateWrite({ mutationKey, variables, context, meta });
+  }
 }
 
 /** One client for the whole app. */
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, variables, context, mutation) =>
+      onMutationError(
+        error,
+        variables,
+        context,
+        mutation.options.mutationKey,
+        mutation.meta,
+      ),
+  }),
   queryCache: new QueryCache({ onError: (error) => void onQueryError(error) }),
   defaultOptions: {
     queries: {
@@ -105,6 +144,54 @@ export function dropSessionCache(): void {
     }
   }
   void persister.removeClient();
+}
+
+/** Reads what a late dialog will need about a write. Registered by the features. */
+let describeWrite: (
+  key: readonly unknown[],
+  variables: unknown,
+) => unknown = () => undefined;
+
+export function setWriteDescriber(
+  describe: (key: readonly unknown[], variables: unknown) => unknown,
+): void {
+  describeWrite = describe;
+}
+
+/**
+ * The platform ended the session while the app was open or on launch. The work
+ * the person did is kept for them: what is waiting to send moves to a store
+ * under their name and goes out when they sign in again (FE Spec §6, §2). Sent
+ * with another person's token it would be recorded as theirs, so nobody else
+ * can send it. What the platform refused stays refused, and the rest of the
+ * session's cache goes as on sign-out.
+ */
+export function endSession(): void {
+  const { owner } = useSessionOwner.getState();
+  if (owner) {
+    const held: HeldWrite[] = [];
+    for (const mutation of queryClient.getMutationCache().getAll()) {
+      const key = mutation.options.mutationKey;
+      const { status, isPaused, variables, error } = mutation.state;
+      if (!key || key[0] === 'auth' || variables === undefined) continue;
+      const waiting =
+        (status === 'pending' && isPaused) ||
+        (status === 'error' &&
+          (!(error instanceof ApiError) || error.status === 401));
+      if (!waiting) continue;
+      held.push({
+        ownerId: owner.userId,
+        ownerName: owner.name,
+        businessId: owner.businessId,
+        mutationKey: key,
+        variables,
+        detail: describeWrite(key, variables),
+      });
+    }
+    if (held.length > 0) useHeldWrites.getState().hold(held);
+  }
+  useSessionOwner.getState().markEnded();
+  dropSessionCache();
 }
 
 /** Auth never persists; neither does a query still in flight. */
