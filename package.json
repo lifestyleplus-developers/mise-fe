@@ -61,7 +61,10 @@
     "format": "prettier --write .",
     "build": "expo export",
     "type-check": "tsc --noEmit",
-    "lh": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:8000 tcp:8000 && pnpm exec expo start --localhost",
+    "lh": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:8000 tcp:8000 && adb reverse tcp:9000 tcp:9000 && pnpm exec expo start --localhost",
+    "env:local": "sh scripts/env.sh local",
+    "env:remote": "sh scripts/env.sh remote",
+    "env:status": "sh scripts/env.sh status",
     "do": "pnpm format && pnpm lint && pnpm type-check && git add ."
   },
   "private": true
