@@ -92,7 +92,7 @@ export function RunScreen() {
     try {
       const uploaded = await imageUpload.upload(task.id);
       if (uploaded) {
-        writeAnswer(task, { image_key: uploaded.key, comment: null });
+        writeAnswer(task, { image_key: uploaded.key });
       }
     } catch {
       // The hook has recorded the failure; the row shows it.

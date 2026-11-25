@@ -111,6 +111,7 @@ export const en = {
   'run.ai-pass': 'AI check: looks good',
   'run.ai-fail': 'AI check: does not match',
   'run.photo-row-failed': "Couldn't upload. Waiting to send.",
+  'run.photo-failed': "Couldn't upload the photo. Try again.",
   'run.enter-number': 'Enter a number',
   'run.comment-required': 'A comment is needed when something fails.',
   'run.comment-title': 'Why?',

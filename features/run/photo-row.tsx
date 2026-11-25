@@ -81,21 +81,31 @@ export function PhotoRow({
   }
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t('run.take-photo')}
-      onPress={onCapture}
-      disabled={disabled}
-      className={cn(
-        'border-input-edge bg-card mt-1.5 min-h-11 flex-row items-center justify-center gap-2 rounded-full border px-4 active:bg-accent',
-        disabled && 'opacity-50',
-      )}
-    >
-      <Camera className="text-foreground size-5" />
-      <Text className="font-sans-semibold text-[15px]">
-        {t('run.take-photo')}
-      </Text>
-    </Pressable>
+    <>
+      {failed ? (
+        <Text
+          accessibilityRole="alert"
+          className="font-sans-medium text-destructive-soft-foreground mt-1.5 text-[13px]"
+        >
+          {t('run.photo-failed')}
+        </Text>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('run.take-photo')}
+        onPress={onCapture}
+        disabled={disabled}
+        className={cn(
+          'border-input-edge bg-card mt-1.5 min-h-11 flex-row items-center justify-center gap-2 rounded-full border px-4 active:bg-accent',
+          disabled && 'opacity-50',
+        )}
+      >
+        <Camera className="text-foreground size-5" />
+        <Text className="font-sans-semibold text-[15px]">
+          {t('run.take-photo')}
+        </Text>
+      </Pressable>
+    </>
   );
 }
 
