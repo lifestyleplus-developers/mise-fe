@@ -29,7 +29,7 @@ Exactly 18, in mockup order. "Reach it with" names the sign-in that shows the st
 15. **singleOutlet** — no outlet chip, the eyebrow reads just "Spot checks". _More, Outlets, Archive Elegance: ZamZam is then the only outlet with spot checks. Reload the app to restore it._
 16. **long** — a 40-character name and a Malayalam name wrap. _Elegance._
 17. **many** — 30 areas, 25 at a time, the rest as the list scrolls. _Elegance._
-18. **archivedFallback** — a platform that cannot list archived areas: no Show archived link, even where an area was archived. _Sign in as `basic` (password 1234, an Administrator on a platform with limits): Areas at ZamZam shows no Show archived link, where raheem sees it for Old bar. The app asks for archived areas once, is refused (400), and stops asking for the rest of the session._
+18. ~~**archivedFallback**~~ — removed. The platform lists archived areas when asked, so the app always asks for them and the Show archived link appears wherever an area is archived.
 
 ## What the states pin down
 

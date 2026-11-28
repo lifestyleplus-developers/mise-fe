@@ -1,8 +1,9 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import * as React from 'react';
 
 import { api } from '@/shared/api/client';
-import { UPLOAD_TIMEOUT_MS, withTimeout } from '@/shared/api/with-timeout';
+import { UPLOAD_TIMEOUT_MS } from '@/shared/api/with-timeout';
 
 /**
  * Why an upload failed, as a code: screens decide what to say, in the person's
@@ -71,38 +72,51 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
           throw new UploadFailure('no_image');
         }
 
-        // The platform signs the size of the photograph into the upload, so
-        // read the bytes first.
-        const photo = await fetch(asset.uri).then((r) => r.blob());
+        // The platform signs the exact size of the photograph into the upload, so
+        // it must be the size of the file that is sent. `asset.fileSize` is not that
+        // (it was 3.2 MB for a 1.0 MB file on Android), and `fetch(uri).blob()` gave
+        // 14 bytes, so the size is read from the file itself.
+        const info = await FileSystem.getInfoAsync(asset.uri);
+        const size = info.exists ? info.size : 0;
+        if (!size) {
+          throw new UploadFailure('no_image');
+        }
 
         // Get upload signature
         const sign = await api.uploads.sign({
           purpose: 'run_task',
           target_id: taskId,
           content_type: 'image/jpeg',
-          content_length: photo.size,
+          content_length: size,
         });
 
         // The mock backend hands out `mock://` locations there is nothing to
         // PUT to; skip the transfer and keep the rest of the flow real.
         if (!sign.upload_url.startsWith('mock://')) {
-          // The length is signed in, but the phone sets it from the body itself;
-          // sending it by hand as well risks a duplicate header.
+          // The file is sent as it is, and the phone sets Content-Length from it;
+          // sending the signed length by hand as well risks a duplicate header.
           const { 'Content-Length': _length, ...headers } = sign.headers;
-          const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
-            fetch(sign.upload_url, {
-              method: sign.method,
-              headers: {
-                'Content-Type': 'image/jpeg',
-                ...headers,
-              },
-              body: photo,
-              signal,
-            }),
-          );
-
-          if (!response.ok) {
-            throw new UploadFailure('upload_failed');
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          const timedOut = new Promise<never>((_, reject) => {
+            timer = setTimeout(
+              () => reject(new UploadFailure('upload_failed')),
+              UPLOAD_TIMEOUT_MS,
+            );
+          });
+          try {
+            const response = await Promise.race([
+              FileSystem.uploadAsync(sign.upload_url, asset.uri, {
+                httpMethod: sign.method,
+                uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                headers: { 'Content-Type': 'image/jpeg', ...headers },
+              }),
+              timedOut,
+            ]);
+            if (response.status < 200 || response.status >= 300) {
+              throw new UploadFailure('upload_failed');
+            }
+          } finally {
+            clearTimeout(timer);
           }
         }
 

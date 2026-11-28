@@ -18,6 +18,8 @@ export const CHECK_FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY'] as const;
 export type DraftRow = {
   /** Stable while editing; moves with the row when it is reordered. */
   key: string;
+  /** The platform's id for a row it already has; sent back so the row stays the same one. */
+  id?: number;
   text: string;
   weight: number;
   /** Archived in this editor: hidden, and removed or flagged on Save. */
@@ -72,6 +74,7 @@ export function formFromCheck(check: SpotCheck): CheckForm {
     window: check.reveal_window_minutes,
     prompts: check.captures.map((capture) => ({
       key: `p${capture.position}`,
+      id: capture.id,
       text: capture.prompt,
       weight: DEFAULT_WEIGHT,
       archived: false,
@@ -79,6 +82,7 @@ export function formFromCheck(check: SpotCheck): CheckForm {
     })),
     items: check.assertions.map((item) => ({
       key: `i${item.position}`,
+      id: item.id,
       text: item.text,
       weight: item.weight,
       archived: item.is_archived,
@@ -140,24 +144,18 @@ export function toCheckRequest(
     day_of_month: form.recurrence === 'MONTHLY' ? form.day : null,
     reveal_window_minutes: form.window,
     captures: liveRows(form.prompts).map((row) => ({
+      id: row.id,
       prompt: row.text.trim(),
     })),
     assertions: form.items
       .filter((row) => !row.archived || row.saved)
       .map((row) => ({
+        id: row.id,
         text: row.text.trim(),
         weight: row.weight,
         is_archived: row.archived,
       })),
   };
-}
-
-/** A save request without the prompts and items, for a platform that will not change them. */
-export function withoutLists(
-  request: Omit<CreateSpotCheckRequest, 'outlet_id'>,
-): Omit<CreateSpotCheckRequest, 'outlet_id' | 'captures' | 'assertions'> {
-  const { captures: _captures, assertions: _assertions, ...own } = request;
-  return own;
 }
 
 /**

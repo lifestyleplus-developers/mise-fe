@@ -25,6 +25,12 @@ export type QueuedWrite<Variables> = {
   /** The refusal, when `kind` is `refused`. */
   error: ApiError | null;
   submittedAt: number;
+  /**
+   * Being sent right now, on a connection that is up. `waiting` also covers this
+   * moment; anything that counts what is held on the phone leaves it out, so a
+   * line does not flash on for the fraction of a second a good send takes.
+   */
+  inFlight: boolean;
 };
 
 /**
@@ -38,7 +44,8 @@ export function useQueuedWrites<Variables>(
   const writes = useMutationState<QueuedWrite<Variables> | null>({
     filters: { mutationKey },
     select: (mutation) => {
-      const { status, variables, error, submittedAt } = mutation.state;
+      const { status, variables, error, submittedAt, isPaused } =
+        mutation.state;
       if (status === 'idle') return null;
       return {
         key: keyOf(variables as Variables),
@@ -51,6 +58,7 @@ export function useQueuedWrites<Variables>(
               : 'waiting',
         error: error instanceof ApiError ? error : null,
         submittedAt,
+        inFlight: status === 'pending' && !isPaused,
       };
     },
   });

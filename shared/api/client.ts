@@ -59,6 +59,12 @@ import {
   mockUpdateStaff,
   mockUpdateTask,
   mockUpdateUser,
+  mockListIncidents,
+  mockGetIncident,
+  mockResolveIncident,
+  mockChecklistOutletsReport,
+  mockChecklistHistoryReport,
+  mockAtRiskReport,
   mockListAreas,
   mockCreateArea,
   mockUpdateArea,
@@ -66,11 +72,6 @@ import {
   mockGetSpotCheck,
   mockCreateSpotCheck,
   mockUpdateSpotCheck,
-  mockAddSpotCheckCapture,
-  mockUpdateSpotCheckCapture,
-  mockRemoveSpotCheckCapture,
-  mockAddSpotCheckAssertion,
-  mockUpdateSpotCheckAssertion,
   mockListSpotCheckManagers,
   mockAppointSpotCheckManager,
   mockRemoveSpotCheckManager,
@@ -82,6 +83,13 @@ import {
 import type {
   AddMemberRequest,
   AnswerTaskRequest,
+  AtRiskReport,
+  ChecklistHistoryQuery,
+  ChecklistHistoryRow,
+  ChecklistOutletsReport,
+  Incident,
+  IncidentDetail,
+  IncidentsQuery,
   AppointManagerRequest,
   AttendanceConfig,
   AttendanceConfigsQuery,
@@ -147,10 +155,6 @@ import type {
   CreateSpotCheckRequest,
   OverrideSpotCheckResultRequest,
   SpotCheck,
-  SpotCheckAssertion,
-  SpotCheckAssertionRequest,
-  SpotCheckCapture,
-  SpotCheckCaptureRequest,
   SpotCheckManager,
   SpotCheckResult,
   SpotCheckRun,
@@ -161,7 +165,7 @@ import type {
   UpdateSpotCheckRequest,
 } from './types';
 
-import { loginRequest, logoutRequest } from './auth-api';
+import { loginRequest, logoutRequest, pushTokenRequest } from './auth-api';
 import { ApiError, request as call, requestAll, USE_REAL_API } from './http';
 
 /**
@@ -180,8 +184,8 @@ export { ApiError };
 
 /**
  * With `EXPO_PUBLIC_API_BASE_URL` set, calls go to the platform; left empty, the
- * app runs on the fixture mock. Runs, answers and run-task photograph uploads are on
- * the platform. Spot checks are not (Lamax, stage 9): those calls fail until they land.
+ * app runs on the fixture mock. Runs, answers, uploads, attendance, inventory, reports,
+ * issues and spot checks are all on the platform.
  */
 export class NotBuiltError extends Error {}
 
@@ -190,12 +194,6 @@ export class NotBuiltError extends Error {}
  * has the ledger per item only, so against the real platform the log is per item.
  */
 export const OUTLET_MOVEMENT_LOG = !USE_REAL_API;
-
-function notBuilt(endpoint: string): Promise<never> {
-  return Promise.reject(
-    new NotBuiltError(`${endpoint} is not on the platform yet. Use the mock.`),
-  );
-}
 
 export const api = {
   auth: {
@@ -214,6 +212,11 @@ export const api = {
       return USE_REAL_API
         ? call<MeResponse>('/auth/me', { method: 'PATCH', body: request })
         : mockUpdateMe(request);
+    },
+
+    /** PATCH /auth/push-token. Sign-out sends `null` itself, inside `logout`. */
+    setPushToken(pushToken: string | null): Promise<void> {
+      return USE_REAL_API ? pushTokenRequest(pushToken) : Promise.resolve();
     },
 
     /** POST /auth/logout */
@@ -811,132 +814,216 @@ export const api = {
         : mockStockSpendReport(query);
     },
   },
+  incidents: {
+    /**
+     * GET /incidents — OPEN unless `status` says otherwise, newest first, 25 a
+     * page. ADMIN and OWNER see all; a CL_ADMIN only their own assignments.
+     */
+    list(query: IncidentsQuery): Promise<Page<Incident>> {
+      return USE_REAL_API
+        ? call<Page<Incident>>('/incidents', {
+            query: {
+              status: query.status,
+              outlet_id: query.outletId,
+              checklist_id: query.checklistId,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
+        : mockListIncidents(query);
+    },
+
+    /** GET /incidents/{id} — with its failed and missed tasks. 404 when not yours. */
+    get(id: number): Promise<IncidentDetail> {
+      return USE_REAL_API
+        ? call<IncidentDetail>(`/incidents/${id}`)
+        : mockGetIncident(id);
+    },
+
+    /**
+     * POST /incidents/{id}/resolve — the incident back, score unchanged.
+     * Resolving a resolved incident is a 200 that keeps the first resolver.
+     */
+    resolve(id: number): Promise<Incident> {
+      return USE_REAL_API
+        ? call<Incident>(`/incidents/${id}/resolve`, { method: 'POST' })
+        : mockResolveIncident(id);
+    },
+  },
+  reports: {
+    /** GET /reports/checklist/{id}/outlets — the checklist scored at each outlet. */
+    checklistOutlets(checklistId: number): Promise<ChecklistOutletsReport> {
+      return USE_REAL_API
+        ? call<ChecklistOutletsReport>(
+            `/reports/checklist/${checklistId}/outlets`,
+          )
+        : mockChecklistOutletsReport(checklistId);
+    },
+
+    /** GET /reports/checklist/{id}/history — one outlet's closed periods, newest first. */
+    checklistHistory(
+      checklistId: number,
+      query: ChecklistHistoryQuery,
+    ): Promise<Page<ChecklistHistoryRow>> {
+      return USE_REAL_API
+        ? call<Page<ChecklistHistoryRow>>(
+            `/reports/checklist/${checklistId}/history`,
+            {
+              query: {
+                assignment_id: query.assignmentId,
+                from: query.from,
+                to: query.to,
+                page: query.page,
+                page_size: query.pageSize,
+              },
+            },
+          )
+        : mockChecklistHistoryReport(checklistId, query);
+    },
+
+    /** GET /reports/at-risk — ADMIN and OWNER; no lookback parameter (§10). */
+    atRisk(): Promise<AtRiskReport> {
+      return USE_REAL_API
+        ? call<AtRiskReport>('/reports/at-risk')
+        : mockAtRiskReport();
+    },
+  },
   spotChecks: {
-    /** Areas of an outlet. Mock only: API Contract §13 has no endpoint for them. */
+    /**
+     * GET /outlets/{id}/areas. The platform lists areas per outlet, so with no outlet
+     * there is nothing to ask for.
+     */
     areas(query: AreasQuery): Promise<Page<Area>> {
-      return USE_REAL_API ? notBuilt('GET /areas') : mockListAreas(query);
+      if (!USE_REAL_API) return mockListAreas(query);
+      if (query.outletId === undefined) {
+        return Promise.resolve({
+          count: 0,
+          next: null,
+          previous: null,
+          results: [],
+        });
+      }
+      return call<Page<Area>>(`/outlets/${query.outletId}/areas`, {
+        query: {
+          include_archived: query.includeArchived,
+          page: query.page,
+          page_size: query.pageSize,
+        },
+      });
     },
 
+    /** POST /outlets/{id}/areas: the outlet is in the path, not the body. */
     createArea(request: CreateAreaRequest): Promise<Area> {
-      return USE_REAL_API ? notBuilt('POST /areas') : mockCreateArea(request);
+      if (!USE_REAL_API) return mockCreateArea(request);
+      const { outlet_id, ...body } = request;
+      return call<Area>(`/outlets/${outlet_id}/areas`, {
+        method: 'POST',
+        body,
+      });
     },
 
+    /** PATCH /areas/{id} */
     updateArea(id: number, request: UpdateAreaRequest): Promise<Area> {
       return USE_REAL_API
-        ? notBuilt('PATCH /areas/{id}')
+        ? call<Area>(`/areas/${id}`, { method: 'PATCH', body: request })
         : mockUpdateArea(id, request);
     },
 
-    /** GET /spot-checks?outlet_id= */
+    /** GET /spot-checks?outlet_id=&include_archived= */
     checks(query: SpotChecksQuery): Promise<Page<SpotCheck>> {
       return USE_REAL_API
-        ? notBuilt('GET /spot-checks')
+        ? call<Page<SpotCheck>>('/spot-checks', {
+            query: {
+              outlet_id: query.outletId,
+              include_archived: query.includeArchived,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
         : mockListSpotChecks(query);
     },
 
-    /** One check with its prompts and items. */
+    /** GET /spot-checks/{id}: the check with its prompts and items. */
     check(id: number): Promise<SpotCheck> {
       return USE_REAL_API
-        ? notBuilt('GET /spot-checks/{id}')
+        ? call<SpotCheck>(`/spot-checks/${id}`)
         : mockGetSpotCheck(id);
     },
 
-    /** POST /spot-checks */
+    /** POST /spot-checks: the check with its prompts and items, in one call. */
     createCheck(request: CreateSpotCheckRequest): Promise<SpotCheck> {
       return USE_REAL_API
-        ? notBuilt('POST /spot-checks')
+        ? call<SpotCheck>('/spot-checks', { method: 'POST', body: request })
         : mockCreateSpotCheck(request);
     },
 
-    /** PATCH /spot-checks/{id} */
+    /**
+     * PATCH /spot-checks/{id}. The prompts and items, when sent, are the whole new
+     * lists. Archiving is its own call (`POST /spot-checks/{id}/archive`), and the
+     * platform has no way to bring a check back. What the platform fixes at creation
+     * (the subject and the outlet) is left out, since it refuses them.
+     */
     updateCheck(
       id: number,
       request: UpdateSpotCheckRequest,
     ): Promise<SpotCheck> {
-      return USE_REAL_API
-        ? notBuilt('PATCH /spot-checks/{id}')
-        : mockUpdateSpotCheck(id, request);
+      if (!USE_REAL_API) return mockUpdateSpotCheck(id, request);
+      const { is_archived, subject_type: _subject, ...rest } = request;
+      if (is_archived === true) {
+        return call<SpotCheck>(`/spot-checks/${id}/archive`, {
+          method: 'POST',
+        });
+      }
+      return call<SpotCheck>(`/spot-checks/${id}`, {
+        method: 'PATCH',
+        body: rest,
+      });
     },
 
-    /** POST /spot-checks/{id}/captures */
-    addCapture(
-      id: number,
-      request: SpotCheckCaptureRequest,
-    ): Promise<SpotCheckCapture> {
-      return USE_REAL_API
-        ? notBuilt('POST /spot-checks/{id}/captures')
-        : mockAddSpotCheckCapture(id, request);
-    },
-
-    /** Edit a prompt. Mock only. */
-    updateCapture(
-      id: number,
-      position: number,
-      request: SpotCheckCaptureRequest,
-    ): Promise<SpotCheckCapture> {
-      return USE_REAL_API
-        ? notBuilt('PATCH /spot-checks/{id}/captures/{position}')
-        : mockUpdateSpotCheckCapture(id, position, request);
-    },
-
-    /** Remove a prompt. Mock only. */
-    removeCapture(id: number, position: number): Promise<void> {
-      return USE_REAL_API
-        ? notBuilt('DELETE /spot-checks/{id}/captures/{position}')
-        : mockRemoveSpotCheckCapture(id, position);
-    },
-
-    /** POST /spot-checks/{id}/assertions */
-    addAssertion(
-      id: number,
-      request: SpotCheckAssertionRequest,
-    ): Promise<SpotCheckAssertion> {
-      return USE_REAL_API
-        ? notBuilt('POST /spot-checks/{id}/assertions')
-        : mockAddSpotCheckAssertion(id, request);
-    },
-
-    /** Edit or archive an item. Mock only. */
-    updateAssertion(
-      id: number,
-      position: number,
-      request: SpotCheckAssertionRequest,
-    ): Promise<SpotCheckAssertion> {
-      return USE_REAL_API
-        ? notBuilt('PATCH /spot-checks/{id}/assertions/{position}')
-        : mockUpdateSpotCheckAssertion(id, position, request);
-    },
-
-    /** Spot-check Managers of an outlet. No endpoint yet (Known Inconsistency #7). */
+    /** GET /outlets/{id}/spot-check-managers: head office only; a plain list. */
     managers(outletId: number): Promise<SpotCheckManager[]> {
       return USE_REAL_API
-        ? notBuilt('GET /spot-checks/managers')
+        ? call<SpotCheckManager[]>(`/outlets/${outletId}/spot-check-managers`)
         : mockListSpotCheckManagers(outletId);
     },
 
-    appointManager(outletId: number, userId: number): Promise<void> {
-      return USE_REAL_API
-        ? notBuilt('POST /spot-checks/managers')
-        : mockAppointSpotCheckManager(outletId, userId);
+    /** POST /outlets/{id}/spot-check-managers. Appointing twice is a no-op. */
+    async appointManager(outletId: number, userId: number): Promise<void> {
+      if (!USE_REAL_API) return mockAppointSpotCheckManager(outletId, userId);
+      await call<SpotCheckManager>(`/outlets/${outletId}/spot-check-managers`, {
+        method: 'POST',
+        body: { user_id: userId },
+      });
     },
 
+    /** DELETE /outlets/{id}/spot-check-managers/{user_id} */
     removeManager(outletId: number, userId: number): Promise<void> {
       return USE_REAL_API
-        ? notBuilt('DELETE /spot-checks/managers')
+        ? call<void>(`/outlets/${outletId}/spot-check-managers/${userId}`, {
+            method: 'DELETE',
+          })
         : mockRemoveSpotCheckManager(outletId, userId);
     },
 
-    /** GET /spot-check-runs?state=&outlet_id= */
+    /** GET /spot-check-runs?state=&outlet_id=&outcome= */
     runs(query: SpotCheckRunsQuery): Promise<Page<SpotCheckRun>> {
       return USE_REAL_API
-        ? notBuilt('GET /spot-check-runs')
+        ? call<Page<SpotCheckRun>>('/spot-check-runs', {
+            query: {
+              state: query.state,
+              outlet_id: query.outletId,
+              outcome: query.outcome,
+              page: query.page,
+              page_size: query.pageSize,
+            },
+          })
         : mockListSpotCheckRuns(query);
     },
 
     /** GET /spot-check-runs/{id} */
     run(id: number): Promise<SpotCheckRun> {
       return USE_REAL_API
-        ? notBuilt('GET /spot-check-runs/{id}')
+        ? call<SpotCheckRun>(`/spot-check-runs/${id}`)
         : mockGetSpotCheckRun(id);
     },
 
@@ -946,17 +1033,23 @@ export const api = {
       request: SubmitSpotCheckPhotoRequest,
     ): Promise<SpotCheckRun> {
       return USE_REAL_API
-        ? notBuilt('POST /spot-check-runs/{id}/photos')
+        ? call<SpotCheckRun>(`/spot-check-runs/${id}/photos`, {
+            method: 'POST',
+            body: request,
+          })
         : mockSubmitSpotCheckPhoto(id, request);
     },
 
-    /** PATCH /spot-check-results/{id} — the note is required. */
+    /** PATCH /spot-check-results/{id} — 400 `override_note_required` without a note. */
     overrideResult(
       id: number,
       request: OverrideSpotCheckResultRequest,
     ): Promise<SpotCheckResult> {
       return USE_REAL_API
-        ? notBuilt('PATCH /spot-check-results/{id}')
+        ? call<SpotCheckResult>(`/spot-check-results/${id}`, {
+            method: 'PATCH',
+            body: request,
+          })
         : mockOverrideSpotCheckResult(id, request);
     },
   },

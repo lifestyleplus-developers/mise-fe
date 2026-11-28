@@ -12,7 +12,6 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { classifyAreaError } from './area-errors';
-import { isManagerNotWired } from './check-errors';
 import {
   useAppointSpotCheckManager,
   useRemoveSpotCheckManager,
@@ -31,8 +30,7 @@ type CheckManagersProps = {
 
 /**
  * Who takes spot checks at this outlet (not per check): the people told when any
- * check here is revealed. Add and Remove take effect at once. The platform has no
- * way to do either yet, and says so in the one line the mockup gives.
+ * check here is revealed. Add and Remove take effect at once.
  */
 export function CheckManagers({
   outletId,
@@ -45,18 +43,15 @@ export function CheckManagers({
   const remove = useRemoveSpotCheckManager(outletId);
   const [picking, setPicking] = React.useState(false);
   const [pendingId, setPendingId] = React.useState<number | null>(null);
-  const [notWired, setNotWired] = React.useState(false);
 
   React.useEffect(() => {
     if (managers.data) onKnown?.(managers.data);
   }, [managers.data, onKnown]);
 
   const people = managers.data ?? [];
-  const unavailable = notWired || isManagerNotWired(managers.error);
 
   function fail(error: unknown) {
-    if (isManagerNotWired(error)) setNotWired(true);
-    else if (classifyAreaError(error) === 'forbidden') onLocked();
+    if (classifyAreaError(error) === 'forbidden') onLocked();
   }
 
   return (
@@ -110,15 +105,6 @@ export function CheckManagers({
           {t('inv.none')}
         </Text>
       )}
-
-      {unavailable ? (
-        <Text
-          accessibilityRole="alert"
-          className="font-sans-medium mt-2 px-1 text-[14px]"
-        >
-          {t('spot.not-wired')}
-        </Text>
-      ) : null}
 
       {disabled ? null : (
         <Button
@@ -201,12 +187,9 @@ function ManagerPicker({
           onSuccess: onClose,
           onError: (cause) => {
             setPendingId(null);
-            // A lost role or an endpoint the platform lacks ends the picking; any
-            // other failure stays in the picker, with the people still listed.
-            if (
-              isManagerNotWired(cause) ||
-              classifyAreaError(cause) === 'forbidden'
-            ) {
+            // A lost role ends the picking; any other failure stays in the
+            // picker, with the people still listed.
+            if (classifyAreaError(cause) === 'forbidden') {
               onClose();
               onFail(cause);
             } else {

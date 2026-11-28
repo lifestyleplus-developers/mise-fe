@@ -24,6 +24,14 @@
  */
 import { onlineManager } from '@tanstack/react-query';
 import type {
+  AtRiskReport,
+  ChecklistHistoryQuery,
+  ChecklistHistoryRow,
+  ChecklistOutletsReport,
+  Incident,
+  IncidentDetail,
+  IncidentsQuery,
+  PersonRef,
   Area,
   AreasQuery,
   CreateAreaRequest,
@@ -31,10 +39,8 @@ import type {
   OverrideSpotCheckResultRequest,
   SpotCheck,
   SpotCheckAssertion,
-  SpotCheckAssertionRequest,
   SpotCheckLists,
   SpotCheckCapture,
-  SpotCheckCaptureRequest,
   SpotCheckCompletion,
   SpotCheckManager,
   SpotCheckOutcome,
@@ -2127,7 +2133,7 @@ export async function mockSignUpload(
   await delay();
   // A signature needs the network: with no signal there is no upload location
   // (a spot-check photograph is then kept on the phone, SPT-01 `noUploadUrl`).
-  if (request.purpose === 'spot_check_run' && !onlineManager.isOnline()) {
+  if (request.purpose === 'spot_check' && !onlineManager.isOnline()) {
     throw new Error('Network request failed');
   }
   const me = resolveMe();
@@ -2136,7 +2142,7 @@ export async function mockSignUpload(
   // A run with a prompt of `upload`: the first photograph's bytes are refused, so
   // the prompt shows Retry (SPT-01 `uploadFailed`); the retry goes through.
   if (
-    request.purpose === 'spot_check_run' &&
+    request.purpose === 'spot_check' &&
     !refusedUploadRuns.has(request.target_id) &&
     spotCheckState()
       .runs.find((run) => run.id === request.target_id)
@@ -3916,7 +3922,6 @@ type DbSpotRun = {
   completion: SpotCheckCompletion | null;
   results: DbSpotResult[];
   ready_at: string | null;
-  issue_id: number | null;
 };
 
 type SpotCheckState = {
@@ -3939,10 +3944,8 @@ const SLOW_SEND_MS = 8_000;
 const RESHMA = 16;
 const ARUN = 17;
 /**
- * Signs in as an Administrator on a platform that cannot do several things the
- * mockup has a fallback for (SPT-01 `partialFallback` and `retakeFallback`, SPT-03
- * `afterCloseFallback` and `noIssueLink`, SPT-05 `managerNotWired` and
- * `itemFallback`, SPT-06 `archivedFallback`). Everyone else gets the full platform.
+ * Signs in as an Administrator on a platform that keeps only the latest photograph
+ * of a prompt (SPT-01 `retakeFallback`). Everyone else gets the full platform.
  */
 const BASIC = 18;
 
@@ -4175,7 +4178,6 @@ function seedSpotCheckState(): SpotCheckState {
       completion: null,
       results: [],
       ready_at: null,
-      issue_id: null,
     };
     const purged =
       close.getTime() <
@@ -4364,9 +4366,6 @@ function seedSpotCheckState(): SpotCheckState {
       `t7/spot/${run10.id}-2-first.jpg`,
     ),
   );
-  for (const run of [run4, run8, run9]) {
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
-  }
 
   // About thirty more at ZamZam over the last 45 days, and a dozen at Elegance.
   const ZAMZAM_CHECKS = [1, 2, 3];
@@ -4390,7 +4389,6 @@ function seedSpotCheckState(): SpotCheckState {
       sent: missed ? [] : partial ? sent.slice(0, -1) : sent,
       settle: true,
     });
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
     state.runs.push(run);
   }
   const front = checkById(11);
@@ -4407,7 +4405,6 @@ function seedSpotCheckState(): SpotCheckState {
       sent: front.captures.map((capture) => capture.position),
       settle: true,
     });
-    run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
     state.runs.push(run);
   }
 
@@ -4466,10 +4463,6 @@ function seedSpotCheckState(): SpotCheckState {
   return state;
 }
 
-function hasLiveFail(run: DbSpotRun): boolean {
-  return run.results.some((result) => effectiveOutcome(result) === 'FAIL');
-}
-
 /**
  * The window has closed: fix how it ended and judge every assertion against the
  * photographs that were sent. Nothing was sent: not done, and nothing to judge.
@@ -4496,7 +4489,6 @@ function settleRun(state: SpotCheckState, run: DbSpotRun, assessedAt?: Date) {
     assessedAt ??
     new Date(new Date(run.window_close).getTime() + SPOT_ASSESS_MS)
   ).toISOString();
-  run.issue_id = hasLiveFail(run) ? 7000 + run.id : null;
 }
 
 function spotCheckState(): SpotCheckState {
@@ -4608,14 +4600,6 @@ function assertAreaNameFree(area: DbArea, name: string, exceptId?: number) {
 export async function mockListAreas(query: AreasQuery): Promise<Page<Area>> {
   await delay();
   const actor = spotActor();
-  if (query.includeArchived && onBasicPlatform(actor)) {
-    throw apiError(
-      400,
-      'archived_not_listed',
-      'Archived areas cannot be listed.',
-      'include_archived',
-    );
-  }
   const readable = readableSpotOutlets(actor);
   const outletId =
     query.outletId === undefined
@@ -4705,16 +4689,6 @@ function findSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
       readable.has(candidate.outlet_id),
   );
   if (!check) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  return check;
-}
-
-/** An archived check is frozen: no edit, no new prompts or items. */
-function findEditableSpotCheck(actor: SpotActor, id: number): DbSpotCheck {
-  requireSpotAuthor(actor);
-  const check = findSpotCheck(actor, id);
-  if (check.is_archived) {
-    throw invalid('An archived spot check cannot be changed.', 'is_archived');
-  }
   return check;
 }
 
@@ -4868,18 +4842,6 @@ export async function mockUpdateSpotCheck(
   triggerFault(request.name);
   triggerRevoked(check.name);
   triggerRevoked(request.name);
-  // A platform that cannot change the list of a check that exists (SPT-05 `itemFallback`).
-  if (
-    onBasicPlatform(actor) &&
-    (request.captures !== undefined || request.assertions !== undefined)
-  ) {
-    throw apiError(
-      400,
-      'list_locked',
-      'The prompts and items of a check cannot be changed.',
-      'captures',
-    );
-  }
   if (check.is_archived && request.is_archived !== false) {
     throw invalid('An archived spot check cannot be changed.', 'is_archived');
   }
@@ -4907,60 +4869,6 @@ export async function mockUpdateSpotCheck(
   return toCheck(check);
 }
 
-/** POST /spot-checks/{id}/captures — added at the end. */
-export async function mockAddSpotCheckCapture(
-  id: number,
-  request: SpotCheckCaptureRequest,
-): Promise<SpotCheckCapture> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.prompt);
-  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
-  if (request.prompt.trim().length > 200) {
-    throw invalid('Use 200 characters or fewer.', 'prompt');
-  }
-  const capture = {
-    position: check.captures.length + 1,
-    prompt: request.prompt.trim(),
-  };
-  check.captures.push(capture);
-  return capture;
-}
-
-/** PATCH a prompt's wording. Mock only: the contract lists add and read. */
-export async function mockUpdateSpotCheckCapture(
-  id: number,
-  position: number,
-  request: SpotCheckCaptureRequest,
-): Promise<SpotCheckCapture> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.prompt);
-  const capture = check.captures.find((entry) => entry.position === position);
-  if (!capture) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  if (!request.prompt.trim()) throw invalid('Prompt is required.', 'prompt');
-  capture.prompt = request.prompt.trim();
-  return capture;
-}
-
-/** DELETE a prompt; those after it move up. Mock only. */
-export async function mockRemoveSpotCheckCapture(
-  id: number,
-  position: number,
-): Promise<void> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  if (!check.captures.some((entry) => entry.position === position)) {
-    throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  }
-  check.captures = check.captures
-    .filter((entry) => entry.position !== position)
-    .map((entry, index) => ({ ...entry, position: index + 1 }));
-}
-
 function assertValidItem(fields: { text?: string; weight?: number }) {
   if (fields.text !== undefined) {
     if (!fields.text.trim()) throw invalid('Text is required.', 'text');
@@ -4978,50 +4886,6 @@ function assertValidItem(fields: { text?: string; weight?: number }) {
   }
 }
 
-/** POST /spot-checks/{id}/assertions — added at the end, never tied to a prompt. */
-export async function mockAddSpotCheckAssertion(
-  id: number,
-  request: SpotCheckAssertionRequest,
-): Promise<SpotCheckAssertion> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.text);
-  if (request.text === undefined) throw invalid('Text is required.', 'text');
-  assertValidItem(request);
-  const assertion: SpotCheckAssertion = {
-    position: check.assertions.length + 1,
-    text: request.text.trim(),
-    weight: request.weight ?? DEFAULT_WEIGHT,
-    is_archived: false,
-  };
-  check.assertions.push(assertion);
-  return assertion;
-}
-
-/** PATCH an item: wording, weight, archive or restore. Mock only. */
-export async function mockUpdateSpotCheckAssertion(
-  id: number,
-  position: number,
-  request: SpotCheckAssertionRequest,
-): Promise<SpotCheckAssertion> {
-  await delay();
-  const actor = spotActor();
-  const check = findEditableSpotCheck(actor, id);
-  triggerFault(request.text);
-  const assertion = check.assertions.find(
-    (entry) => entry.position === position,
-  );
-  if (!assertion) throw apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
-  assertValidItem(request);
-  if (request.text !== undefined) assertion.text = request.text.trim();
-  if (request.weight !== undefined) assertion.weight = request.weight;
-  if (request.is_archived !== undefined) {
-    assertion.is_archived = request.is_archived;
-  }
-  return assertion;
-}
-
 // Spot-check Managers. The Schema has no membership table (Known Inconsistency
 // #7), so this is the mock's own shape, written to the rows /auth/me reads
 // (`spot_check_outlets`).
@@ -5032,13 +4896,6 @@ export async function mockListSpotCheckManagers(
 ): Promise<SpotCheckManager[]> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   return db.users
@@ -5063,13 +4920,6 @@ export async function mockAppointSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -5092,13 +4942,6 @@ export async function mockRemoveSpotCheckManager(
 ): Promise<void> {
   await delay();
   const actor = spotActor();
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      405,
-      'method_not_allowed',
-      'Spot-check managers cannot be changed here.',
-    );
-  }
   requireSpotAuthor(actor);
   readableSpotOutlet(actor, outletId);
   const user = db.users.find(
@@ -5169,7 +5012,6 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
       captures: null,
       completion: null,
       results: null,
-      issue_id: null,
     };
   }
   const state = spotCheckState();
@@ -5191,14 +5033,8 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
   }
   const sees = actor.admin || run.manager_id === actor.me.user.id;
   const basic = onBasicPlatform(actor);
-  // On the basic platform a partial capture is simply "not done" and is not assessed,
-  // a retake overwrites, and no failure raises an issue.
-  const completion =
-    status === 'FINALIZED'
-      ? basic && run.completion === 'PARTIAL'
-        ? 'NOT_DONE'
-        : run.completion
-      : null;
+  // On the basic platform a retake overwrites.
+  const completion = status === 'FINALIZED' ? run.completion : null;
   return {
     ...base,
     scheduled_for: run.scheduled_for,
@@ -5218,11 +5054,8 @@ function toRun(actor: SpotActor, run: DbSpotRun): SpotCheckRun {
     completion,
     results:
       sees && status === 'FINALIZED'
-        ? basic && run.completion === 'PARTIAL'
-          ? []
-          : run.results.map((result) => toResult(run, result, now))
+        ? run.results.map((result) => toResult(run, result, now))
         : null,
-    issue_id: sees && !basic ? run.issue_id : null,
   };
 }
 
@@ -5441,15 +5274,6 @@ export async function mockOverrideSpotCheckResult(
       "You can't change this result.",
     );
   }
-  // A platform that takes no override once the window has closed (SPT-03
-  // `afterCloseFallback`); results only exist after the close, so none is allowed.
-  if (onBasicPlatform(actor)) {
-    throw apiError(
-      409,
-      API_ERROR_CODE.WINDOW_CLOSED,
-      "Results can't be changed after the window closes.",
-    );
-  }
   if (!request.override_note.trim()) {
     throw apiError(
       400,
@@ -5469,6 +5293,467 @@ export async function mockOverrideSpotCheckResult(
   result.override_note = request.override_note.trim();
   result.overridden_by_id = actor.me.user.id;
   result.overridden_at = new Date(now).toISOString();
-  run.issue_id = hasLiveFail(run) ? 7000 + run.id : run.issue_id;
   return toResult(run, result, now);
+}
+
+// ---------------------------------------------------------------------------
+// Incidents and reports (§9, §10)
+//
+// Closed periods are made up from the run templates, one per assignment per
+// day for the last 60 days, the same every time: which tasks were lost comes
+// from a hash of the run, not from chance. The last two days lose more, so
+// there is always something for Issues and At risk to show. Incidents older
+// than three days start resolved, so both lists have rows. Resolving writes to
+// `incidentResolutions`, which every later read respects.
+// ---------------------------------------------------------------------------
+
+const PAST_RUN_DAYS = 60;
+const PAST_RUN_ID_BASE = 900_000;
+const INCIDENT_ID_BASE = 10_000;
+const PAST_TASK_ID_BASE = 5_000_000;
+/** Periods this many days old or older start resolved. */
+const RESOLVED_AFTER_DAYS = 4;
+const COMPARISON_DAYS = 30;
+const AT_RISK_HOURS = 24;
+const AT_RISK_LIMIT = 5;
+const ASSESSING_WINDOW_MS = 60 * MINUTE_MS;
+
+const FAILURE_COMMENTS = [
+  'Not done at opening; the person on shift will do it now.',
+  'The equipment was not available.',
+  'Counted twice and it still did not match.',
+  'Left for the next shift to finish.',
+];
+
+const incidentStore = globalThis as typeof globalThis & {
+  __miseMockIncidents?: Map<number, { by: PersonRef; at: string }>;
+};
+const incidentResolutions = (incidentStore.__miseMockIncidents ??= new Map());
+
+/** A repeatable number in [0, 1) for a seed, so the same period is always the same. */
+function mix(seed: number): number {
+  let x = Math.imul(seed + 0x9e3779b9, 0x85ebca6b) >>> 0;
+  x ^= x >>> 15;
+  x = Math.imul(x, 0xc2b2ae35) >>> 0;
+  x ^= x >>> 13;
+  return (x >>> 0) / 4294967296;
+}
+
+type PastRun = {
+  key: number;
+  runId: number;
+  incidentId: number;
+  assignmentId: number;
+  checklistId: number;
+  checklist: string;
+  outletId: number;
+  outlet: string;
+  daysAgo: number;
+  windowOpen: Date;
+  windowClose: Date;
+  score: number;
+  missed: number;
+  failed: number;
+  assessing: number;
+  rushed: boolean;
+  /** Every task that was failed or missed, plus any still being assessed. */
+  tasks: RunTask[];
+};
+
+/** The marks of a closed period: which of its tasks were lost, and how. */
+function pastRunsOf(assignment: {
+  id: number;
+  checklist_id: number;
+  outlet_id: number;
+  outlet_name: string;
+}): PastRun[] {
+  const template = RUN_TEMPLATES.find(
+    (candidate) => candidate.assignmentId === assignment.id,
+  );
+  if (!template) return [];
+  const checklist = checklistState().checklists.find(
+    (candidate) => candidate.id === assignment.checklist_id,
+  );
+  const taskTemplates = TASK_TEMPLATES[assignment.id] ?? [];
+  const now = Date.now();
+  const runs: PastRun[] = [];
+  for (let daysAgo = 0; daysAgo < PAST_RUN_DAYS; daysAgo++) {
+    const midnight = localTime(daysAgo, '00:00').getTime();
+    const windowOpen = new Date(midnight + template.open * MINUTE_MS);
+    const windowClose = new Date(midnight + template.close * MINUTE_MS);
+    if (windowClose.getTime() > now) continue;
+    const key = assignment.id * 100 + daysAgo;
+    const recent = windowClose.getTime() > now - 2 * 24 * 60 * MINUTE_MS;
+    const lossRate = recent ? 0.35 : 0.1;
+    const justClosed = now - windowClose.getTime() < ASSESSING_WINDOW_MS;
+
+    const tasks: RunTask[] = [];
+    let missed = 0;
+    let failed = 0;
+    let assessing = 0;
+    taskTemplates.forEach((task, index) => {
+      if (mix(key * 31 + index) >= lossRate) return;
+      const kind = mix(key * 17 + index);
+      const id = PAST_TASK_ID_BASE + key * 10 + index + 1;
+      const base = {
+        id,
+        position: index + 1,
+        answer_type: task.type,
+        text: task.text,
+        unit: task.unit ?? null,
+        min_value: task.min ?? null,
+        max_value: task.max ?? null,
+        weight: DEFAULT_WEIGHT,
+        requires_comment_on_fail: task.type !== 'IMAGE',
+      };
+      const answered = task.type !== 'NUMBER' && kind < 0.6;
+      const answeredAt = new Date(
+        windowClose.getTime() - 30 * MINUTE_MS,
+      ).toISOString();
+      const person = db.users.find((user) => user.username === 'priya');
+      if (!answered) {
+        missed++;
+        tasks.push({
+          ...base,
+          answer_number: null,
+          answer_bool: null,
+          image_key: null,
+          image_url: null,
+          comment: null,
+          outcome: 'MISSED',
+          answered_by: null,
+          answered_at: null,
+        });
+        return;
+      }
+      const imageKey = `t7/mock/past-${key}-${index + 1}.jpg`;
+      const isImage = task.type === 'IMAGE';
+      const pending = isImage && justClosed && assessing === 0;
+      if (pending) assessing++;
+      else failed++;
+      tasks.push({
+        ...base,
+        answer_number: null,
+        answer_bool: isImage ? null : false,
+        image_key: isImage ? imageKey : null,
+        image_url: isImage ? `mock://storage/${imageKey}` : null,
+        comment: isImage
+          ? null
+          : FAILURE_COMMENTS[
+              Math.floor(mix(key + index) * FAILURE_COMMENTS.length)
+            ],
+        outcome: pending ? 'PENDING_JUDGEMENT' : 'FAIL',
+        answered_by: person
+          ? { id: person.id, full_name: person.full_name }
+          : null,
+        answered_at: answeredAt,
+      });
+    });
+
+    const total = taskTemplates.length * DEFAULT_WEIGHT;
+    const lost = (missed + failed) * DEFAULT_WEIGHT;
+    runs.push({
+      key,
+      runId: PAST_RUN_ID_BASE + key,
+      incidentId: INCIDENT_ID_BASE + key,
+      assignmentId: assignment.id,
+      checklistId: assignment.checklist_id,
+      checklist: checklist?.name ?? 'Checklist',
+      outletId: assignment.outlet_id,
+      outlet: assignment.outlet_name,
+      daysAgo,
+      windowOpen,
+      windowClose,
+      score: total === 0 ? 1 : Math.round((1 - lost / total) * 10_000) / 10_000,
+      missed,
+      failed,
+      assessing,
+      rushed: mix(key * 7) < 0.08,
+      tasks,
+    });
+  }
+  return runs;
+}
+
+/** Who the signed-in person is, as far as incidents and reports are concerned. */
+function reportActor() {
+  const me = resolveMe();
+  return {
+    me,
+    admin: canAdminister(me.user.tenant_role),
+    supervised: new Set(me.memberships.cl_admin_assignments),
+  };
+}
+
+type ReportActor = ReturnType<typeof reportActor>;
+
+/** The assignments of the caller's business whose history they may read. */
+function reportableAssignments(actor: ReportActor, checklistId?: number) {
+  return checklistState().assignments.filter(
+    (assignment) =>
+      assignment.tenant_id === actor.me.business.id &&
+      (checklistId === undefined || assignment.checklist_id === checklistId) &&
+      (actor.admin || actor.supervised.has(assignment.id)),
+  );
+}
+
+function allPastRuns(actor: ReportActor, checklistId?: number): PastRun[] {
+  return reportableAssignments(actor, checklistId).flatMap(pastRunsOf);
+}
+
+function notFound(): ApiError {
+  return apiError(404, API_ERROR_CODE.NOT_FOUND, 'Not found.');
+}
+
+function personOf(user: DbUser | undefined): PersonRef | null {
+  return user ? { id: user.id, full_name: user.full_name } : null;
+}
+
+/** The incident's current state: what was done to it this session, else its seed. */
+function resolutionOf(run: PastRun): { by: PersonRef; at: string } | null {
+  const written = incidentResolutions.get(run.incidentId);
+  if (written) return written;
+  if (run.daysAgo < RESOLVED_AFTER_DAYS) return null;
+  const manager = db.users.find((user) =>
+    user.memberships.cl_admin_assignments.includes(run.assignmentId),
+  );
+  const by = personOf(
+    manager ?? db.users.find((user) => user.tenant_role === 'ADMIN'),
+  );
+  return by
+    ? {
+        by,
+        at: new Date(
+          run.windowClose.getTime() + 3 * 60 * MINUTE_MS,
+        ).toISOString(),
+      }
+    : null;
+}
+
+function toIncident(run: PastRun): Incident {
+  const resolution = resolutionOf(run);
+  return {
+    id: run.incidentId,
+    run_id: run.runId,
+    checklist: { id: run.checklistId, name: run.checklist },
+    outlet: { id: run.outletId, name: run.outlet },
+    window_open: run.windowOpen.toISOString(),
+    window_close: run.windowClose.toISOString(),
+    score: run.score,
+    missed_count: run.missed,
+    failed_count: run.failed,
+    rushed: run.rushed,
+    status: resolution ? 'RESOLVED' : 'OPEN',
+    resolved_by: resolution?.by ?? null,
+    resolved_at: resolution?.at ?? null,
+    created_at: new Date(run.windowClose.getTime() + MINUTE_MS).toISOString(),
+    assessing_count: run.assessing,
+  };
+}
+
+/** A period that raised an incident: finalised below a perfect score. */
+function raisesIncident(run: PastRun): boolean {
+  return run.score < 1;
+}
+
+/** GET /incidents — OPEN unless asked otherwise, newest first, 25 a page. */
+export async function mockListIncidents(
+  query: IncidentsQuery,
+): Promise<Page<Incident>> {
+  await delay();
+  const actor = reportActor();
+  const wanted = query.status ?? 'OPEN';
+  const matches = allPastRuns(actor)
+    .filter(raisesIncident)
+    .map(toIncident)
+    .filter((incident) => wanted === 'ALL' || incident.status === wanted)
+    .filter(
+      (incident) =>
+        query.outletId === undefined || incident.outlet.id === query.outletId,
+    )
+    .filter(
+      (incident) =>
+        query.checklistId === undefined ||
+        incident.checklist.id === query.checklistId,
+    )
+    .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id);
+  return paginate(matches, query.page, query.pageSize);
+}
+
+function findVisibleIncident(actor: ReportActor, id: number): PastRun {
+  const run = allPastRuns(actor).find(
+    (candidate) => raisesIncident(candidate) && candidate.incidentId === id,
+  );
+  if (!run) throw notFound();
+  return run;
+}
+
+/** GET /incidents/{id} — with its failed and missed tasks. Not yours: 404. */
+export async function mockGetIncident(id: number): Promise<IncidentDetail> {
+  await delay();
+  const run = findVisibleIncident(reportActor(), id);
+  return {
+    ...toIncident(run),
+    tasks: run.tasks.filter((task) => task.outcome !== 'PENDING_JUDGEMENT'),
+  };
+}
+
+/** POST /incidents/{id}/resolve — a resolved one is left as it was; the score never moves. */
+export async function mockResolveIncident(id: number): Promise<Incident> {
+  await delay();
+  const actor = reportActor();
+  const run = findVisibleIncident(actor, id);
+  if (!resolutionOf(run)) {
+    incidentResolutions.set(run.incidentId, {
+      by: { id: actor.me.user.id, full_name: actor.me.user.full_name },
+      at: new Date().toISOString(),
+    });
+  }
+  return toIncident(run);
+}
+
+/** The checklist if the caller may see its reports, otherwise 404. */
+function reportableChecklist(actor: ReportActor, checklistId: number) {
+  const checklist = checklistState().checklists.find(
+    (candidate) =>
+      candidate.id === checklistId &&
+      candidate.tenant_id === actor.me.business.id,
+  );
+  if (!checklist || reportableAssignments(actor, checklistId).length === 0) {
+    throw notFound();
+  }
+  return checklist;
+}
+
+function meanScore(runs: PastRun[]): number | null {
+  if (runs.length === 0) return null;
+  const mean = runs.reduce((sum, run) => sum + run.score, 0) / runs.length;
+  return Math.round(mean * 10_000) / 10_000;
+}
+
+/** GET /reports/checklist/{id}/outlets — a 30-day mean per outlet, by outlet name. */
+export async function mockChecklistOutletsReport(
+  checklistId: number,
+): Promise<ChecklistOutletsReport> {
+  await delay();
+  const actor = reportActor();
+  const checklist = reportableChecklist(actor, checklistId);
+  const since = Date.now() - COMPARISON_DAYS * 24 * 60 * MINUTE_MS;
+  const outlets = reportableAssignments(actor, checklistId)
+    .filter(
+      (assignment) =>
+        assignment.is_active &&
+        !db.outlets.find((outlet) => outlet.id === assignment.outlet_id)
+          ?.is_archived,
+    )
+    .sort((a, b) => a.outlet_name.localeCompare(b.outlet_name) || a.id - b.id)
+    .map((assignment) => {
+      const runs = pastRunsOf(assignment);
+      const recent = runs.filter((run) => run.windowClose.getTime() >= since);
+      const latest = runs[0];
+      return {
+        assignment_id: assignment.id,
+        outlet: { id: assignment.outlet_id, name: assignment.outlet_name },
+        score: meanScore(recent),
+        runs_counted: recent.length,
+        latest_run: latest
+          ? {
+              run_id: latest.runId,
+              score: latest.score,
+              window_open: latest.windowOpen.toISOString(),
+              window_close: latest.windowClose.toISOString(),
+            }
+          : null,
+      };
+    });
+  return {
+    checklist: { id: checklist.id, name: checklist.name },
+    days: COMPARISON_DAYS,
+    outlets,
+  };
+}
+
+/** GET /reports/checklist/{id}/history — one outlet's closed periods, newest first. */
+export async function mockChecklistHistoryReport(
+  checklistId: number,
+  query: ChecklistHistoryQuery,
+): Promise<Page<ChecklistHistoryRow>> {
+  await delay();
+  const actor = reportActor();
+  reportableChecklist(actor, checklistId);
+  const assignments = reportableAssignments(actor, checklistId);
+  let assignment = assignments[0];
+  if (query.assignmentId !== undefined) {
+    const named = assignments.find((a) => a.id === query.assignmentId);
+    if (!named) throw notFound();
+    assignment = named;
+  } else if (assignments.length !== 1) {
+    throw invalid(
+      "Say which outlet's history: send assignment_id.",
+      'assignment_id',
+    );
+  }
+  const from = query.from ? parseDay(query.from, 'from') : null;
+  const to = query.to ? parseDay(query.to, 'to') : null;
+  if (from && to && to < from) {
+    throw invalid('The end cannot be before the start.', 'to');
+  }
+  const rows = pastRunsOf(assignment)
+    .filter((run) => !from || localDay(run.windowClose) >= localDay(from))
+    .filter((run) => !to || localDay(run.windowClose) <= localDay(to))
+    .sort(
+      (a, b) =>
+        b.windowClose.getTime() - a.windowClose.getTime() || b.runId - a.runId,
+    )
+    .map((run): ChecklistHistoryRow => ({
+      run_id: run.runId,
+      window_open: run.windowOpen.toISOString(),
+      window_close: run.windowClose.toISOString(),
+      score: run.score,
+      missed_count: run.missed,
+      failed_count: run.failed,
+      rushed: run.rushed,
+      assessing_count: run.assessing,
+    }));
+  return paginate(rows, query.page, query.pageSize);
+}
+
+/** GET /reports/at-risk — ADMIN and OWNER; the worst of the last 24 hours, at most five. */
+export async function mockAtRiskReport(): Promise<AtRiskReport> {
+  await delay();
+  const actor = reportActor();
+  if (!actor.admin) {
+    throw apiError(403, API_ERROR_CODE.PERMISSION_DENIED, 'Not permitted.');
+  }
+  const since = Date.now() - AT_RISK_HOURS * 60 * MINUTE_MS;
+  const worst = allPastRuns(actor)
+    .filter((run) => run.score < 1 && run.windowClose.getTime() >= since)
+    .sort(
+      (a, b) =>
+        a.score - b.score ||
+        b.windowClose.getTime() - a.windowClose.getTime() ||
+        a.runId - b.runId,
+    )
+    .slice(0, AT_RISK_LIMIT);
+  return {
+    hours: AT_RISK_HOURS,
+    results: worst.map((run) => ({
+      run_id: run.runId,
+      checklist: { id: run.checklistId, name: run.checklist },
+      outlet: { id: run.outletId, name: run.outlet },
+      window_open: run.windowOpen.toISOString(),
+      window_close: run.windowClose.toISOString(),
+      score: run.score,
+      missed_count: run.missed,
+      failed_count: run.failed,
+      rushed: run.rushed,
+      incident_id: run.incidentId,
+      cl_admins: db.users
+        .filter((user) =>
+          user.memberships.cl_admin_assignments.includes(run.assignmentId),
+        )
+        .sort((a, b) => a.full_name.localeCompare(b.full_name))
+        .map((user) => ({ id: user.id, full_name: user.full_name })),
+    })),
+  };
 }

@@ -1,10 +1,11 @@
 import { onlineManager } from '@tanstack/react-query';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as React from 'react';
 
 import { useMe } from '@/features/auth/use-me';
 import { api } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/http';
-import { UPLOAD_TIMEOUT_MS, withTimeout } from '@/shared/api/with-timeout';
+import { UPLOAD_TIMEOUT_MS } from '@/shared/api/with-timeout';
 
 import { photoDraftId, usePhotoOutbox, type PhotoDraft } from './photo-outbox';
 import {
@@ -33,12 +34,31 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
   try {
     update(draft.id, { stage: 'uploading', error: null });
 
+    // The platform signs the exact size of the photograph into the upload, so it
+    // must be the size of the file that is sent. `fetch(uri).blob()` gave 14 bytes
+    // for a 4 MB photo on Android, so the size is read from the file itself. The
+    // file is on the phone: failing to read it is not "no signal".
+    let size: number;
+    try {
+      const info = await FileSystem.getInfoAsync(draft.uri);
+      if (!info.exists || !info.size) throw new Error('No photograph');
+      size = info.size;
+    } catch (error) {
+      update(draft.id, {
+        stage: 'uploadFailed',
+        error: error instanceof Error ? error.message : 'Upload failed',
+      });
+      return;
+    }
+
     let sign;
     try {
       sign = await api.uploads.sign({
-        purpose: 'spot_check_run',
+        purpose: 'spot_check',
         target_id: draft.runId,
+        capture_position: draft.position,
         content_type: 'image/jpeg',
+        content_length: size,
       });
     } catch (error) {
       // No answer at all is "no signal": keep the photograph and wait. An answer
@@ -59,16 +79,31 @@ async function transfer(draft: PhotoDraft, submit: Submit): Promise<void> {
         throw new Error('Upload failed');
       }
       if (!sign.upload_url.startsWith('mock://')) {
-        const photo = await fetch(draft.uri).then((r) => r.blob());
-        const response = await withTimeout(UPLOAD_TIMEOUT_MS, (signal) =>
-          fetch(sign.upload_url, {
-            method: sign.method,
-            headers: { 'Content-Type': 'image/jpeg', ...sign.headers },
-            body: photo,
-            signal,
-          }),
-        );
-        if (!response.ok) throw new Error('Upload failed');
+        // The file is sent as it is, and the phone sets Content-Length from it;
+        // sending the signed length by hand as well risks a duplicate header.
+        const { 'Content-Length': _length, ...headers } = sign.headers;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const timedOut = new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('Upload failed')),
+            UPLOAD_TIMEOUT_MS,
+          );
+        });
+        try {
+          const response = await Promise.race([
+            FileSystem.uploadAsync(sign.upload_url, draft.uri, {
+              httpMethod: sign.method,
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+              headers: { 'Content-Type': 'image/jpeg', ...headers },
+            }),
+            timedOut,
+          ]);
+          if (response.status < 200 || response.status >= 300) {
+            throw new Error('Upload failed');
+          }
+        } finally {
+          clearTimeout(timer);
+        }
       }
     } catch (error) {
       update(draft.id, {

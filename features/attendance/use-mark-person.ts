@@ -20,7 +20,7 @@ export type MarkVariables = {
   request: MarkPersonRequest;
 };
 
-const MARK_KEY = ['attendance', 'mark'] as const;
+export const MARK_KEY = ['attendance', 'mark'] as const;
 
 /**
  * PATCH /attendance/marks/{id} — its defaults, so a paused (queued) mark can be

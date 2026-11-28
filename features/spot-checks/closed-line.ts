@@ -15,11 +15,6 @@ export function closedLine(
         n: String(summary.sent),
         total: String(summary.total),
       });
-    case 'partialFallback':
-      return format(t('spot.partial-fallback'), {
-        n: String(summary.sent),
-        total: String(summary.total),
-      });
     case 'done':
       return t('spot.closed-done');
   }

@@ -10,7 +10,7 @@ export function classifyAreaError(error: unknown): AreaFailure {
     if (error.status === 404) return 'gone';
     if (error.status === 400) {
       return error.body.error.field === 'name' &&
-        /already exists/i.test(error.body.error.message)
+        /already (exists|has)/i.test(error.body.error.message)
         ? 'duplicate'
         : 'rejected';
     }
@@ -21,16 +21,4 @@ export function classifyAreaError(error: unknown): AreaFailure {
 /** The platform's own words for a refusal. */
 export function areaMessage(error: unknown): string | null {
   return error instanceof ApiError ? error.body.error.message : null;
-}
-
-/**
- * The platform will not list archived areas (SPT-06 `archivedFallback`): the answer
- * to asking for them.
- */
-export function isArchivedUnsupported(error: unknown): boolean {
-  return (
-    error instanceof ApiError &&
-    error.status === 400 &&
-    error.body.error.code === 'archived_not_listed'
-  );
 }

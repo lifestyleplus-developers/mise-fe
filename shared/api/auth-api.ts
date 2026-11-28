@@ -25,10 +25,28 @@ export async function loginRequest(
  * The call is sent with the tokens taken before the clearing. It is best effort:
  * if it fails the refresh token simply stays valid on the server until it expires.
  */
+/** PATCH /auth/push-token (204): this phone's Expo token, or null to stop pushes. */
+export async function pushTokenRequest(
+  pushToken: string | null,
+): Promise<void> {
+  await request<void>('/auth/push-token', {
+    method: 'PATCH',
+    body: { push_token: pushToken },
+  });
+}
+
 export async function logoutRequest(): Promise<void> {
   const tokens = await getTokens();
   await clearTokens();
   if (tokens) {
+    // This phone stops receiving this person's pushes (API Contract §14). Best
+    // effort, and before logout so the access token is still good.
+    await request<void>('/auth/push-token', {
+      method: 'PATCH',
+      body: { push_token: null },
+      authenticated: false,
+      access: tokens.access,
+    }).catch(() => undefined);
     await request<void>('/auth/logout', {
       method: 'POST',
       body: { refresh: tokens.refresh },

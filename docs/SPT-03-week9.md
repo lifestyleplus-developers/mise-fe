@@ -20,7 +20,7 @@ Exactly 26, in mockup order. "Reach it with" names the sign-in that shows the st
 6. **overrideRefused** — "You can't change this result.", the note kept. _Override with a note of exactly `refused` (the mock's 403 trigger), or sign in as someone who is neither head office nor the run's own manager._
 7. **overridden** — the badge keeps the assessment's own answer; "Overridden: Passed, by Reshma · 3:10 PM" and the note sit under it. _Run 8 ("name tag is visible"), already overridden in the fixtures._
 8. **overriddenNoTime** — the same, with no time: "Overridden: Passed, by Arun". _Run 9, as arun — the fixtures give this one override no `overridden_at`._
-9. **afterCloseFallback** — a platform that takes no override once the window has closed: "Results can't be changed after the window closes." in the sheet, and afterwards no row opens. _Sign in as `basic`, open any run, tap a result, write a note and Override. The platform answers 409; close the sheet and the rows no longer open._
+9. ~~**afterCloseFallback**~~ — removed. Results only exist once the window has closed, and the platform takes an override then, so the sheet no longer has a "closed" refusal and every assessed row opens.
 10. **partial** — "2 of 3 photos · assessed on these", and a dashed "Not taken" tile for the one not sent. _Run 5 (Imran, two of the check's three prompts)._
 11. **replaced** — the retaken photograph and the one it replaced, each with its own time; the earlier one quieter. _Run 10 (Lakshmi), prompt 2 was retaken in the fixtures._
 12. **assessing** — the outcome badge spins; "Being assessed" instead of a result. In the list the card says "Being assessed" instead of a tally, and the list is read again every 15 seconds until the outcomes are in. _Run 6, read in the first two minutes of a mock session (it closed just before the app started and its `ready_at` is two minutes out)._
@@ -29,7 +29,7 @@ Exactly 26, in mockup order. "Reach it with" names the sign-in that shows the st
 15. **filtered** — the chip row narrows the list to one outcome. _Pick Failed, Passed or Needs review above the list. A result is matched on what it stands as now: an override counts, so a failure overridden to Passed is under Passed, not Failed, and the filter always agrees with the cards' tally._
 16. **filterEmpty** — "No results match this filter.", with Clear filter. _Pick a filter with nothing open under it (e.g. Needs review, once every review item at the outlet has been overridden)._
 17. **ownOnly** — "Results aren't shown for a check assigned to someone else.", no badges, no tally. _Run 11 (Arun's run), as reshma — she can read the outlet but the outcomes are his._
-18. **noIssueLink** — a failed result with no "Issue raised" link: the link is simply not drawn. _Sign in as `basic` and open a run that has the link for raheem (for example runs 23, 29 or 32 at ZamZam, found by their dates): none shows it, because that platform never returns an issue._
+18. ~~**noIssueLink**~~ — removed. Lamax's platform raises no issue for a spot check (Known Inconsistency #6), so the "Issue raised" link no longer exists in the app, with or without the fallback.
 19. **empty** — "No spot checks have closed yet." _An outlet with spot checks on and nothing closed. None of the fixture outlets is one: set `spot_checks_enabled` to `true` for Central Kitchen (id 12) in `shared/mocks/fixtures/outlets.json` and reload (the Outlets screen has no switch for it)._
 20. **loading** — skeleton rows.
 21. **loadFailed** — Retry above; what already loaded stays, with "Showing the last list" under it. _Open the screen offline; pull to refresh once loaded._
@@ -47,4 +47,4 @@ Exactly 26, in mockup order. "Reach it with" names the sign-in that shows the st
 - **Who can override.** Head office and the run's own manager; everyone else who can read the run sees no result rows at all (`ownOnly`), so there is nothing to tap.
 - **The subject's own capture state carries over read-only.** A photograph still shows as sent, replaced or purged exactly as the capture screen (SPT-01) would show it; there is no Retake or Retry here.
 - **Filtering is by outcome only**, and is the platform's own filter (`GET /spot-check-runs?state=closed&outcome=`), not a client-side narrowing of an already-fetched page.
-- **"Issue raised" is a mock-only link** (Known Inconsistency #6: the Schema has no table tying an incident to a spot-check run). It opens the Issues tab, which is itself a Week 10 placeholder; nothing here is wired to a real issue.
+- **There is no "Issue raised" link.** It was mock-only, and the platform raises no issue for a spot check, so it was removed. A failed result is seen and overridden in Spot checks, and does not appear in Issues.

@@ -34,7 +34,13 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#1F2937"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

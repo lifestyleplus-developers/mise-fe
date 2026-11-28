@@ -6,14 +6,12 @@ import type { SpotCheckResult, SpotCheckRunCapture } from '@/shared/api/types';
 import { RetryBanner } from '@/shared/components/retry-banner';
 import { SkeletonRows } from '@/shared/components/skeleton';
 import { Banner } from '@/shared/components/ui/banner';
-import { Button } from '@/shared/components/ui/button';
 import { Text } from '@/shared/components/ui/text';
 import { format, useT } from '@/shared/i18n';
 import { isoToClock } from '@/shared/lib/time';
 import { useFormatClock } from '@/shared/lib/use-clock-format';
 import { usePullToRefresh } from '@/shared/lib/use-pull-to-refresh';
 import { useRouter } from 'expo-router';
-import { Flag } from 'lucide-react-native';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -23,7 +21,6 @@ import { ResultRow } from './result-row';
 import { SpotCheckLinks } from './spot-check-links';
 import { closedSummary } from './capture-view';
 import { closedLine } from './closed-line';
-import { usePlatformLimit } from './platform-limits';
 import { subjectName } from './spot-outcome';
 import { useSpotCheckOutlets } from './use-spot-check-outlets';
 import { useSpotCheckRun } from './use-spot-check-runs';
@@ -105,8 +102,6 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
   const { data: me } = useMe();
   const pull = usePullToRefresh(() => void query.refetch());
   const [opening, setOpening] = React.useState<SpotCheckResult | null>(null);
-  // The platform has said it takes no override after the close: no row opens.
-  const noOverride = usePlatformLimit('overrideAfterClose');
 
   const status = query.error instanceof ApiError ? query.error.status : null;
   const moduleOff = status === 404;
@@ -188,22 +183,6 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
         </Text>
       </View>
 
-      {run.issue_id !== null ? (
-        <View className="mx-4 mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-destructive/50 self-start"
-            onPress={() => router.push('/issues')}
-          >
-            <Flag className="text-destructive-soft-foreground size-4" />
-            <Text className="text-destructive-soft-foreground">
-              {t('spot.issue-raised')}
-            </Text>
-          </Button>
-        </View>
-      ) : null}
-
       {ownOnly ? (
         <View className="mx-4 mb-3">
           <Banner tone="notice" message={t('spot.own-only')} />
@@ -216,7 +195,7 @@ export function RunResultsScreen({ runId }: RunResultsScreenProps) {
               result={result}
               first={index === 0}
               onOpen={
-                result.outcome === 'PENDING_JUDGEMENT' || noOverride
+                result.outcome === 'PENDING_JUDGEMENT'
                   ? undefined
                   : () => setOpening(result)
               }

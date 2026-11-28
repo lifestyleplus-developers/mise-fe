@@ -1,3 +1,5 @@
+import '@/features/notifications/sign-out';
+import '@/features/pending/late-writes';
 import '@/features/spot-checks/sign-out';
 import '@/shared/lib/icons';
 import { ApiProvider } from '@/shared/api/query-client';
@@ -14,6 +16,7 @@ import { NotoSansDevanagari_400Regular } from '@expo-google-fonts/noto-sans-deva
 import { NotoSansKannada_400Regular } from '@expo-google-fonts/noto-sans-kannada';
 import { NotoSansMalayalam_400Regular } from '@expo-google-fonts/noto-sans-malayalam';
 import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
+import { TapListener } from '@/features/notifications/tap-listener';
 import { ThemeTransition } from '@/shared/components/theme-transition';
 import { PortalHost } from '@rn-primitives/portal';
 import { LucideProvider } from 'lucide-react-native';
@@ -98,6 +101,7 @@ export default function RootLayout() {
                 </Stack>
               </ThemeProvider>
             </View>
+            <TapListener />
             <ThemeTransition />
             <PortalHost />
           </LucideProvider>

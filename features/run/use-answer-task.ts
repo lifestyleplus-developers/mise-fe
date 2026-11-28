@@ -11,7 +11,10 @@ import type { AnswerTaskRequest, RunDetail, RunTask } from '@/shared/api/types';
  * replayed after the app restarts (AGENTS.md: setMutationDefaults at the
  * point the mutation is defined).
  */
-type AnswerTaskVariables = { taskId: number; request: AnswerTaskRequest };
+export type AnswerTaskVariables = {
+  taskId: number;
+  request: AnswerTaskRequest;
+};
 
 const answerTaskMutationFn = ({
   taskId,
@@ -19,7 +22,9 @@ const answerTaskMutationFn = ({
 }: AnswerTaskVariables): Promise<RunTask> =>
   api.runTasks.answer(taskId, request);
 
-queryClient.setMutationDefaults(['run-tasks', 'answer'], {
+export const ANSWER_KEY = ['run-tasks', 'answer'] as const;
+
+queryClient.setMutationDefaults(ANSWER_KEY, {
   mutationFn: answerTaskMutationFn,
   // A replayed mutation has no hook around it, so it does not know its run:
   // find the cached run that holds this task and update that one.
@@ -60,7 +65,7 @@ export function useAnswerTask(runId: number) {
     AnswerTaskVariables,
     { previous: RunDetail | undefined }
   >({
-    mutationKey: ['run-tasks', 'answer'],
+    mutationKey: ANSWER_KEY,
     networkMode: 'online',
     mutationFn: answerTaskMutationFn,
     onMutate: async ({ taskId, request }) => {
@@ -123,9 +128,8 @@ export function useAnswerTask(runId: number) {
  * Spec §6, §11) — a queued No counts once. Re-renders as the queue changes.
  */
 export function useAnswerPendingCount(taskIds: number[]) {
-  const writes = useQueuedWrites<AnswerTaskVariables>(
-    ['run-tasks', 'answer'],
-    (variables) => String(variables.taskId),
+  const writes = useQueuedWrites<AnswerTaskVariables>(ANSWER_KEY, (variables) =>
+    String(variables.taskId),
   );
   return writes.filter(
     (write) =>

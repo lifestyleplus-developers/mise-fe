@@ -3,10 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/shared/api/client';
 import { retryTransient } from '@/shared/api/query-helpers';
 
-import { isManagerNotWired } from './check-errors';
 import { spotCheckKeys } from './spot-check-keys';
 
-/** Who takes spot checks at an outlet. Not on the platform yet, so only the mock answers. */
+/** Who takes spot checks at an outlet. */
 export function useSpotCheckManagers(
   outletId: number | undefined,
   enabled = true,
@@ -15,8 +14,7 @@ export function useSpotCheckManagers(
     queryKey: spotCheckKeys.managers(outletId ?? 0),
     queryFn: () => api.spotChecks.managers(outletId!),
     enabled: enabled && outletId !== undefined,
-    retry: (count, error) =>
-      isManagerNotWired(error) ? false : retryTransient(count, error),
+    retry: retryTransient,
   });
 }
 

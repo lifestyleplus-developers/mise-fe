@@ -111,6 +111,7 @@ export const en = {
   'run.ai-pass': 'AI check: looks good',
   'run.ai-fail': 'AI check: does not match',
   'run.photo-row-failed': "Couldn't upload. Waiting to send.",
+  'run.photo-failed': "Couldn't upload the photo. Try again.",
   'run.enter-number': 'Enter a number',
   'run.comment-required': 'A comment is needed when something fails.',
   'run.comment-title': 'Why?',
@@ -228,6 +229,74 @@ export const en = {
 
   'signout.queued.language':
     "Your language choice hasn't been saved to your account yet. If you sign out now, it is lost.",
+  'signout.q.answers.one':
+    "1 answer hasn't been sent. If you sign out now it is lost, and that task may show as missed if its window closes first.",
+  'signout.q.answers.many':
+    "{n} answers haven't been sent. If you sign out now they are lost, and those tasks may show as missed if the window closes first.",
+  'signout.q.photos.one':
+    "1 photo hasn't been sent. If you sign out now it is lost, and the check may show as not done or incomplete if the window closes first.",
+  'signout.q.photos.many':
+    "{n} photos haven't been sent. If you sign out now they are lost, and the check may show as not done or incomplete if the window closes first.",
+  'signout.q.marks.one':
+    "1 mark hasn't been sent. If you sign out now it is lost, and that person may show as not marked if the window closes first.",
+  'signout.q.marks.many':
+    "{n} marks haven't been sent. If you sign out now they are lost, and those people may show as not marked if the window closes first.",
+  'signout.q.stock.one':
+    "1 stock entry hasn't been sent. If you sign out now it is lost.",
+  'signout.q.stock.many':
+    "{n} stock entries haven't been sent. If you sign out now they are lost.",
+  'signout.q.changes.one':
+    "1 change hasn't been sent. If you sign out now it is lost.",
+  'signout.q.changes.many':
+    "{n} changes haven't been sent. If you sign out now they are lost.",
+  'signout.q.mixed':
+    "{n} things haven't been sent. If you sign out now they are lost.",
+  'signout.q.mixed-window':
+    "{n} things haven't been sent. If you sign out now they are lost, and some of it may not be recorded if a window closes first.",
+  'queue.line.answers.one': '1 answer waiting to send',
+  'queue.line.answers.many': '{n} answers waiting to send',
+  'queue.line.photos.one': '1 photo waiting to send',
+  'queue.line.photos.many': '{n} photos waiting to send',
+  'queue.line.marks.one': '1 mark waiting to send',
+  'queue.line.marks.many': '{n} marks waiting to send',
+  'queue.line.stock.one': '1 stock entry waiting to send',
+  'queue.line.stock.many': '{n} stock entries waiting to send',
+  'queue.line.changes.one': '1 change waiting to send',
+  'queue.line.changes.many': '{n} changes waiting to send',
+  'queue.line.mixed': '{n} waiting to send',
+  'queue.late.title': "Your answer wasn't recorded",
+  'queue.late.body':
+    "Your answer to “{task}” wasn't recorded: the window closed at {time}. Your manager will see it as missed. If something was wrong, tell them now.",
+  'queue.late.ok': 'OK',
+  'queue.late-change.title': "Your change wasn't recorded",
+  'queue.late-change.body':
+    "Your change to “{task}” wasn't recorded: the window closed at {time}. The earlier answer stands.",
+  'queue.late-changes.title': "Your changes weren't recorded",
+  'queue.late-changes.body':
+    "{n} changes to {name} weren't recorded: the window closed at {time}. The earlier answers stand.",
+  'queue.late.also.one':
+    "A change you made wasn't recorded either; the earlier answer stands.",
+  'queue.late.also.many':
+    "{n} changes you made weren't recorded either; the earlier answers stand.",
+  'queue.late-many.title': "Your answers weren't recorded",
+  'queue.late-many.body':
+    "{n} answers to {name} weren't recorded: the window closed at {time}. Your manager will see them as missed. If something was wrong, tell them now.",
+  'queue.late-mark.title': "Your mark wasn't recorded",
+  'queue.late-mark.body':
+    "Your mark for {name} wasn't recorded: the window closed at {time}. {name} will show as not marked.",
+  'queue.late-marks.title': "Your marks weren't recorded",
+  'queue.late-marks.body':
+    'The window closed at {time}. {names} will show as not marked.',
+  'queue.late-photo.title': "Your photo wasn't recorded",
+  'queue.late-photo.partial':
+    'Window closed. This photo was not recorded. The check reads Closed · {n} of {total} photos · assessed on these.',
+  'login.signed-out': "You've been signed out. Sign in again.",
+  'login.waiting.one': '1 answer on this phone is waiting to be sent.',
+  'login.waiting.many': '{n} answers on this phone are waiting to be sent.',
+  'queue.kept.one':
+    '{name} has 1 answer waiting on this phone. It sends when {name} signs in.',
+  'queue.kept.many':
+    '{name} has {n} answers waiting on this phone. They send when {name} signs in.',
 
   'settings.sign-out': 'Sign out',
 
@@ -826,12 +895,6 @@ export const en = {
   'spot.managers': 'Spot-check Managers',
   'spot.add-manager': 'Add manager',
   'spot.already-manager': 'Already a Spot-check Manager here',
-  'spot.not-wired': "This can't be saved yet.",
-  'spot.partial-fallback':
-    'Closed · Not done. {n} of {total} photos were taken.',
-  'spot.item-fallback':
-    'To change this list, archive the check and create a new one.',
-  'spot.after-close': "Results can't be changed after the window closes.",
   'spot.remove': 'Remove',
   'spot.empty-checks': 'No spot checks yet.',
   'spot.apply-next':
@@ -896,13 +959,8 @@ export const en = {
   'spot.n-waiting-one': '1 photo waiting to send',
   'spot.n-waiting': '{n} photos waiting to send',
   'spot.closes-at': 'Closes {time}',
-  'spot.sign-out-title': "A photo hasn't been sent",
-  'spot.sign-out-body':
-    "1 photo hasn't been sent yet. If you sign out now it will be lost.",
   'spot.placeholder-prompts': 'Placeholder prompts until the AI evaluation',
   'spot.why': 'mise needs the camera to take the photos for this spot check.',
-  'spot.sign-out-body-n':
-    "{n} photos haven't been sent yet. If you sign out now they will be lost.",
   'cam.name': 'Camera',
   'cam.continue': 'Continue',
   'cam.not-now': 'Not now',
@@ -929,13 +987,71 @@ export const en = {
   'spot.results-empty': 'No spot checks have closed yet.',
   'spot.tally': '{passed} passed · {failed} failed · {review} review',
   'spot.own-only': "Results aren't shown for a check assigned to someone else.",
-  'spot.issue-raised': 'Issue raised',
   'spot.photos': 'Photos',
   'spot.override': 'Override',
   'spot.override-to': 'Change to',
   'spot.note-label': 'Note',
   'spot.note-placeholder': "Say why you're changing this.",
   'spot.note-missing': 'A note is required.',
+  // Issues (ISS-01, FE Spec §3.6)
+  'iss.open-issues': 'Open issues',
+  'iss.open': 'Open',
+  'iss.resolved': 'Resolved',
+  'iss.show': 'Show',
+  'iss.n-failed': '{n} failed',
+  'iss.n-missed': '{n} missed',
+  'iss.n-assessing': '{n} being assessed',
+  'iss.rushed': 'Rushed',
+  'iss.waiting': 'Resolved · waiting to send',
+  'iss.resolved-by': 'Resolved by {name} · {when}',
+  'iss.empty': 'No open issues',
+  'iss.empty-body': 'Nothing waiting for you.',
+  'iss.empty-resolved': 'No resolved issues yet.',
+  'iss.empty-filter': 'No open issues for {what}.',
+  'iss.load-failed': "Couldn't load issues. Can't reach mise.",
+  'iss.try-again': 'Try again',
+  'iss.empty-filter-resolved': 'No resolved issues for {what}.',
+  'iss.eyebrow': 'Issue',
+  'iss.failed-group': 'Failed',
+  'iss.missed-group': 'Missed',
+  'iss.other-group': 'Being assessed',
+  'iss.not-answered': 'Not answered',
+  'iss.score-line':
+    "Resolving doesn't change the score ({score}). It records that you've seen it.",
+  'iss.mark-resolved': 'Mark resolved',
+  'iss.confirm-title': 'Mark this issue resolved?',
+  'iss.resolve': 'Resolve',
+  'iss.already': 'Already resolved.',
+  'iss.gone': 'This issue is no longer available.',
+  'iss.detail-failed': "Couldn't load this issue. Can't reach mise.",
+  'iss.photo': 'Photo',
+  'iss.limit': '{value} · limit {limit}',
+  'iss.by-at': '{name} · {time}',
+  'risk.heading': 'At risk · last 24 hours',
+  'risk.empty': 'Nothing at risk in the last 24 hours.',
+  'risk.failed': "Couldn't load. Can't reach mise.",
+  'iss.no-manager': 'No Checklist Manager',
+  'ovs.today': 'Today · {date}',
+  'ovs.no-score': 'No score yet',
+  'ovs.empty':
+    'No closed periods yet. Scores appear after the first run closes.',
+  'ovs.empty-at':
+    'No closed periods yet at {outlet}. Scores appear after the first run closes.',
+  'ovs.load-failed': "Couldn't load scores. Can't reach mise.",
+  'ovs.issue': 'Issue',
+  'ovs.resolved': 'Resolved',
+  'ovs.load-earlier': 'Load earlier periods',
+  'ovs.chart': 'Scores, oldest to newest: {values}',
+  'ovs.periods': 'Periods',
+  'ovs.open-outlet': '{outlet}, {score}. Open its history',
+
+  'ntf.open': 'Open',
+  'ntf.stray': "This isn't available to you on this phone.",
+  'ntf.no-entry': "This isn't available to you.",
+  'ntf.ask.title': 'Notifications',
+  'ntf.ask.why': 'So you know when a checklist opens',
+  'ntf.ask.allow': 'Allow',
+  'ntf.ask.later': 'Not now',
 } as const;
 
 export type Catalogue = Record<keyof typeof en, string>;

@@ -394,13 +394,15 @@ export type AnswerTaskRequest = {
  * sign, PUT the bytes to object storage, then PATCH the run task with the key.
  */
 export type UploadSignRequest = {
-  /** `spot_check_run` is mock only: §8 signs run-task photographs. */
-  purpose: 'run_task' | 'spot_check_run';
+  /** `spot_check`: `target_id` is the spot-check run and `capture_position` the prompt. */
+  purpose: 'run_task' | 'spot_check';
   target_id: number;
   content_type: 'image/jpeg';
   /** Size of the photograph in bytes. The platform signs it into the upload and
-   * requires it for a `run_task` (1 byte to 10 MB). */
+   * requires it (1 byte to 10 MB). */
   content_length?: number;
+  /** Only for `spot_check`: which prompt of the run the photograph answers. */
+  capture_position?: number;
 };
 
 /** → 200. */
@@ -729,11 +731,11 @@ export type InventoryManager = {
 };
 
 // ---------------------------------------------------------------------------
-// Week 9 — spot checks (API Contract §13). Marked "mock only" where the contract
-// has no endpoint or field yet; those move when Lamax's platform lands.
+// Week 9 — spot checks (API Contract §13, and Lamax's `apps/spotchecks`). Marked
+// "mock only" where the platform does not have the field.
 // ---------------------------------------------------------------------------
 
-/** An inspectable part of an outlet (Schema `area`). Mock only: API Contract §13 has no endpoint for areas. */
+/** An inspectable part of an outlet (Schema `area`): `/outlets/{id}/areas` and `/areas/{id}`. */
 export type Area = {
   id: number;
   outlet_id: number;
@@ -770,15 +772,19 @@ export type SpotCheckRecurrence = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
 /** What the manager is told to photograph, in order. */
 export type SpotCheckCapture = {
+  /** The platform's id, sent back on a save so the prompt stays the same one. The mock has none. */
+  id?: number;
   position: number;
   prompt: string;
 };
 
 /**
  * What gets judged. 🔒 Never mapped to a capture: every assertion is judged against
- * the whole set. `is_archived` is mock only.
+ * the whole set. The platform lists only live items, so `is_archived` is false there.
  */
 export type SpotCheckAssertion = {
+  /** The platform's id, sent back on a save so the item stays the same one. The mock has none. */
+  id?: number;
   position: number;
   text: string;
   /** 1–10, default 5. */
@@ -816,20 +822,20 @@ export type SpotChecksQuery = {
 /** One item as the editor sends it: wording, weight, and whether it is archived. */
 export type SpotCheckAssertionInput = Pick<
   SpotCheckAssertion,
-  'text' | 'weight' | 'is_archived'
+  'id' | 'text' | 'weight' | 'is_archived'
 >;
 
 /**
- * The prompts and items of a whole editor, in order, written together. Mock only:
- * API Contract §13 adds one prompt or one item at a time, and has no way to reorder
- * or to save an editor in one call. Positions are numbered 1 to n in the order given.
+ * The prompts and items of a whole editor, in order, written together: on the
+ * platform they are the full new ordered lists, and what is left out is gone.
+ * Positions are numbered 1 to n in the order given.
  */
 export type SpotCheckLists = {
   captures?: SpotCheckCaptureRequest[];
   assertions?: SpotCheckAssertionInput[];
 };
 
-/** POST /spot-checks. `captures` and `assertions` are mock only (see `SpotCheckLists`). */
+/** POST /spot-checks, with its prompts and items. */
 export type CreateSpotCheckRequest = Pick<
   SpotCheck,
   | 'outlet_id'
@@ -843,22 +849,15 @@ export type CreateSpotCheckRequest = Pick<
 > &
   SpotCheckLists;
 
-/** PATCH /spot-checks/{id}: everything but the outlet; archive. Lists are mock only. */
+/** PATCH /spot-checks/{id}: everything but the outlet. `is_archived: true` is `POST /spot-checks/{id}/archive`; the platform has no way back. */
 export type UpdateSpotCheckRequest = Partial<
   Omit<CreateSpotCheckRequest, 'outlet_id'> & Pick<SpotCheck, 'is_archived'>
 >;
 
-/** POST /spot-checks/{id}/captures. Editing or removing a prompt is mock only. */
-export type SpotCheckCaptureRequest = { prompt: string };
+/** One prompt as an editor sends it; `id` when the platform has it already. */
+export type SpotCheckCaptureRequest = { id?: number; prompt: string };
 
-/** POST /spot-checks/{id}/assertions. Editing or archiving an item is mock only. */
-export type SpotCheckAssertionRequest = {
-  text?: string;
-  weight?: number;
-  is_archived?: boolean;
-};
-
-/** Who takes spot checks at an outlet. Mock only: no table or endpoint yet (Known Inconsistency #7). */
+/** Who takes spot checks at an outlet: `/outlets/{id}/spot-check-managers`, head office only. */
 export type SpotCheckManager = {
   id: number;
   username: string;
@@ -877,7 +876,7 @@ export type SpotCheckPhoto = {
 /** One prompt of a revealed run and its photograph, if sent. */
 export type SpotCheckRunCapture = SpotCheckCapture & {
   photo: SpotCheckPhoto | null;
-  /** Mock only: photos this one replaced on a retake, oldest first, each kept with its time. */
+  /** Photos this one replaced on a retake, oldest first, each kept with its time. */
   earlier_photos: SpotCheckPhoto[];
 };
 
@@ -895,7 +894,6 @@ export type SpotCheckResult = {
   overridden_to: SpotCheckOutcome | null;
   override_note: string | null;
   overridden_by: { id: number; full_name: string } | null;
-  /** Mock only: the Schema has no override time. */
   overridden_at: string | null;
 };
 
@@ -905,7 +903,7 @@ export type SpotCheckResult = {
  */
 export type SpotCheckRunStatus = 'SCHEDULED' | 'OPEN' | 'FINALIZED';
 
-/** How a closed run ended. Mock only: the Schema has no missed status (Known Inconsistency #5). */
+/** How a closed run ended (`NOT_DONE` is a check nobody photographed). */
 export type SpotCheckCompletion = 'DONE' | 'PARTIAL' | 'NOT_DONE';
 
 /**
@@ -924,7 +922,7 @@ export type SpotCheckRun = {
     | null;
   revealed_at: string | null;
   window_close: string | null;
-  /** Mock only: when the check was selected. Null until the reveal: before it, no time that could give the moment away is sent. */
+  /** When the check was selected. Null until the reveal: before it, no time that could give the moment away is sent. */
   scheduled_for: string | null;
   /** The manager the subject was revealed to. */
   manager: { id: number; full_name: string } | null;
@@ -933,11 +931,11 @@ export type SpotCheckRun = {
   completion: SpotCheckCompletion | null;
   /** Null when the caller may not see this run's outcomes (another manager's). */
   results: SpotCheckResult[] | null;
-  /** Mock only: the issue a failure raised (Known Inconsistency #6). */
-  issue_id: number | null;
+  /** Compliance 0 to 1, once the run is scored; null otherwise and for a caller who may not see results. */
+  score?: number | null;
 };
 
-/** GET /spot-check-runs filters. `closed` and `outcome` are mock only. */
+/** GET /spot-check-runs filters. `outcome` matches a result's effective (overridden) outcome. */
 export type SpotCheckRunsQuery = {
   state?: 'revealed' | 'scheduled' | 'closed';
   outletId?: number;
@@ -956,4 +954,124 @@ export type SubmitSpotCheckPhotoRequest = {
 export type OverrideSpotCheckResultRequest = {
   overridden_to: Exclude<SpotCheckOutcome, 'PENDING_JUDGEMENT'>;
   override_note: string;
+};
+
+/** API Contract §9 — a person, as an incident names who resolved it. */
+export type PersonRef = { id: number; full_name: string };
+
+/** API Contract §9 — a checklist or an outlet, named. */
+export type NamedRef = { id: number; name: string };
+
+export type IncidentStatus = 'OPEN' | 'RESOLVED';
+
+/**
+ * API Contract §9 — one incident per imperfect run, raised when the run
+ * finalises below a perfect score. `score` is compliance from 0 to 1 (1 is
+ * perfect); show it as a percentage and never rescale it here. Resolving never
+ * changes it.
+ */
+export type Incident = {
+  id: number;
+  run_id: number;
+  checklist: NamedRef;
+  outlet: NamedRef;
+  window_open: string;
+  window_close: string;
+  score: number;
+  missed_count: number;
+  failed_count: number;
+  rushed: boolean;
+  status: IncidentStatus;
+  resolved_by: PersonRef | null;
+  resolved_at: string | null;
+  created_at: string;
+  /**
+   * Mock only: photographs of the run still being assessed (the "1 being
+   * assessed" mark). The platform sends no such field, so it is undefined
+   * against it and the mark is simply not shown.
+   */
+  assessing_count?: number;
+};
+
+/** GET /incidents/{id} — adds every failed and missed task, in position order. */
+export type IncidentDetail = Incident & { tasks: RunTask[] };
+
+/** GET /incidents filters. The platform answers OPEN unless told otherwise. */
+export type IncidentsQuery = {
+  page: number;
+  pageSize: number;
+  status?: IncidentStatus | 'ALL';
+  outletId?: number;
+  checklistId?: number;
+};
+
+/**
+ * GET /reports/checklist/{id}/outlets — the same checklist at every outlet.
+ * `score` is the mean of the finalised runs that closed in the last `days`
+ * days, null when there are none; `latest_run` is the most recent closed one.
+ * Lowest-first and "today only" are the screen's to do from these.
+ */
+export type ChecklistOutletsReport = {
+  checklist: NamedRef;
+  days: number;
+  outlets: {
+    assignment_id: number;
+    outlet: NamedRef;
+    score: number | null;
+    runs_counted: number;
+    latest_run: {
+      run_id: number;
+      score: number | null;
+      window_open: string;
+      window_close: string;
+    } | null;
+  }[];
+};
+
+/** One closed period in GET /reports/checklist/{id}/history, newest first. */
+export type ChecklistHistoryRow = {
+  run_id: number;
+  window_open: string;
+  window_close: string;
+  score: number | null;
+  missed_count: number;
+  failed_count: number;
+  rushed: boolean;
+  /** Mock only, like `Incident.assessing_count`. */
+  assessing_count?: number;
+};
+
+/**
+ * GET /reports/checklist/{id}/history filters. Without `assignmentId` the
+ * platform answers for the caller's only outlet, and 400 if there are several.
+ * `from` and `to` are dates (YYYY-MM-DD), inclusive, on the day each period closed.
+ */
+export type ChecklistHistoryQuery = {
+  page: number;
+  pageSize: number;
+  assignmentId?: number;
+  from?: string;
+  to?: string;
+};
+
+/**
+ * GET /reports/at-risk — the worst runs among those that closed in the last
+ * `hours` hours (fixed at 24, no parameter), at most five. Empty means nothing
+ * went wrong. ADMIN and OWNER only.
+ */
+export type AtRiskReport = {
+  hours: number;
+  results: {
+    run_id: number;
+    checklist: NamedRef;
+    outlet: NamedRef;
+    window_open: string;
+    window_close: string;
+    score: number;
+    missed_count: number;
+    failed_count: number;
+    rushed: boolean;
+    incident_id: number | null;
+    cl_admins: PersonRef[];
+  }[];
 };
